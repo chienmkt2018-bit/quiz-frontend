@@ -13,7 +13,7 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 850px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { width: 100%; max-width: 850px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
         
         .header-banner {
             width: 100%;
@@ -119,6 +119,7 @@
             <div id="mcionBox" class="mcion-badge hidden">
                 🪙 Mcion: <span id="userMcionBalance" style="margin-left: 4px;">0</span>
             </div>
+            <button id="btnShowChangePass" class="btn-warning hidden">Đổi Mật Khẩu</button>
             <button id="btnLogout" class="btn-danger hidden">Đăng Xuất</button>
         </div>
     </div>
@@ -313,6 +314,30 @@
             </table>
         </div>
     </div>
+
+    <!-- KHU VỰC MODAL ĐỔI MẬT KHẨU -->
+    <div id="modalChangePass" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000;">
+        <div style="background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            <h3 style="margin-bottom: 15px; text-align: center;">Đổi Mật Khẩu</h3>
+            <div class="form-group">
+                <label>Mật khẩu cũ:</label>
+                <input type="password" id="cpOldPass" placeholder="Nhập mật khẩu hiện tại...">
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu mới:</label>
+                <input type="password" id="cpNewPass" placeholder="Nhập mật khẩu mới...">
+            </div>
+            <div class="form-group">
+                <label>Xác nhận mật khẩu mới:</label>
+                <input type="password" id="cpConfirmPass" placeholder="Nhập lại mật khẩu mới...">
+            </div>
+            <div class="btn-group" style="justify-content: flex-end; margin-top: 20px;">
+                <button id="btnCancelChangePass" class="btn-danger">Hủy Bỏ</button>
+                <button id="btnSubmitChangePass" class="btn-success">Xác Nhận Đổi</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -365,6 +390,7 @@
                 document.getElementById('sectionStudent').classList.add('hidden');
                 document.getElementById('sectionAdmin').classList.add('hidden');
                 document.getElementById('btnLogout').classList.add('hidden');
+                document.getElementById('btnShowChangePass').classList.add('hidden');
                 document.getElementById('userInfo').textContent = "Chưa đăng nhập";
                 updateMcionDisplay();
                 return;
@@ -372,13 +398,14 @@
 
             document.getElementById('sectionAuth').classList.add('hidden');
             document.getElementById('btnLogout').classList.remove('hidden');
+            document.getElementById('btnShowChangePass').classList.remove('hidden');
 
             if (currentUser.role === "admin") {
                 document.getElementById('userInfo').textContent = `Admin (${currentUser.username})`;
                 document.getElementById('sectionAdmin').classList.remove('hidden');
                 document.getElementById('sectionStudent').classList.add('hidden');
                 renderAllHistory();
-                loadAdminExamList(); // Tải danh sách sửa đề
+                loadAdminExamList(); 
             } else {
                 document.getElementById('userInfo').textContent = `Học sinh: ${currentUser.fullname || currentUser.username}`;
                 document.getElementById('sectionStudent').classList.remove('hidden');
@@ -416,6 +443,53 @@
             clearInterval(examTimerInterval);
             document.getElementById('examArea').classList.add('hidden');
             checkLoginState();
+        });
+
+        // ------------------ XỬ LÝ ĐỔI MẬT KHẨU ------------------
+        document.getElementById('btnShowChangePass').addEventListener('click', function() {
+            document.getElementById('modalChangePass').classList.remove('hidden');
+            document.getElementById('cpOldPass').value = '';
+            document.getElementById('cpNewPass').value = '';
+            document.getElementById('cpConfirmPass').value = '';
+        });
+
+        document.getElementById('btnCancelChangePass').addEventListener('click', function() {
+            document.getElementById('modalChangePass').classList.add('hidden');
+        });
+
+        document.getElementById('btnSubmitChangePass').addEventListener('click', async function() {
+            const oldPassword = document.getElementById('cpOldPass').value.trim();
+            const newPassword = document.getElementById('cpNewPass').value.trim();
+            const confirmPass = document.getElementById('cpConfirmPass').value.trim();
+            
+            if (!oldPassword || !newPassword || !confirmPass) return alert("⚠️ Vui lòng điền đủ thông tin!");
+            if (newPassword !== confirmPass) return alert("❌ Mật khẩu mới không khớp nhau!");
+
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+            if (!currentUser) return;
+
+            try {
+                const res = await fetch(`${API_URL}/change-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        username: currentUser.username, 
+                        role: currentUser.role, 
+                        oldPassword: oldPassword, 
+                        newPassword: newPassword 
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert("✅ " + data.message);
+                    document.getElementById('modalChangePass').classList.add('hidden');
+                } else {
+                    alert("❌ " + data.message);
+                }
+            } catch (err) {
+                alert("❌ Lỗi kết nối Server!");
+            }
         });
 
         // ------------------ ĐỒNG HỒ ĐẾM NGƯỢC ------------------
