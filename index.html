@@ -60,7 +60,7 @@
 
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input[type="text"], input[type="password"], input[type="color"], select {
+        input[type="text"], input[type="password"], input[type="color"], input[type="number"], select {
             width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;
         }
 
@@ -123,6 +123,7 @@
         </div>
     </div>
 
+    <!-- KHU VỰC ĐĂNG NHẬP / ĐĂNG KÝ -->
     <div id="sectionAuth" class="card-box">
         <div id="formLogin">
             <h3>Đăng Nhập Hệ Thống</h3>
@@ -172,6 +173,7 @@
         </div>
     </div>
 
+    <!-- KHU VỰC HỌC SINH -->
     <div id="sectionStudent" class="hidden">
         <div class="card-box">
             <h3>Chọn Đề Thi</h3>
@@ -183,10 +185,16 @@
             <button id="btnStartExam" class="btn-success">Bắt Đầu Làm Bài</button>
         </div>
 
+        <!-- KHU VỰC LÀM BÀI CÓ ĐỒNG HỒ -->
         <div id="examArea" class="card-box hidden">
-            <h3 id="examTitle" style="margin-bottom: 15px;">Bài Thi</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 id="examTitle" style="margin: 0;">Bài Thi</h3>
+                <div id="examTimerDisplay" class="mcion-badge hidden" style="background: linear-gradient(135deg, #e74c3c, #c0392b); font-size: 16px;">
+                    ⏱️ <span id="timeRemaining">--:--</span>
+                </div>
+            </div>
             <div id="questionsContainer"></div>
-            <button id="btnSubmitExam" class="btn-primary" style="width: 100%; padding: 12px; font-size: 16px;">NỘP BÀI THI</button>
+            <button id="btnSubmitExam" class="btn-primary" style="width: 100%; padding: 12px; font-size: 16px; margin-top: 15px;">NỘP BÀI THI</button>
         </div>
 
         <div class="card-box">
@@ -206,7 +214,6 @@
 
         <div class="card-box">
             <h3>🛒 Cửa Hàng Đổi Thưởng Mcion</h3>
-            <p style="color: #666; font-size: 13px; margin-bottom: 10px;">Dùng điểm Mcion tích lũy từ các bài thi để đổi quà!</p>
             <div class="shop-grid">
                 <div class="shop-card">
                     <div style="font-size: 28px;">🎖️</div>
@@ -230,19 +237,50 @@
         </div>
     </div>
 
+    <!-- KHU VỰC ADMIN -->
     <div id="sectionAdmin" class="hidden">
+        <!-- TẢI ĐỀ THI EXCEL CÓ THỜI GIAN -->
         <div class="card-box">
-            <h3>Quản Lý Đề Thi (Excel)</h3>
+            <h3>Thêm Mới Đề Thi (Excel)</h3>
             <br>
             <div class="form-group">
-                <label>Mã Đề Thi (VD: DE01, DE02):</label>
+                <label>Mã Đề Thi (VD: DE01):</label>
                 <input type="text" id="inputExamCode" placeholder="Nhập mã đề...">
+            </div>
+            <div class="form-group">
+                <label>Thời Gian Làm Bài (Phút):</label>
+                <input type="number" id="inputExamTime" placeholder="Để 0 nếu không giới hạn" value="0" min="0">
             </div>
             <div class="form-group">
                 <label>Chọn Tệp Excel (.xlsx):</label>
                 <input type="file" id="excelFileInput" accept=".xlsx, .xls">
             </div>
             <button id="btnSaveExam" class="btn-success">Lưu Bộ Đề</button>
+        </div>
+
+        <!-- QUẢN LÝ / CHỈNH SỬA / XÓA ĐỀ THI -->
+        <div class="card-box">
+            <h3>Quản Lý & Chỉnh Sửa Đề Thi</h3>
+            <br>
+            <div class="form-group">
+                <label>Chọn Đề Thi Hiện Có:</label>
+                <select id="adminSelectExamToEdit">
+                    <option value="">-- Chọn mã đề để sửa --</option>
+                </select>
+            </div>
+            <div class="btn-group">
+                <button id="btnLoadExam" class="btn-primary">Tải Đề Chỉnh Sửa</button>
+                <button id="btnDeleteExam" class="btn-danger">Xóa Đề Này</button>
+            </div>
+            
+            <div id="adminEditArea" class="hidden" style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px;">
+                <div class="form-group">
+                    <label>Thời Gian Làm Bài Mới (phút):</label>
+                    <input type="number" id="editExamTime" value="0" min="0">
+                </div>
+                <div id="editQuestionsList"></div>
+                <button id="btnUpdateExam" class="btn-success" style="width: 100%; padding: 10px; margin-top: 15px;">LƯU CẬP NHẬT ĐỀ THI</button>
+            </div>
         </div>
 
         <div class="card-box">
@@ -257,42 +295,6 @@
                 <input type="text" id="targetMcionAmount" placeholder="VD: 100 hoặc -50">
             </div>
             <button id="btnGrantMcion" class="btn-warning">Cấp Mcion</button>
-        </div>
-
-        <div class="card-box">
-            <h3>Cấu Hình Giao Diện Web</h3>
-            <br>
-            <div class="form-group">
-                <label>Tiêu Đề Trang Web:</label>
-                <input type="text" id="inputWebTitle" placeholder="Hệ Thống Trắc Nghiệm Online">
-            </div>
-            <div class="form-group">
-                <label>Đường Dẫn Ảnh Banner (URL):</label>
-                <input type="text" id="inputBannerUrl" placeholder="https://example.com/banner.jpg">
-            </div>
-            <div class="form-group">
-                <label>Màu Chủ Đạo:</label>
-                <input type="color" id="inputPrimaryColor" value="#3498db">
-            </div>
-            <div class="form-group">
-                <label>Màu Nền Web:</label>
-                <input type="color" id="inputBgColor" value="#f4f7f6">
-            </div>
-            <button id="btnSaveUI" class="btn-primary">Lưu Giao Diện</button>
-        </div>
-
-        <div class="card-box">
-            <h3>Đổi Tài Khoản Admin</h3>
-            <br>
-            <div class="form-group">
-                <label>Tên Admin Mới:</label>
-                <input type="text" id="newAdminUser" placeholder="Tên admin mới...">
-            </div>
-            <div class="form-group">
-                <label>Mật Khẩu Mới:</label>
-                <input type="password" id="newAdminPass" placeholder="Mật khẩu mới...">
-            </div>
-            <button id="btnChangeAdmin" class="btn-warning">Cập Nhật Tài Khoản Admin</button>
         </div>
 
         <div class="card-box">
@@ -314,13 +316,14 @@
 </div>
 
 <script>
-    const API_URL = "https://quiz-backend-ta9z.onrender.com/api"; // Chuyển sang địa chỉ Online khi deploy server
+    const API_URL = "https://quiz-backend-ta9z.onrender.com/api";
+    let examTimerInterval;
 
     document.addEventListener("DOMContentLoaded", function() {
         loadUISettings();
         checkLoginState();
 
-        // CHUYỂN FORM ĐĂNG NHẬP / ĐĂNG KÝ
+        // ------------------ AUTH & CHUYỂN TAB ------------------
         document.getElementById('btnToggleToRegister').addEventListener('click', function() {
             document.getElementById('formLogin').classList.add('hidden');
             document.getElementById('formRegister').classList.remove('hidden');
@@ -331,7 +334,6 @@
             document.getElementById('formLogin').classList.remove('hidden');
         });
 
-        // ĐĂNG KÝ HỌC VIÊN
         document.getElementById('btnRegisterSubmit').addEventListener('click', async function() {
             const fullname = document.getElementById('regFullname').value.trim();
             const username = document.getElementById('regUsername').value.trim();
@@ -355,53 +357,7 @@
             } catch (err) { alert("❌ Lỗi kết nối Server!"); }
         });
 
-        // CẬP NHẬT MCION
-        async function updateMcionDisplay() {
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-            if (currentUser && currentUser.role === "student") {
-                const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
-                const data = await res.json();
-                document.getElementById('userMcionBalance').textContent = (data.balance || 0).toLocaleString("vi-VN");
-                document.getElementById('mcionBox').classList.remove('hidden');
-            } else {
-                document.getElementById('mcionBox').classList.add('hidden');
-            }
-        }
-
-        window.buyShopItem = async function(itemName, cost) {
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-            if (!currentUser) return;
-
-            if (confirm(`Xác nhận dùng ${cost} Mcion để đổi [${itemName}]?`)) {
-                const res = await fetch(`${API_URL}/mcion/buy`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: currentUser.username, cost, itemName })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert(`🎉 Đổi thành công [${itemName}]!`);
-                    updateMcionDisplay();
-                } else alert("⚠️ " + data.message);
-            }
-        };
-
-        // ADMIN CẤP MCION
-        document.getElementById('btnGrantMcion').addEventListener('click', async function() {
-            const username = document.getElementById('targetStudentUser').value.trim();
-            const amount = parseInt(document.getElementById('targetMcionAmount').value.trim(), 10);
-            if (!username || isNaN(amount)) return alert("⚠️ Nhập đầy đủ thông tin!");
-
-            const res = await fetch(`${API_URL}/mcion/grant`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, amount })
-            });
-            const data = await res.json();
-            if (data.success) alert(`✅ Đã cấp Mcion! Số dư mới: ${data.balance}`);
-        });
-
-        // TRẠNG THÁI ĐĂNG NHẬP
+        // ------------------ TRẠNG THÁI ĐĂNG NHẬP ------------------
         function checkLoginState() {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
             if (!currentUser) {
@@ -422,6 +378,7 @@
                 document.getElementById('sectionAdmin').classList.remove('hidden');
                 document.getElementById('sectionStudent').classList.add('hidden');
                 renderAllHistory();
+                loadAdminExamList(); // Tải danh sách sửa đề
             } else {
                 document.getElementById('userInfo').textContent = `Học sinh: ${currentUser.fullname || currentUser.username}`;
                 document.getElementById('sectionStudent').classList.remove('hidden');
@@ -432,7 +389,6 @@
             updateMcionDisplay();
         }
 
-        // ĐĂNG NHẬP
         async function handleLogin(role) {
             const username = document.getElementById('authUsername').value.trim();
             const password = document.getElementById('authPassword').value.trim();
@@ -457,12 +413,42 @@
 
         document.getElementById('btnLogout').addEventListener('click', function() {
             sessionStorage.removeItem("current_user");
+            clearInterval(examTimerInterval);
+            document.getElementById('examArea').classList.add('hidden');
             checkLoginState();
         });
 
-        // LƯU ĐỀ THI (EXCEL)
+        // ------------------ ĐỒNG HỒ ĐẾM NGƯỢC ------------------
+        function startTimer(minutes) {
+            clearInterval(examTimerInterval);
+            const timerDisplay = document.getElementById('examTimerDisplay');
+            
+            if (!minutes || minutes <= 0) {
+                timerDisplay.classList.add('hidden');
+                return;
+            }
+            
+            timerDisplay.classList.remove('hidden');
+            let seconds = minutes * 60;
+            
+            examTimerInterval = setInterval(() => {
+                seconds--;
+                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const s = (seconds % 60).toString().padStart(2, '0');
+                document.getElementById('timeRemaining').textContent = `${m}:${s}`;
+                
+                if (seconds <= 0) {
+                    clearInterval(examTimerInterval);
+                    alert("⏳ Đã hết thời gian làm bài! Hệ thống sẽ tự động nộp bài.");
+                    document.getElementById('btnSubmitExam').click();
+                }
+            }, 1000);
+        }
+
+        // ------------------ ADMIN: LƯU TỪ EXCEL ------------------
         document.getElementById('btnSaveExam').addEventListener('click', function() {
             const examCode = document.getElementById('inputExamCode').value.trim();
+            const timeLimit = parseInt(document.getElementById('inputExamTime').value, 10) || 0;
             const fileInput = document.getElementById('excelFileInput');
 
             if (!examCode || !fileInput.files[0]) return alert("⚠️ Vui lòng nhập mã đề và chọn file Excel!");
@@ -488,26 +474,123 @@
                 const res = await fetch(`${API_URL}/exams`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ examCode, questions })
+                    body: JSON.stringify({ examCode, timeLimit, questions })
                 });
                 const resData = await res.json();
-                if (resData.success) alert(`✅ Đã lưu đề [${examCode}]!`);
+                if (resData.success) {
+                    alert(`✅ Đã lưu đề [${examCode}]!`);
+                    loadAdminExamList(); 
+                }
             };
             reader.readAsArrayBuffer(fileInput.files[0]);
         });
 
-        // LÀM BÀI & NỘP BÀI
-        async function loadExamList() {
-            const res = await fetch(`${API_URL}/exams`);
-            const exams = await res.json();
-            const select = document.getElementById('selectExamCode');
-            select.innerHTML = '<option value="">-- Chọn mã đề --</option>';
-            exams.forEach(code => {
-                const opt = document.createElement('option');
-                opt.value = code;
-                opt.textContent = `Đề thi: ${code}`;
-                select.appendChild(opt);
+        // ------------------ ADMIN: CHỈNH SỬA & XÓA ĐỀ THI ------------------
+        async function loadAdminExamList() {
+            try {
+                const res = await fetch(`${API_URL}/exams`);
+                const exams = await res.json();
+                const select = document.getElementById('adminSelectExamToEdit');
+                select.innerHTML = '<option value="">-- Chọn mã đề để sửa --</option>';
+                exams.forEach(code => {
+                    const opt = document.createElement('option');
+                    opt.value = code;
+                    opt.textContent = `Đề thi: ${code}`;
+                    select.appendChild(opt);
+                });
+            } catch(e) { console.error(e) }
+        }
+
+        document.getElementById('btnLoadExam').addEventListener('click', async function() {
+            const examCode = document.getElementById('adminSelectExamToEdit').value;
+            if (!examCode) return alert("⚠️ Vui lòng chọn mã đề!");
+
+            const res = await fetch(`${API_URL}/exams/${examCode}`);
+            const data = await res.json();
+            const questions = Array.isArray(data) ? data : (data.questions || []);
+            const timeLimit = Array.isArray(data) ? 0 : (data.timeLimit || 0);
+
+            window.editingExamCode = examCode;
+            document.getElementById('editExamTime').value = timeLimit;
+            
+            const container = document.getElementById('editQuestionsList');
+            container.innerHTML = "";
+            
+            questions.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = "question-card";
+                card.innerHTML = `
+                    <div class="form-group">
+                        <label style="color: #e74c3c;">Câu ${index + 1}:</label>
+                        <textarea class="edit-q-text" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">${q.question}</textarea>
+                    </div>
+                    ${q.options.map((opt, optIndex) => `
+                        <div style="display: flex; gap: 10px; margin-bottom: 8px; align-items: center;">
+                            <input type="radio" name="edit_correct_${index}" value="${optIndex}" ${q.correct === optIndex ? 'checked' : ''}>
+                            <input type="text" class="edit-q-opt" style="flex:1; padding:6px; border:1px solid #ccc; border-radius:4px;" value="${opt}">
+                        </div>
+                    `).join('')}
+                `;
+                container.appendChild(card);
             });
+            document.getElementById('adminEditArea').classList.remove('hidden');
+        });
+
+        document.getElementById('btnUpdateExam').addEventListener('click', async function() {
+            const timeLimit = parseInt(document.getElementById('editExamTime').value, 10) || 0;
+            const cards = document.querySelectorAll('#editQuestionsList .question-card');
+            const updatedQuestions = [];
+            
+            cards.forEach((card, index) => {
+                const qText = card.querySelector('.edit-q-text').value;
+                const opts = Array.from(card.querySelectorAll('.edit-q-opt')).map(input => input.value);
+                const correctRadio = card.querySelector(`input[name="edit_correct_${index}"]:checked`);
+                
+                updatedQuestions.push({
+                    question: qText,
+                    options: opts,
+                    correct: correctRadio ? parseInt(correctRadio.value, 10) : 0
+                });
+            });
+
+            try {
+                await fetch(`${API_URL}/exams/${window.editingExamCode}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ timeLimit, questions: updatedQuestions })
+                });
+                alert("✅ Cập nhật đề thi thành công!");
+                document.getElementById('adminEditArea').classList.add('hidden');
+            } catch (e) { alert("❌ Lỗi khi cập nhật!"); }
+        });
+
+        document.getElementById('btnDeleteExam').addEventListener('click', async function() {
+            const examCode = document.getElementById('adminSelectExamToEdit').value;
+            if (!examCode) return alert("⚠️ Vui lòng chọn mã đề!");
+            if (!confirm(`Bạn có chắc chắn muốn XÓA VĨNH VIỄN đề ${examCode}?`)) return;
+            
+            try {
+                await fetch(`${API_URL}/exams/${examCode}`, { method: 'DELETE' });
+                alert("✅ Đã xóa đề thi!");
+                loadAdminExamList();
+                document.getElementById('adminEditArea').classList.add('hidden');
+            } catch (e) { alert("❌ Lỗi khi xóa đề!"); }
+        });
+
+        // ------------------ HỌC SINH: LÀM BÀI ------------------
+        async function loadExamList() {
+            try {
+                const res = await fetch(`${API_URL}/exams`);
+                const exams = await res.json();
+                const select = document.getElementById('selectExamCode');
+                select.innerHTML = '<option value="">-- Chọn mã đề --</option>';
+                exams.forEach(code => {
+                    const opt = document.createElement('option');
+                    opt.value = code;
+                    opt.textContent = `Đề thi: ${code}`;
+                    select.appendChild(opt);
+                });
+            } catch(e) { console.log(e); }
         }
 
         document.getElementById('btnStartExam').addEventListener('click', async function() {
@@ -515,7 +598,11 @@
             if (!examCode) return alert("⚠️ Chọn mã đề!");
 
             const res = await fetch(`${API_URL}/exams/${examCode}`);
-            const questions = await res.json();
+            const data = await res.json();
+            
+            const questions = Array.isArray(data) ? data : (data.questions || []);
+            const timeLimit = Array.isArray(data) ? 0 : (data.timeLimit || 0);
+
             window.currentQuestions = questions;
             window.currentExamCode = examCode;
 
@@ -538,9 +625,12 @@
 
             document.getElementById('examTitle').textContent = `Đang làm đề: ${examCode}`;
             document.getElementById('examArea').classList.remove('hidden');
+            
+            startTimer(timeLimit);
         });
 
         document.getElementById('btnSubmitExam').addEventListener('click', async function() {
+            clearInterval(examTimerInterval);
             const questions = window.currentQuestions;
             if (!questions) return;
 
@@ -579,7 +669,51 @@
             updateMcionDisplay();
         });
 
-        // XEM LỊCH SỬ
+        // ------------------ MCION & LỊCH SỬ ------------------
+        async function updateMcionDisplay() {
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
+            if (currentUser && currentUser.role === "student") {
+                const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
+                const data = await res.json();
+                document.getElementById('userMcionBalance').textContent = (data.balance || 0).toLocaleString("vi-VN");
+                document.getElementById('mcionBox').classList.remove('hidden');
+            } else {
+                document.getElementById('mcionBox').classList.add('hidden');
+            }
+        }
+
+        window.buyShopItem = async function(itemName, cost) {
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
+            if (!currentUser) return;
+
+            if (confirm(`Xác nhận dùng ${cost} Mcion để đổi [${itemName}]?`)) {
+                const res = await fetch(`${API_URL}/mcion/buy`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser.username, cost, itemName })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`🎉 Đổi thành công [${itemName}]!`);
+                    updateMcionDisplay();
+                } else alert("⚠️ " + data.message);
+            }
+        };
+
+        document.getElementById('btnGrantMcion').addEventListener('click', async function() {
+            const username = document.getElementById('targetStudentUser').value.trim();
+            const amount = parseInt(document.getElementById('targetMcionAmount').value.trim(), 10);
+            if (!username || isNaN(amount)) return alert("⚠️ Nhập đầy đủ thông tin!");
+
+            const res = await fetch(`${API_URL}/mcion/grant`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, amount })
+            });
+            const data = await res.json();
+            if (data.success) alert(`✅ Đã cấp Mcion! Số dư mới: ${data.balance}`);
+        });
+
         async function renderMyHistory() {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return;
@@ -610,55 +744,27 @@
             });
         }
 
-        // CẤU HÌNH GIAO DIỆN
+        // ------------------ GIAO DIỆN CHUNG ------------------
         async function loadUISettings() {
-            const res = await fetch(`${API_URL}/ui`);
-            const ui = await res.json();
+            try {
+                const res = await fetch(`${API_URL}/ui`);
+                const ui = await res.json();
 
-            document.getElementById('siteTitleTag').textContent = ui.title;
-            document.getElementById('mainTitle').textContent = ui.title;
+                document.getElementById('siteTitleTag').textContent = ui.title;
+                document.getElementById('mainTitle').textContent = ui.title;
 
-            const bannerImg = document.getElementById('headerBanner');
-            if (ui.banner) {
-                bannerImg.src = ui.banner;
-                bannerImg.classList.remove('hidden');
-            } else bannerImg.classList.add('hidden');
+                const bannerImg = document.getElementById('headerBanner');
+                if (ui.banner) {
+                    bannerImg.src = ui.banner;
+                    bannerImg.classList.remove('hidden');
+                } else bannerImg.classList.add('hidden');
 
-            document.documentElement.style.setProperty('--primary-color', ui.primaryColor);
-            document.documentElement.style.setProperty('--bg-color', ui.bgColor);
+                document.documentElement.style.setProperty('--primary-color', ui.primaryColor);
+                document.documentElement.style.setProperty('--bg-color', ui.bgColor);
+            } catch(e) { console.log(e); }
         }
-
-        document.getElementById('btnSaveUI').addEventListener('click', async function() {
-            const title = document.getElementById('inputWebTitle').value.trim();
-            const banner = document.getElementById('inputBannerUrl').value.trim();
-            const primaryColor = document.getElementById('inputPrimaryColor').value;
-            const bgColor = document.getElementById('inputBgColor').value;
-
-            await fetch(`${API_URL}/ui`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, banner, primaryColor, bgColor })
-            });
-            loadUISettings();
-            alert("✅ Đã cập nhật giao diện!");
-        });
-
-        document.getElementById('btnChangeAdmin').addEventListener('click', async function() {
-            const newAdminUser = document.getElementById('newAdminUser').value.trim();
-            const newAdminPass = document.getElementById('newAdminPass').value.trim();
-            if (!newAdminUser || !newAdminPass) return alert("⚠️ Nhập đầy đủ thông tin!");
-
-            await fetch(`${API_URL}/admin/change`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ newAdminUser, newAdminPass })
-            });
-            alert("✅ Đã đổi thông tin Admin!");
-            document.getElementById('btnLogout').click();
-        });
     });
 </script>
-
 
 </body>
 </html>
