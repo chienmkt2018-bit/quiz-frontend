@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="siteTitleTag">Trang Web Học Tập Của MR Minh</title>
+    <!-- Thư viện đọc file Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -51,11 +52,6 @@
         .btn-warning { background-color: #f39c12; color: white; }
         .btn-link { background: none; color: var(--primary-color); border: none; padding: 0; text-decoration: underline; cursor: pointer; font-size: 14px; }
         button:hover { opacity: 0.9; }
-
-        .question-card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .question-title { font-weight: bold; margin-bottom: 10px; color: #2c3e50; }
-        .option-item { margin: 6px 0; display: flex; align-items: center; cursor: pointer; }
-        .option-item input { margin-right: 10px; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
@@ -150,12 +146,7 @@
         </div>
 
         <div id="examArea" class="card-box hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 id="examTitle" style="margin: 0;">Bài Thi</h3>
-                <div id="examTimerDisplay" class="mcion-badge hidden" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
-                    ⏱️ <span id="timeRemaining">--:--</span>
-                </div>
-            </div>
+            <h3 id="examTitle" style="margin-bottom: 15px;">Bài Thi</h3>
             <div id="questionsContainer"></div>
             <button id="btnSubmitExam" class="btn-primary" style="width: 100%; padding: 12px; margin-top: 15px;">NỘP BÀI THI</button>
         </div>
@@ -215,34 +206,14 @@
         </div>
 
         <div class="card-box">
-            <h3>Quản Lý & Chỉnh Sửa Đề Thi</h3><br>
-            <div class="form-group">
-                <label>Chọn Đề Thi:</label>
-                <select id="adminSelectExamToEdit"><option value="">-- Chọn mã đề --</option></select>
-            </div>
-            <div class="btn-group">
-                <button id="btnLoadExam" class="btn-primary">Tải Đề</button>
-                <button id="btnDeleteExam" class="btn-danger">Xóa Đề</button>
-            </div>
-            <div id="adminEditArea" class="hidden" style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px;">
-                <div class="form-group">
-                    <label>Thời Gian Mới (phút):</label>
-                    <input type="number" id="editExamTime" value="0" min="0">
-                </div>
-                <div id="editQuestionsList"></div>
-                <button id="btnUpdateExam" class="btn-success" style="width: 100%; padding: 10px; margin-top: 15px;">LƯU CẬP NHẬT</button>
-            </div>
-        </div>
-
-        <div class="card-box">
             <h3>Cấp Tặng Mcion Cho Học Sinh</h3><br>
             <div class="form-group">
                 <label>Username học sinh:</label>
-                <input type="text" id="targetStudentUser" placeholder="Username...">
+                <input type="text" id="targetStudentUser" placeholder="Username học sinh...">
             </div>
             <div class="form-group">
                 <label>Số Mcion (+/-):</label>
-                <input type="text" id="targetMcionAmount" placeholder="100">
+                <input type="text" id="targetMcionAmount" placeholder="VD: 100 hoặc -50">
             </div>
             <button id="btnGrantMcion" class="btn-warning">Cấp Mcion</button>
         </div>
@@ -276,7 +247,6 @@
     <div id="modalChangeAvatar" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000;">
         <div style="background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px; text-align: center;">
             <h3 style="margin-bottom: 15px;">Chọn Avatar Đã Mua</h3>
-            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Bạn chỉ có thể chọn những avatar đã mua ở cửa hàng hoặc dùng ảnh mặc định.</p>
             <div id="ownedAvatarList" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;"></div>
             <button id="btnCancelAvatar" class="btn-danger" style="width: 100%;">Đóng</button>
         </div>
@@ -286,7 +256,6 @@
 
 <script>
     const API_URL = "https://quiz-backend-ta9z.onrender.com/api";
-    let examTimerInterval;
 
     document.addEventListener("DOMContentLoaded", function() {
         loadUISettings();
@@ -301,6 +270,7 @@
             document.getElementById('formLogin').classList.remove('hidden');
         });
 
+        // ĐĂNG KÝ HỌC SINH
         document.getElementById('btnRegisterSubmit').addEventListener('click', async () => {
             const fullname = document.getElementById('regFullname').value.trim();
             const username = document.getElementById('regUsername').value.trim();
@@ -360,11 +330,11 @@
                 document.getElementById('sectionAdmin').classList.remove('hidden');
                 document.getElementById('sectionStudent').classList.add('hidden');
                 renderAllHistory();
-                loadAdminExamList();
             }
             updateMcionDisplay();
         }
 
+        // ĐĂNG NHẬP
         async function handleLogin(role) {
             const username = document.getElementById('authUsername').value.trim();
             const password = document.getElementById('authPassword').value.trim();
@@ -399,9 +369,92 @@
 
         document.getElementById('btnLogout').addEventListener('click', () => {
             sessionStorage.removeItem("current_user");
-            clearInterval(examTimerInterval);
-            document.getElementById('examArea').classList.add('hidden');
             checkLoginState();
+        });
+
+        // ---------------- ADMIN: LƯU BỘ ĐỀ (UPLOAD EXCEL) ----------------
+        document.getElementById('btnSaveExam').addEventListener('click', async () => {
+            const examCode = document.getElementById('inputExamCode').value.trim();
+            const timeLimit = parseInt(document.getElementById('inputExamTime').value) || 0;
+            const fileInput = document.getElementById('excelFileInput');
+
+            if (!examCode) return alert("⚠️ Vui lòng nhập mã đề thi!");
+            if (fileInput.files.length === 0) return alert("⚠️ Vui lòng chọn file Excel chứa câu hỏi!");
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (rows.length === 0) return alert("❌ File Excel không có dữ liệu!");
+
+                    const questions = rows.map((row, index) => ({
+                        id: index + 1,
+                        question: row['Câu hỏi'] || row['Question'] || row['question'] || `Câu ${index + 1}`,
+                        options: [
+                            row['A'] || row['a'] || '',
+                            row['B'] || row['b'] || '',
+                            row['C'] || row['c'] || '',
+                            row['D'] || row['d'] || ''
+                        ],
+                        correct: String(row['Đáp án'] || row['Answer'] || row['correct'] || 'A').trim().toUpperCase()
+                    }));
+
+                    const res = await fetch(`${API_URL}/exams`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ examCode, timeLimit, questions })
+                    });
+
+                    const result = await res.json();
+                    if (result.success) {
+                        alert("🎉 Lưu bộ đề thành công!");
+                        document.getElementById('inputExamCode').value = '';
+                        document.getElementById('inputExamTime').value = '0';
+                        fileInput.value = '';
+                    } else {
+                        alert("❌ " + result.message);
+                    }
+                } catch (err) {
+                    alert("❌ Lỗi đọc file Excel: " + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // ---------------- ADMIN: CẤP MCION CHO HỌC SINH ----------------
+        document.getElementById('btnGrantMcion').addEventListener('click', async () => {
+            const username = document.getElementById('targetStudentUser').value.trim();
+            const amount = document.getElementById('targetMcionAmount').value.trim();
+
+            if (!username || !amount) {
+                return alert("⚠️ Vui lòng nhập đầy đủ Username và số Mcion!");
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/mcion/grant`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, amount })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert(`✅ ${data.message}`);
+                    document.getElementById('targetStudentUser').value = '';
+                    document.getElementById('targetMcionAmount').value = '';
+                } else {
+                    alert("❌ " + data.message);
+                }
+            } catch (err) {
+                alert("❌ Lỗi kết nối khi cấp Mcion!");
+            }
         });
 
         // ĐỔI MẬT KHẨU
@@ -506,7 +559,6 @@
             }
         };
 
-        // CÁC HÀM HỖ TRỢ KHÁC
         async function loadExamList() {
             try {
                 const res = await fetch(`${API_URL}/exams`);
@@ -555,21 +607,6 @@
                 tbody.innerHTML = history.length === 0 ? '<tr><td colspan="5" style="text-align:center;">Chưa có lịch sử nào.</td></tr>' : "";
                 history.forEach(h => {
                     tbody.innerHTML += `<tr><td>${h.time}</td><td>${h.fullname || h.username}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`;
-                });
-            } catch(e) {}
-        }
-
-        async function loadAdminExamList() {
-            try {
-                const res = await fetch(`${API_URL}/exams`);
-                const exams = await res.json();
-                const select = document.getElementById('adminSelectExamToEdit');
-                select.innerHTML = '<option value="">-- Chọn mã đề --</option>';
-                exams.forEach(code => {
-                    const opt = document.createElement('option');
-                    opt.value = code;
-                    opt.textContent = `Đề: ${code}`;
-                    select.appendChild(opt);
                 });
             } catch(e) {}
         }
