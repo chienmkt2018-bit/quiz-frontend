@@ -277,9 +277,7 @@
         <div style="background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px; text-align: center;">
             <h3 style="margin-bottom: 15px;">Chọn Avatar Đã Mua</h3>
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Bạn chỉ có thể chọn những avatar đã mua ở cửa hàng hoặc dùng ảnh mặc định.</p>
-            <div id="ownedAvatarList" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
-                <!-- Danh sách avatar sẽ được render bằng JS -->
-            </div>
+            <div id="ownedAvatarList" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;"></div>
             <button id="btnCancelAvatar" class="btn-danger" style="width: 100%;">Đóng</button>
         </div>
     </div>
@@ -370,7 +368,7 @@
         async function handleLogin(role) {
             const username = document.getElementById('authUsername').value.trim();
             const password = document.getElementById('authPassword').value.trim();
-            if (!username || !password) return alert("⚠️ Nhập đủ thông tin!");
+            if (!username || !password) return alert("⚠️ Vui lòng nhập đầy đủ thông tin!");
 
             try {
                 const res = await fetch(`${API_URL}/login`, {
@@ -378,12 +376,22 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password, role })
                 });
+
+                const contentType = res.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Server đang khởi động (Cold Start). Vui lòng đợi 30 giây rồi thử lại!");
+                }
+
                 const data = await res.json();
                 if (data.success) {
                     sessionStorage.setItem("current_user", JSON.stringify(data));
                     checkLoginState();
-                } else alert("❌ " + data.message);
-            } catch (e) { alert("❌ Lỗi kết nối!"); }
+                } else {
+                    alert("❌ " + (data.message || "Đăng nhập thất bại!"));
+                }
+            } catch (e) { 
+                alert("❌ Lỗi kết nối: " + e.message); 
+            }
         }
 
         document.getElementById('btnLoginStudent').addEventListener('click', () => handleLogin('student'));
@@ -426,7 +434,7 @@
             } else alert("❌ " + data.message);
         });
 
-        // ĐỔI AVATAR (CHỈ DÙNG ẢNH ĐÃ MUA HOẶC MẶC ĐỊNH)
+        // ĐỔI AVATAR
         document.getElementById('btnShowChangeAvatar').addEventListener('click', async () => {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
@@ -498,7 +506,7 @@
             }
         };
 
-        // CÁC TÍNH NĂNG KHÁC (ĐỀ THI, LỊCH SỬ,...) GIỮ NGUYÊN HOẶC TƯƠNG TỰ
+        // CÁC HÀM HỖ TRỢ KHÁC
         async function loadExamList() {
             try {
                 const res = await fetch(`${API_URL}/exams`);
@@ -513,84 +521,6 @@
                 });
             } catch(e) {}
         }
-
-        document.getElementById('btnStartExam').addEventListener('click', async function() {
-            const examCode = document.getElementById('selectExamCode').value;
-            if (!examCode) return alert("⚠️ Chọn mã đề!");
-            const res = await fetch(`${API_URL}/exams/${examCode}`);
-            const data = await res.json();
-            const questions = Array.isArray(data) ? data : (data.questions || []);
-            const timeLimit = Array.isArray(data) ? 0 : (data.timeLimit || 0);
-
-            window.currentQuestions = questions;
-            window.currentExamCode = examCode;
-
-            const container = document.getElementById('questionsContainer');
-            container.innerHTML = "";
-            questions.forEach((q, index) => {
-                container.innerHTML += `
-                    <div class="question-card">
-                        <div class="question-title">Câu ${index + 1}: ${q.question}</div>
-                        ${q.options.map((opt, optIndex) => `
-                            <label class="option-item">
-                                <input type="radio" name="q_${index}" value="${optIndex}">
-                                ${String.fromCharCode(65 + optIndex)}. ${opt}
-                            </label>
-                        `).join('')}
-                    </div>
-                `;
-            });
-            document.getElementById('examTitle').textContent = `Đang làm đề: ${examCode}`;
-            document.getElementById('examArea').classList.remove('hidden');
-            
-            if (timeLimit > 0) {
-                document.getElementById('examTimerDisplay').classList.remove('hidden');
-                let seconds = timeLimit * 60;
-                clearInterval(examTimerInterval);
-                examTimerInterval = setInterval(() => {
-                    seconds--;
-                    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-                    const s = (seconds % 60).toString().padStart(2, '0');
-                    document.getElementById('timeRemaining').textContent = `${m}:${s}`;
-                    if (seconds <= 0) {
-                        clearInterval(examTimerInterval);
-                        alert("⏳ Hết giờ!");
-                        document.getElementById('btnSubmitExam').click();
-                    }
-                }, 1000);
-            }
-        });
-
-        document.getElementById('btnSubmitExam').addEventListener('click', async function() {
-            clearInterval(examTimerInterval);
-            const questions = window.currentQuestions;
-            if (!questions) return;
-            let correctCount = 0;
-            questions.forEach((q, index) => {
-                const selected = document.querySelector(`input[name="q_${index}"]:checked`);
-                if (selected && parseInt(selected.value, 10) === q.correct) correctCount++;
-            });
-            const score = ((correctCount / questions.length) * 10).toFixed(1);
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
-            let earnedMcion = correctCount * 10;
-
-            await fetch(`${API_URL}/submit`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: currentUser.username,
-                    fullname: currentUser.fullname || currentUser.username,
-                    examCode: window.currentExamCode,
-                    correctCount, totalQuestions: questions.length,
-                    score, time: new Date().toLocaleString("vi-VN"), earnedMcion
-                })
-            });
-
-            alert(`🎉 Điểm: ${score}đ. Thưởng +${earnedMcion} Mcion!`);
-            document.getElementById('examArea').classList.add('hidden');
-            renderMyHistory();
-            updateMcionDisplay();
-        });
 
         async function updateMcionDisplay() {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
@@ -615,6 +545,33 @@
             myHistory.forEach(h => {
                 tbody.innerHTML += `<tr><td>${h.time}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`;
             });
+        }
+
+        async function renderAllHistory() {
+            try {
+                const res = await fetch(`${API_URL}/history`);
+                const history = await res.json();
+                const tbody = document.getElementById('allHistoryBody');
+                tbody.innerHTML = history.length === 0 ? '<tr><td colspan="5" style="text-align:center;">Chưa có lịch sử nào.</td></tr>' : "";
+                history.forEach(h => {
+                    tbody.innerHTML += `<tr><td>${h.time}</td><td>${h.fullname || h.username}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`;
+                });
+            } catch(e) {}
+        }
+
+        async function loadAdminExamList() {
+            try {
+                const res = await fetch(`${API_URL}/exams`);
+                const exams = await res.json();
+                const select = document.getElementById('adminSelectExamToEdit');
+                select.innerHTML = '<option value="">-- Chọn mã đề --</option>';
+                exams.forEach(code => {
+                    const opt = document.createElement('option');
+                    opt.value = code;
+                    opt.textContent = `Đề: ${code}`;
+                    select.appendChild(opt);
+                });
+            } catch(e) {}
         }
 
         async function loadUISettings() {
