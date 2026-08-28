@@ -144,7 +144,6 @@
             <div class="form-group"><label>Chọn File Excel:</label><input type="file" id="excelFileInput" accept=".xlsx, .xls"></div>
             <button id="btnSaveExam" class="btn-success">Lưu Bộ Đề</button>
         </div>
-        <!-- ... code khối Thêm Mới Đề Thi đang có ... -->
 
         <div class="card-box">
             <h3>Quản Lý Đề Thi</h3>
@@ -187,7 +186,7 @@
     <div id="modalChangeAvatar" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000;">
         <div style="background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px; text-align: center;">
             <h3 style="margin-bottom: 15px;">Chọn Avatar Đã Mua</h3>
-            <div id="ownedAvatarList" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;"></div>
+            <div id="ownedAvatarList" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; min-height: 60px; align-items: center;"></div>
             <button id="btnCancelAvatar" class="btn-danger" style="width: 100%;">Đóng</button>
         </div>
     </div>
@@ -216,7 +215,6 @@
             const examCode = document.getElementById('selectExamCode').value;
             if (!examCode) return alert("⚠️ Vui lòng chọn một mã đề thi!");
 
-            // Thêm hiệu ứng Đang tải để chờ máy chủ (tránh bị lỗi không phản hồi)
             const btn = this;
             const originalText = btn.textContent;
             btn.textContent = "⏳ Đang tải (Chờ Server)...";
@@ -225,7 +223,6 @@
             try {
                 const res = await fetch(`${API_URL}/exams/${examCode}`);
                 
-                // Bắt lỗi server trả về HTML thay vì JSON (thường do 404 hoặc máy chủ khởi động)
                 const contentType = res.headers.get("content-type");
                 if (!contentType || !contentType.includes("application/json")) {
                     throw new Error("Lỗi máy chủ hoặc máy chủ đang khởi động lại (Mất khoảng 30s). Vui lòng đợi và thử lại!");
@@ -246,7 +243,6 @@
                 const container = document.getElementById('questionsContainer');
                 container.innerHTML = '';
 
-                // Render danh sách câu hỏi
                 exam.questions.forEach((q, index) => {
                     let html = `<div class="question-card">
                                     <div class="question-title">Câu ${index + 1}: ${q.question}</div>`;
@@ -263,7 +259,6 @@
                     container.innerHTML += html;
                 });
 
-                // Xử lý thời gian làm bài
                 clearInterval(examTimerInterval);
                 if (exam.timeLimit > 0) {
                     let time = exam.timeLimit * 60;
@@ -287,7 +282,6 @@
             } catch (err) {
                 alert("❌ Lỗi: " + err.message);
             } finally {
-                // Trả lại trạng thái nút ban đầu
                 btn.textContent = originalText;
                 btn.disabled = false;
             }
@@ -605,6 +599,73 @@
             } catch(e) {}
         }
 
+        // ================= XỬ LÝ QUẢN LÝ AVATAR =================
+        async function loadMyAvatars() {
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+            const container = document.getElementById('ownedAvatarList');
+            if (!currentUser || !container) return;
+
+            container.innerHTML = '<p style="color: #7f8c8d; font-size: 14px;">Đang tải danh sách...</p>';
+
+            try {
+                const res = await fetch(`${API_URL}/users/${currentUser.username}`);
+                const userData = await res.json();
+                const avatars = userData.unlockedAvatars || (userData.avatar ? [userData.avatar] : []);
+
+                if (avatars.length === 0) {
+                    container.innerHTML = '<p style="color: #7f8c8d; font-size: 14px;">Bạn chưa mua Avatar nào từ Cửa hàng.</p>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                avatars.forEach(url => {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.style.cssText = "width: 60px; height: 60px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; object-fit: cover; transition: all 0.2s;";
+                    img.onmouseover = () => img.style.borderColor = '#3498db';
+                    img.onmouseout = () => img.style.borderColor = 'transparent';
+                    img.onclick = () => selectAvatar(url);
+                    container.appendChild(img);
+                });
+            } catch (e) {
+                if (currentUser.avatar) {
+                    container.innerHTML = `<img src="${currentUser.avatar}" onclick="selectAvatar('${currentUser.avatar}')" style="width: 60px; height: 60px; border-radius: 50%; cursor: pointer; border: 3px solid #3498db; object-fit: cover;">`;
+                } else {
+                    container.innerHTML = '<p style="color: red; font-size: 14px;">Không thể tải danh sách Avatar.</p>';
+                }
+            }
+        }
+
+        window.selectAvatar = async function(avatarUrl) {
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+            if (!currentUser) return;
+
+            try {
+                const res = await fetch(`${API_URL}/users/${currentUser.username}/avatar`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ avatar: avatarUrl })
+                });
+                const data = await res.json();
+
+                if (data.success || res.ok) {
+                    currentUser.avatar = avatarUrl;
+                    sessionStorage.setItem("current_user", JSON.stringify(currentUser));
+                    document.getElementById('modalChangeAvatar').classList.add('hidden');
+                    checkLoginState();
+                    alert("✅ Đổi Avatar thành công!");
+                } else {
+                    alert("❌ " + (data.message || "Đổi Avatar thất bại!"));
+                }
+            } catch(e) {
+                currentUser.avatar = avatarUrl;
+                sessionStorage.setItem("current_user", JSON.stringify(currentUser));
+                document.getElementById('modalChangeAvatar').classList.add('hidden');
+                checkLoginState();
+                alert("✅ Đổi Avatar thành công!");
+            }
+        };
+
         // ================= XỬ LÝ MODALS =================
         document.getElementById('btnShowChangePass').addEventListener('click', () => {
             document.getElementById('modalChangePass').classList.remove('hidden');
@@ -614,6 +675,7 @@
         });
         document.getElementById('btnShowChangeAvatar').addEventListener('click', () => {
             document.getElementById('modalChangeAvatar').classList.remove('hidden');
+            loadMyAvatars();
         });
         document.getElementById('btnCancelAvatar').addEventListener('click', () => {
             document.getElementById('modalChangeAvatar').classList.add('hidden');
