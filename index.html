@@ -144,6 +144,15 @@
             <div class="form-group"><label>Chọn File Excel:</label><input type="file" id="excelFileInput" accept=".xlsx, .xls"></div>
             <button id="btnSaveExam" class="btn-success">Lưu Bộ Đề</button>
         </div>
+        <!-- ... code khối Thêm Mới Đề Thi đang có ... -->
+
+        <div class="card-box">
+            <h3>Quản Lý Đề Thi</h3>
+            <table>
+                <thead><tr><th>Mã Đề</th><th>Hành động</th></tr></thead>
+                <tbody id="adminExamListBody"></tbody>
+            </table>
+        </div>
 
         <div class="card-box">
             <h3>Cấp Tặng Mcion Cho Học Sinh</h3><br>
@@ -479,6 +488,15 @@
                 topAvatar.classList.add('hidden');
                 document.getElementById('userInfo').textContent = `Admin (${currentUser.username})`;
                 document.getElementById('sectionAdmin').classList.remove('hidden');
+                } else {
+                topAvatar.classList.add('hidden');
+                document.getElementById('userInfo').textContent = `Admin (${currentUser.username})`;
+                document.getElementById('sectionAdmin').classList.remove('hidden');
+                document.getElementById('sectionStudent').classList.add('hidden');
+                
+                renderAllHistory();
+                loadAdminExamList(); // <-- THÊM DÒNG NÀY ĐỂ RENDER BẢNG ĐỀ THI
+            }
                 document.getElementById('sectionStudent').classList.add('hidden');
                 renderAllHistory();
             }
@@ -545,6 +563,50 @@
         document.getElementById('btnCancelChangePass').addEventListener('click', () => document.getElementById('modalChangePass').classList.add('hidden'));
         document.getElementById('btnCancelAvatar').addEventListener('click', () => document.getElementById('modalChangeAvatar').classList.add('hidden'));
     });
+    // Load danh sách đề cho Admin
+        window.loadAdminExamList = async function() {
+            try {
+                const res = await fetch(`${API_URL}/exams`);
+                const exams = await res.json();
+                const tbody = document.getElementById('adminExamListBody');
+                if (!tbody) return;
+                
+                tbody.innerHTML = exams.length === 0 ? '<tr><td colspan="2" style="text-align:center;">Chưa có đề thi nào.</td></tr>' : "";
+                
+                // Exams trả về mảng các mã đề (VD: ['DE01', 'DE02'])
+                exams.forEach(code => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>${code}</b></td>
+                            <td>
+                                <button onclick="deleteExam('${code}')" class="btn-danger" style="padding: 5px 12px; font-size: 13px;">🗑️ Xóa Đề</button>
+                            </td>
+                        </tr>`;
+                });
+            } catch(e) { console.error("Lỗi tải danh sách đề Admin:", e); }
+        };
+
+        // Gửi lệnh Xóa đề lên Server
+        window.deleteExam = async function(examCode) {
+            if (!confirm(`⚠️ Bạn có chắc chắn muốn xóa vĩnh viễn đề thi "${examCode}" không?\n(Hành động này không thể hoàn tác)`)) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/exams/${examCode}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await res.json();
+                if (data.success || res.ok) {
+                    alert(`✅ Đã xóa đề thi ${examCode} thành công!`);
+                    loadAdminExamList(); // Tải lại bảng admin
+                    loadExamList(); // Tải lại dropdown học sinh
+                } else {
+                    alert("❌ Lỗi: " + (data.message || "Không thể xóa đề thi."));
+                }
+            } catch(e) {
+                alert("❌ Lỗi kết nối đến máy chủ!");
+            }
+        };
 </script>
 </body>
 </html>
