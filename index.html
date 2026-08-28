@@ -7,57 +7,37 @@
     <!-- Thư viện đọc file Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        :root {
-            --primary-color: #3498db;
-            --bg-color: #f4f7f6;
-        }
-
+        :root { --primary-color: #3498db; --bg-color: #f4f7f6; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 850px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
-        
         .header-banner { width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; display: block; }
         .main-title { text-align: center; color: #333; margin-bottom: 15px; }
-
-        .top-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #eef2f5; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
-        }
-
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #eef2f5; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .user-profile-bar { display: flex; align-items: center; gap: 12px; }
         .user-avatar-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color); }
-
-        .mcion-badge {
-            display: inline-flex; align-items: center;
-            background: linear-gradient(135deg, #f1c40f, #f39c12); color: #fff;
-            padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-        }
-
+        .mcion-badge { display: inline-flex; align-items: center; background: linear-gradient(135deg, #f1c40f, #f39c12); color: #fff; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
         .card-box { border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fafafa; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input[type="text"], input[type="password"], input[type="number"], select {
-            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;
-        }
-
+        input[type="text"], input[type="password"], input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-        button {
-            padding: 10px 18px; border: none; border-radius: 5px; cursor: pointer;
-            font-weight: bold; transition: background 0.2s; font-size: 14px;
-        }
+        button { padding: 10px 18px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: background 0.2s; font-size: 14px; }
         .btn-primary { background-color: var(--primary-color); color: white; }
         .btn-success { background-color: #2ecc71; color: white; }
         .btn-danger { background-color: #e74c3c; color: white; }
         .btn-warning { background-color: #f39c12; color: white; }
         .btn-link { background: none; color: var(--primary-color); border: none; padding: 0; text-decoration: underline; cursor: pointer; font-size: 14px; }
-        button:hover { opacity: 0.9; }
-
+        button:hover:not(:disabled) { opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .question-card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .question-title { font-weight: bold; margin-bottom: 10px; color: #2c3e50; }
+        .option-item { margin: 6px 0; display: flex; align-items: center; cursor: pointer; }
+        .option-item input { margin-right: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
         th { background: #f2f2f2; }
         .hidden { display: none !important; }
-
         .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
         .shop-card { background: white; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; text-align: center; }
     </style>
@@ -71,14 +51,10 @@
     <div class="top-bar">
         <div class="user-profile-bar">
             <img id="topUserAvatar" class="user-avatar-img hidden" src="https://i.imgur.com/6VBx3io.png" alt="Avatar">
-            <div>
-                <b>Trạng thái: </b><span id="userInfo">Chưa đăng nhập</span>
-            </div>
+            <div><b>Trạng thái: </b><span id="userInfo">Chưa đăng nhập</span></div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <div id="mcionBox" class="mcion-badge hidden">
-                🪙 Mcion: <span id="userMcionBalance" style="margin-left: 4px;">0</span>
-            </div>
+            <div id="mcionBox" class="mcion-badge hidden">🪙 Mcion: <span id="userMcionBalance" style="margin-left: 4px;">0</span></div>
             <button id="btnShowChangePass" class="btn-warning hidden">Đổi Mật Khẩu</button>
             <button id="btnShowChangeAvatar" class="btn-primary hidden">Đổi Avatar</button>
             <button id="btnLogout" class="btn-danger hidden">Đăng Xuất</button>
@@ -89,47 +65,22 @@
     <div id="sectionAuth" class="card-box">
         <div id="formLogin">
             <h3>Đăng Nhập Hệ Thống</h3><br>
-            <div class="form-group">
-                <label>Tên đăng nhập:</label>
-                <input type="text" id="authUsername" placeholder="Nhập tên đăng nhập...">
-            </div>
-            <div class="form-group">
-                <label>Mật khẩu:</label>
-                <input type="password" id="authPassword" placeholder="Nhập mật khẩu...">
-            </div>
+            <div class="form-group"><label>Tên đăng nhập:</label><input type="text" id="authUsername" placeholder="Nhập tên đăng nhập..."></div>
+            <div class="form-group"><label>Mật khẩu:</label><input type="password" id="authPassword" placeholder="Nhập mật khẩu..."></div>
             <div class="btn-group">
                 <button id="btnLoginStudent" class="btn-primary">Đăng Nhập Học Sinh</button>
                 <button id="btnLoginAdmin" class="btn-warning">Đăng Nhập Admin</button>
             </div>
-            <p style="margin-top: 15px; font-size: 14px;">
-                Chưa có tài khoản? <button type="button" class="btn-link" id="btnToggleToRegister">Đăng ký học viên mới</button>
-            </p>
+            <p style="margin-top: 15px; font-size: 14px;">Chưa có tài khoản? <button type="button" class="btn-link" id="btnToggleToRegister">Đăng ký học viên mới</button></p>
         </div>
-
         <div id="formRegister" class="hidden">
             <h3>Đăng Ký Tài Khoản Học Viên</h3><br>
-            <div class="form-group">
-                <label>Họ và Tên:</label>
-                <input type="text" id="regFullname" placeholder="VD: Nguyễn Văn A">
-            </div>
-            <div class="form-group">
-                <label>Tên đăng nhập:</label>
-                <input type="text" id="regUsername" placeholder="Username...">
-            </div>
-            <div class="form-group">
-                <label>Mật khẩu:</label>
-                <input type="password" id="regPassword" placeholder="Mật khẩu...">
-            </div>
-            <div class="form-group">
-                <label>Xác nhận Mật khẩu:</label>
-                <input type="password" id="regConfirmPassword" placeholder="Nhập lại mật khẩu...">
-            </div>
-            <div class="btn-group">
-                <button id="btnRegisterSubmit" class="btn-success">Xác Nhận Đăng Ký</button>
-            </div>
-            <p style="margin-top: 15px; font-size: 14px;">
-                Đã có tài khoản? <button type="button" class="btn-link" id="btnToggleToLogin">Quay lại Đăng nhập</button>
-            </p>
+            <div class="form-group"><label>Họ và Tên:</label><input type="text" id="regFullname" placeholder="VD: Nguyễn Văn A"></div>
+            <div class="form-group"><label>Tên đăng nhập:</label><input type="text" id="regUsername" placeholder="Username..."></div>
+            <div class="form-group"><label>Mật khẩu:</label><input type="password" id="regPassword" placeholder="Mật khẩu..."></div>
+            <div class="form-group"><label>Xác nhận Mật khẩu:</label><input type="password" id="regConfirmPassword" placeholder="Nhập lại mật khẩu..."></div>
+            <div class="btn-group"><button id="btnRegisterSubmit" class="btn-success">Xác Nhận Đăng Ký</button></div>
+            <p style="margin-top: 15px; font-size: 14px;">Đã có tài khoản? <button type="button" class="btn-link" id="btnToggleToLogin">Quay lại Đăng nhập</button></p>
         </div>
     </div>
 
@@ -138,15 +89,18 @@
         <div class="card-box">
             <h3>Chọn Đề Thi</h3>
             <div class="form-group" style="margin-top: 10px;">
-                <select id="selectExamCode">
-                    <option value="">-- Chọn mã đề --</option>
-                </select>
+                <select id="selectExamCode"><option value="">-- Chọn mã đề --</option></select>
             </div>
             <button id="btnStartExam" class="btn-success">Bắt Đầu Làm Bài</button>
         </div>
 
         <div id="examArea" class="card-box hidden">
-            <h3 id="examTitle" style="margin-bottom: 15px;">Bài Thi</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 id="examTitle" style="margin: 0;">Bài Thi</h3>
+                <div id="examTimerDisplay" class="mcion-badge hidden" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                    ⏱️ <span id="timeRemaining">--:--</span>
+                </div>
+            </div>
             <div id="questionsContainer"></div>
             <button id="btnSubmitExam" class="btn-primary" style="width: 100%; padding: 12px; margin-top: 15px;">NỘP BÀI THI</button>
         </div>
@@ -154,33 +108,28 @@
         <div class="card-box">
             <h3>Lịch Sử Làm Bài Của Bạn</h3>
             <table>
-                <thead>
-                    <tr><th>Thời Gian</th><th>Mã Đề</th><th>Số Câu Đúng</th><th>Điểm Số</th></tr>
-                </thead>
+                <thead><tr><th>Thời Gian</th><th>Mã Đề</th><th>Số Câu Đúng</th><th>Điểm Số</th></tr></thead>
                 <tbody id="myHistoryBody"></tbody>
             </table>
         </div>
 
         <div class="card-box">
-            <h3>🛒 Cửa Hàng Đổi Thưởng Mcion (Avatar & Vật Phẩm)</h3>
+            <h3>🛒 Cửa Hàng Đổi Thưởng Mcion</h3>
             <div class="shop-grid">
                 <div class="shop-card">
-                    <div style="font-size: 28px;">🐱</div>
-                    <h4 style="margin: 5px 0;">Avatar Mèo Cool</h4>
+                    <div style="font-size: 28px;">🐱</div><h4 style="margin: 5px 0;">Mèo Cool</h4>
                     <p style="color: #d35400; font-weight: bold; margin-bottom: 8px;">100 Mcion</p>
-                    <button onclick="buyShopItem('Avatar Mèo Cool', 100, 'https://i.imgur.com/2Z099v7.png')" class="btn-primary">Mua & Dùng</button>
+                    <button onclick="buyShopItem('Avatar Mèo Cool', 100, 'https://i.imgur.com/2Z099v7.png')" class="btn-primary">Mua</button>
                 </div>
                 <div class="shop-card">
-                    <div style="font-size: 28px;">🐶</div>
-                    <h4 style="margin: 5px 0;">Avatar Chó Shiba</h4>
+                    <div style="font-size: 28px;">🐶</div><h4 style="margin: 5px 0;">Chó Shiba</h4>
                     <p style="color: #d35400; font-weight: bold; margin-bottom: 8px;">150 Mcion</p>
-                    <button onclick="buyShopItem('Avatar Chó Shiba', 150, 'https://i.imgur.com/8KM9t1w.png')" class="btn-primary">Mua & Dùng</button>
+                    <button onclick="buyShopItem('Avatar Chó Shiba', 150, 'https://i.imgur.com/8KM9t1w.png')" class="btn-primary">Mua</button>
                 </div>
                 <div class="shop-card">
-                    <div style="font-size: 28px;">👑</div>
-                    <h4 style="margin: 5px 0;">Avatar Siêu VIP</h4>
+                    <div style="font-size: 28px;">👑</div><h4 style="margin: 5px 0;">Siêu VIP</h4>
                     <p style="color: #d35400; font-weight: bold; margin-bottom: 8px;">300 Mcion</p>
-                    <button onclick="buyShopItem('Avatar Siêu VIP', 300, 'https://i.imgur.com/9v49v0O.png')" class="btn-primary">Mua & Dùng</button>
+                    <button onclick="buyShopItem('Avatar Siêu VIP', 300, 'https://i.imgur.com/9v49v0O.png')" class="btn-primary">Mua</button>
                 </div>
             </div>
         </div>
@@ -190,52 +139,35 @@
     <div id="sectionAdmin" class="hidden">
         <div class="card-box">
             <h3>Thêm Mới Đề Thi (Excel)</h3><br>
-            <div class="form-group">
-                <label>Mã Đề Thi:</label>
-                <input type="text" id="inputExamCode" placeholder="VD: DE01">
-            </div>
-            <div class="form-group">
-                <label>Thời Gian (Phút):</label>
-                <input type="number" id="inputExamTime" value="0" min="0">
-            </div>
-            <div class="form-group">
-                <label>Chọn File Excel:</label>
-                <input type="file" id="excelFileInput" accept=".xlsx, .xls">
-            </div>
+            <div class="form-group"><label>Mã Đề Thi:</label><input type="text" id="inputExamCode" placeholder="VD: DE01"></div>
+            <div class="form-group"><label>Thời Gian (Phút):</label><input type="number" id="inputExamTime" value="0" min="0"></div>
+            <div class="form-group"><label>Chọn File Excel:</label><input type="file" id="excelFileInput" accept=".xlsx, .xls"></div>
             <button id="btnSaveExam" class="btn-success">Lưu Bộ Đề</button>
         </div>
 
         <div class="card-box">
             <h3>Cấp Tặng Mcion Cho Học Sinh</h3><br>
-            <div class="form-group">
-                <label>Username học sinh:</label>
-                <input type="text" id="targetStudentUser" placeholder="Username học sinh...">
-            </div>
-            <div class="form-group">
-                <label>Số Mcion (+/-):</label>
-                <input type="text" id="targetMcionAmount" placeholder="VD: 100 hoặc -50">
-            </div>
+            <div class="form-group"><label>Username học sinh:</label><input type="text" id="targetStudentUser" placeholder="Username học sinh..."></div>
+            <div class="form-group"><label>Số Mcion (+/-):</label><input type="text" id="targetMcionAmount" placeholder="VD: 100 hoặc -50"></div>
             <button id="btnGrantMcion" class="btn-warning">Cấp Mcion</button>
         </div>
 
         <div class="card-box">
             <h3>Lịch Sử Toàn Hệ Thống</h3>
             <table>
-                <thead>
-                    <tr><th>Thời Gian</th><th>Thí Sinh</th><th>Mã Đề</th><th>Kết Quả</th><th>Điểm Số</th></tr>
-                </thead>
+                <thead><tr><th>Thời Gian</th><th>Thí Sinh</th><th>Mã Đề</th><th>Kết Quả</th><th>Điểm Số</th></tr></thead>
                 <tbody id="allHistoryBody"></tbody>
             </table>
         </div>
     </div>
 
-    <!-- MODAL ĐỔI MẬT KHẨU -->
+    <!-- MODALS (Đổi Mật Khẩu, Đổi Avatar) -->
     <div id="modalChangePass" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000;">
         <div style="background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px;">
             <h3 style="margin-bottom: 15px; text-align: center;">Đổi Mật Khẩu</h3>
             <div class="form-group"><label>Mật khẩu cũ:</label><input type="password" id="cpOldPass"></div>
             <div class="form-group"><label>Mật khẩu mới:</label><input type="password" id="cpNewPass"></div>
-            <div class="form-group"><label>Xác nhận mật khẩu mới:</label><input type="password" id="cpConfirmPass"></div>
+            <div class="form-group"><label>Xác nhận MK:</label><input type="password" id="cpConfirmPass"></div>
             <div class="btn-group" style="justify-content: flex-end; margin-top: 20px;">
                 <button id="btnCancelChangePass" class="btn-danger">Hủy</button>
                 <button id="btnSubmitChangePass" class="btn-success">Xác Nhận</button>
@@ -243,7 +175,6 @@
         </div>
     </div>
 
-    <!-- MODAL ĐỔI AVATAR -->
     <div id="modalChangeAvatar" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000;">
         <div style="background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px; text-align: center;">
             <h3 style="margin-bottom: 15px;">Chọn Avatar Đã Mua</h3>
@@ -251,11 +182,12 @@
             <button id="btnCancelAvatar" class="btn-danger" style="width: 100%;">Đóng</button>
         </div>
     </div>
-
 </div>
 
 <script>
     const API_URL = "https://quiz-backend-ta9z.onrender.com/api";
+    let examTimerInterval; 
+    let currentExamData = null;
 
     document.addEventListener("DOMContentLoaded", function() {
         loadUISettings();
@@ -270,14 +202,201 @@
             document.getElementById('formLogin').classList.remove('hidden');
         });
 
-        // ĐĂNG KÝ HỌC SINH
+        // ================= XỬ LÝ LÀM BÀI THI =================
+        document.getElementById('btnStartExam').addEventListener('click', async function() {
+            const examCode = document.getElementById('selectExamCode').value;
+            if (!examCode) return alert("⚠️ Vui lòng chọn một mã đề thi!");
+
+            // Thêm hiệu ứng Đang tải để chờ máy chủ (tránh bị lỗi không phản hồi)
+            const btn = this;
+            const originalText = btn.textContent;
+            btn.textContent = "⏳ Đang tải (Chờ Server)...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/exams/${examCode}`);
+                
+                // Bắt lỗi server trả về HTML thay vì JSON (thường do 404 hoặc máy chủ khởi động)
+                const contentType = res.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Lỗi máy chủ hoặc máy chủ đang khởi động lại (Mất khoảng 30s). Vui lòng đợi và thử lại!");
+                }
+
+                const exam = await res.json();
+                
+                if (!exam || !exam.questions || exam.questions.length === 0) {
+                    throw new Error("Đề thi này bị lỗi hoặc chưa có dữ liệu câu hỏi!");
+                }
+
+                currentExamData = exam;
+                currentExamData.examCode = examCode;
+
+                document.getElementById('examArea').classList.remove('hidden');
+                document.getElementById('examTitle').textContent = `Bài Thi: ${examCode}`;
+                
+                const container = document.getElementById('questionsContainer');
+                container.innerHTML = '';
+
+                // Render danh sách câu hỏi
+                exam.questions.forEach((q, index) => {
+                    let html = `<div class="question-card">
+                                    <div class="question-title">Câu ${index + 1}: ${q.question}</div>`;
+                    const labels = ['A', 'B', 'C', 'D'];
+                    q.options.forEach((opt, i) => {
+                        if (opt) {
+                            html += `<label class="option-item">
+                                        <input type="radio" name="q${index}" value="${labels[i]}">
+                                        ${labels[i]}. ${opt}
+                                     </label>`;
+                        }
+                    });
+                    html += `</div>`;
+                    container.innerHTML += html;
+                });
+
+                // Xử lý thời gian làm bài
+                clearInterval(examTimerInterval);
+                if (exam.timeLimit > 0) {
+                    let time = exam.timeLimit * 60;
+                    document.getElementById('examTimerDisplay').classList.remove('hidden');
+                    examTimerInterval = setInterval(() => {
+                        time--;
+                        let m = Math.floor(time / 60);
+                        let s = time % 60;
+                        document.getElementById('timeRemaining').textContent = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+                        
+                        if (time <= 0) {
+                            clearInterval(examTimerInterval);
+                            alert("⏳ Đã hết thời gian, hệ thống tự động nộp bài!");
+                            document.getElementById('btnSubmitExam').click();
+                        }
+                    }, 1000);
+                } else {
+                    document.getElementById('examTimerDisplay').classList.add('hidden');
+                }
+
+            } catch (err) {
+                alert("❌ Lỗi: " + err.message);
+            } finally {
+                // Trả lại trạng thái nút ban đầu
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btnSubmitExam').addEventListener('click', async () => {
+            if (!currentExamData) return;
+            
+            let correctCount = 0;
+            const total = currentExamData.questions.length;
+
+            currentExamData.questions.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                if (selected && selected.value.trim() === q.correct.trim()) correctCount++;
+            });
+
+            const score = ((correctCount / total) * 10).toFixed(1);
+            const earnedMcion = correctCount * 10;
+
+            clearInterval(examTimerInterval);
+            alert(`🎉 Nộp bài thành công!\n- Số câu đúng: ${correctCount}/${total}\n- Điểm số: ${score} điểm\n- Thưởng: +${earnedMcion} Mcion!`);
+
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+            const historyData = {
+                username: currentUser.username,
+                fullname: currentUser.fullname || currentUser.username,
+                examCode: currentExamData.examCode,
+                correctCount: correctCount,
+                totalQuestions: total,
+                score: score,
+                time: new Date().toLocaleString('vi-VN'),
+                earnedMcion: earnedMcion
+            };
+
+            try {
+                await fetch(`${API_URL}/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(historyData)
+                });
+                document.getElementById('examArea').classList.add('hidden');
+                renderMyHistory();
+                updateMcionDisplay();
+            } catch(e) { console.error("Lỗi nộp bài", e); }
+        });
+
+        // ================= LƯU ĐỀ EXCEL THEO VỊ TRÍ CỘT =================
+        document.getElementById('btnSaveExam').addEventListener('click', async () => {
+            const examCode = document.getElementById('inputExamCode').value.trim();
+            const timeLimit = parseInt(document.getElementById('inputExamTime').value) || 0;
+            const fileInput = document.getElementById('excelFileInput');
+
+            if (!examCode) return alert("⚠️ Vui lòng nhập mã đề thi!");
+            if (fileInput.files.length === 0) return alert("⚠️ Vui lòng chọn file Excel!");
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    const validRows = rows.filter(row => row.length > 0 && row.some(cell => cell !== undefined && cell !== null && cell !== ''));
+                    if (validRows.length === 0) return alert("❌ File Excel rỗng!");
+
+                    let startIndex = 0;
+                    if (validRows[0][0] && typeof validRows[0][0] === 'string' && validRows[0][0].toLowerCase().includes('câu')) {
+                        startIndex = 1;
+                    }
+
+                    const questions = [];
+                    for (let i = startIndex; i < validRows.length; i++) {
+                        const row = validRows[i];
+                        if (!row[0]) continue;
+                        questions.push({
+                            id: questions.length + 1,
+                            question: String(row[0]).trim(),
+                            options: [
+                                row[1] ? String(row[1]).trim() : '',
+                                row[2] ? String(row[2]).trim() : '',
+                                row[3] ? String(row[3]).trim() : '',
+                                row[4] ? String(row[4]).trim() : ''
+                            ],
+                            correct: row[5] ? String(row[5]).trim().toUpperCase() : 'A'
+                        });
+                    }
+
+                    if (questions.length === 0) return alert("❌ Không tìm thấy dữ liệu hợp lệ!");
+
+                    const res = await fetch(`${API_URL}/exams`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ examCode, timeLimit, questions })
+                    });
+                    const result = await res.json();
+                    
+                    if (result.success) {
+                        alert(`🎉 Lưu thành công ${questions.length} câu hỏi!`);
+                        document.getElementById('inputExamCode').value = '';
+                        document.getElementById('inputExamTime').value = '0';
+                        fileInput.value = '';
+                    } else alert("❌ " + result.message);
+                } catch (err) { alert("❌ Lỗi: " + err.message); }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // ================= CÁC CHỨC NĂNG KHÁC (AUTH, MCION, UI) =================
         document.getElementById('btnRegisterSubmit').addEventListener('click', async () => {
             const fullname = document.getElementById('regFullname').value.trim();
             const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value.trim();
             const confirmPass = document.getElementById('regConfirmPassword').value.trim();
 
-            if (!fullname || !username || !password) return alert("⚠️ Điền đầy đủ thông tin!");
+            if (!fullname || !username || !password) return alert("⚠️ Điền đầy đủ!");
             if (password !== confirmPass) return alert("❌ Mật khẩu không khớp!");
 
             try {
@@ -287,17 +406,53 @@
                     body: JSON.stringify({ fullname, username, password })
                 });
                 const data = await res.json();
+                if (data.success) { alert("🎉 Đăng ký thành công!"); document.getElementById('btnToggleToLogin').click(); }
+                else alert("❌ " + data.message);
+            } catch (err) { alert("❌ Lỗi kết nối!"); }
+        });
+
+        async function handleLogin(role) {
+            const username = document.getElementById('authUsername').value.trim();
+            const password = document.getElementById('authPassword').value.trim();
+            if (!username || !password) return alert("⚠️ Nhập đủ thông tin!");
+
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, role })
+                });
+                const data = await res.json();
                 if (data.success) {
-                    alert("🎉 Đăng ký thành công!");
-                    document.getElementById('btnToggleToLogin').click();
-                } else alert("❌ " + data.message);
+                    sessionStorage.setItem("current_user", JSON.stringify(data));
+                    checkLoginState();
+                } else alert("❌ " + (data.message || "Đăng nhập thất bại!"));
+            } catch (e) { alert("❌ Lỗi kết nối! Máy chủ có thể đang khởi động, đợi xíu nhé."); }
+        }
+
+        document.getElementById('btnLoginStudent').addEventListener('click', () => handleLogin('student'));
+        document.getElementById('btnLoginAdmin').addEventListener('click', () => handleLogin('admin'));
+        document.getElementById('btnLogout').addEventListener('click', () => { sessionStorage.removeItem("current_user"); clearInterval(examTimerInterval); document.getElementById('examArea').classList.add('hidden'); checkLoginState(); });
+
+        document.getElementById('btnGrantMcion').addEventListener('click', async () => {
+            const username = document.getElementById('targetStudentUser').value.trim();
+            const amount = document.getElementById('targetMcionAmount').value.trim();
+            if (!username || !amount) return alert("⚠️ Nhập Username và số Mcion!");
+            try {
+                const res = await fetch(`${API_URL}/mcion/grant`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, amount })
+                });
+                const data = await res.json();
+                if (data.success) { alert(`✅ ${data.message}`); document.getElementById('targetStudentUser').value = ''; document.getElementById('targetMcionAmount').value = ''; }
+                else alert("❌ " + data.message);
             } catch (err) { alert("❌ Lỗi kết nối!"); }
         });
 
         function checkLoginState() {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
             const topAvatar = document.getElementById('topUserAvatar');
-
             if (!currentUser) {
                 document.getElementById('sectionAuth').classList.remove('hidden');
                 document.getElementById('sectionStudent').classList.add('hidden');
@@ -307,14 +462,11 @@
                 document.getElementById('btnShowChangeAvatar').classList.add('hidden');
                 topAvatar.classList.add('hidden');
                 document.getElementById('userInfo').textContent = "Chưa đăng nhập";
-                updateMcionDisplay();
-                return;
+                updateMcionDisplay(); return;
             }
-
             document.getElementById('sectionAuth').classList.add('hidden');
             document.getElementById('btnLogout').classList.remove('hidden');
             document.getElementById('btnShowChangePass').classList.remove('hidden');
-
             if (currentUser.role === "student") {
                 document.getElementById('btnShowChangeAvatar').classList.remove('hidden');
                 topAvatar.src = currentUser.avatar || "https://i.imgur.com/6VBx3io.png";
@@ -322,8 +474,7 @@
                 document.getElementById('userInfo').textContent = `Học sinh: ${currentUser.fullname || currentUser.username}`;
                 document.getElementById('sectionStudent').classList.remove('hidden');
                 document.getElementById('sectionAdmin').classList.add('hidden');
-                loadExamList();
-                renderMyHistory();
+                loadExamList(); renderMyHistory();
             } else {
                 topAvatar.classList.add('hidden');
                 document.getElementById('userInfo').textContent = `Admin (${currentUser.username})`;
@@ -334,231 +485,6 @@
             updateMcionDisplay();
         }
 
-        // ĐĂNG NHẬP
-        async function handleLogin(role) {
-            const username = document.getElementById('authUsername').value.trim();
-            const password = document.getElementById('authPassword').value.trim();
-            if (!username || !password) return alert("⚠️ Vui lòng nhập đầy đủ thông tin!");
-
-            try {
-                const res = await fetch(`${API_URL}/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, role })
-                });
-
-                const contentType = res.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    throw new Error("Server đang khởi động (Cold Start). Vui lòng đợi 30 giây rồi thử lại!");
-                }
-
-                const data = await res.json();
-                if (data.success) {
-                    sessionStorage.setItem("current_user", JSON.stringify(data));
-                    checkLoginState();
-                } else {
-                    alert("❌ " + (data.message || "Đăng nhập thất bại!"));
-                }
-            } catch (e) { 
-                alert("❌ Lỗi kết nối: " + e.message); 
-            }
-        }
-
-        document.getElementById('btnLoginStudent').addEventListener('click', () => handleLogin('student'));
-        document.getElementById('btnLoginAdmin').addEventListener('click', () => handleLogin('admin'));
-
-        document.getElementById('btnLogout').addEventListener('click', () => {
-            sessionStorage.removeItem("current_user");
-            checkLoginState();
-        });
-
-        // ---------------- ADMIN: LƯU BỘ ĐỀ (UPLOAD EXCEL) ----------------
-        document.getElementById('btnSaveExam').addEventListener('click', async () => {
-            const examCode = document.getElementById('inputExamCode').value.trim();
-            const timeLimit = parseInt(document.getElementById('inputExamTime').value) || 0;
-            const fileInput = document.getElementById('excelFileInput');
-
-            if (!examCode) return alert("⚠️ Vui lòng nhập mã đề thi!");
-            if (fileInput.files.length === 0) return alert("⚠️ Vui lòng chọn file Excel chứa câu hỏi!");
-
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-
-            reader.onload = async function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const rows = XLSX.utils.sheet_to_json(worksheet);
-
-                    if (rows.length === 0) return alert("❌ File Excel không có dữ liệu!");
-
-                    const questions = rows.map((row, index) => ({
-                        id: index + 1,
-                        question: row['Câu hỏi'] || row['Question'] || row['question'] || `Câu ${index + 1}`,
-                        options: [
-                            row['A'] || row['a'] || '',
-                            row['B'] || row['b'] || '',
-                            row['C'] || row['c'] || '',
-                            row['D'] || row['d'] || ''
-                        ],
-                        correct: String(row['Đáp án'] || row['Answer'] || row['correct'] || 'A').trim().toUpperCase()
-                    }));
-
-                    const res = await fetch(`${API_URL}/exams`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ examCode, timeLimit, questions })
-                    });
-
-                    const result = await res.json();
-                    if (result.success) {
-                        alert("🎉 Lưu bộ đề thành công!");
-                        document.getElementById('inputExamCode').value = '';
-                        document.getElementById('inputExamTime').value = '0';
-                        fileInput.value = '';
-                    } else {
-                        alert("❌ " + result.message);
-                    }
-                } catch (err) {
-                    alert("❌ Lỗi đọc file Excel: " + err.message);
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        });
-
-        // ---------------- ADMIN: CẤP MCION CHO HỌC SINH ----------------
-        document.getElementById('btnGrantMcion').addEventListener('click', async () => {
-            const username = document.getElementById('targetStudentUser').value.trim();
-            const amount = document.getElementById('targetMcionAmount').value.trim();
-
-            if (!username || !amount) {
-                return alert("⚠️ Vui lòng nhập đầy đủ Username và số Mcion!");
-            }
-
-            try {
-                const res = await fetch(`${API_URL}/mcion/grant`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, amount })
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    alert(`✅ ${data.message}`);
-                    document.getElementById('targetStudentUser').value = '';
-                    document.getElementById('targetMcionAmount').value = '';
-                } else {
-                    alert("❌ " + data.message);
-                }
-            } catch (err) {
-                alert("❌ Lỗi kết nối khi cấp Mcion!");
-            }
-        });
-
-        // ĐỔI MẬT KHẨU
-        document.getElementById('btnShowChangePass').addEventListener('click', () => {
-            document.getElementById('modalChangePass').classList.remove('hidden');
-            document.getElementById('cpOldPass').value = '';
-            document.getElementById('cpNewPass').value = '';
-            document.getElementById('cpConfirmPass').value = '';
-        });
-        document.getElementById('btnCancelChangePass').addEventListener('click', () => document.getElementById('modalChangePass').classList.add('hidden'));
-
-        document.getElementById('btnSubmitChangePass').addEventListener('click', async () => {
-            const oldPassword = document.getElementById('cpOldPass').value.trim();
-            const newPassword = document.getElementById('cpNewPass').value.trim();
-            const confirmPass = document.getElementById('cpConfirmPass').value.trim();
-            
-            if (!oldPassword || !newPassword || !confirmPass) return alert("⚠️ Điền đủ thông tin!");
-            if (newPassword !== confirmPass) return alert("❌ Mật khẩu mới không khớp!");
-
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
-            const res = await fetch(`${API_URL}/change-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser.username, role: currentUser.role, oldPassword, newPassword })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert("✅ " + data.message);
-                document.getElementById('modalChangePass').classList.add('hidden');
-            } else alert("❌ " + data.message);
-        });
-
-        // ĐỔI AVATAR
-        document.getElementById('btnShowChangeAvatar').addEventListener('click', async () => {
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
-            const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
-            const data = await res.json();
-            const inventory = data.inventory || [];
-
-            const listDiv = document.getElementById('ownedAvatarList');
-            listDiv.innerHTML = `
-                <div style="cursor: pointer; text-align: center;" onclick="changeUserAvatar('default', 'Mặc định')">
-                    <img src="https://i.imgur.com/6VBx3io.png" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #ccc;">
-                    <p style="font-size: 12px; margin-top: 4px;">Mặc định</p>
-                </div>
-            `;
-
-            const avatarMap = {
-                'Avatar Mèo Cool': 'https://i.imgur.com/2Z099v7.png',
-                'Avatar Chó Shiba': 'https://i.imgur.com/8KM9t1w.png',
-                'Avatar Siêu VIP': 'https://i.imgur.com/9v49v0O.png'
-            };
-
-            inventory.forEach(item => {
-                if (avatarMap[item]) {
-                    listDiv.innerHTML += `
-                        <div style="cursor: pointer; text-align: center;" onclick="changeUserAvatar('${avatarMap[item]}', '${item}')">
-                            <img src="${avatarMap[item]}" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #2ecc71;">
-                            <p style="font-size: 12px; margin-top: 4px;">${item}</p>
-                        </div>
-                    `;
-                }
-            });
-
-            document.getElementById('modalChangeAvatar').classList.remove('hidden');
-        });
-
-        document.getElementById('btnCancelAvatar').addEventListener('click', () => document.getElementById('modalChangeAvatar').classList.add('hidden'));
-
-        window.changeUserAvatar = async function(avatarUrl, itemName) {
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
-            const res = await fetch(`${API_URL}/update-avatar`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser.username, avatarUrl, itemName })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert("✅ " + data.message);
-                sessionStorage.setItem("current_user", JSON.stringify(data.user));
-                checkLoginState();
-                document.getElementById('modalChangeAvatar').classList.add('hidden');
-            } else alert("⚠️ " + data.message);
-        };
-
-        window.buyShopItem = async function(itemName, cost, avatarUrl) {
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-            if (!currentUser) return;
-
-            if (confirm(`Xác nhận dùng ${cost} Mcion để mua [${itemName}]?`)) {
-                const res = await fetch(`${API_URL}/mcion/buy`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: currentUser.username, cost, itemName, avatarUrl })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert(`🎉 Đã mua và tự động đổi sang [${itemName}]!`);
-                    sessionStorage.setItem("current_user", JSON.stringify(data.user));
-                    checkLoginState();
-                } else alert("⚠️ " + data.message);
-            }
-        };
-
         async function loadExamList() {
             try {
                 const res = await fetch(`${API_URL}/exams`);
@@ -567,8 +493,7 @@
                 select.innerHTML = '<option value="">-- Chọn mã đề --</option>';
                 exams.forEach(code => {
                     const opt = document.createElement('option');
-                    opt.value = code;
-                    opt.textContent = `Đề thi: ${code}`;
+                    opt.value = code; opt.textContent = `Đề thi: ${code}`;
                     select.appendChild(opt);
                 });
             } catch(e) {}
@@ -581,9 +506,7 @@
                 const data = await res.json();
                 document.getElementById('userMcionBalance').textContent = (data.balance || 0).toLocaleString("vi-VN");
                 document.getElementById('mcionBox').classList.remove('hidden');
-            } else {
-                document.getElementById('mcionBox').classList.add('hidden');
-            }
+            } else document.getElementById('mcionBox').classList.add('hidden');
         }
 
         async function renderMyHistory() {
@@ -594,9 +517,7 @@
             const myHistory = history.filter(h => h.username === currentUser.username);
             const tbody = document.getElementById('myHistoryBody');
             tbody.innerHTML = myHistory.length === 0 ? '<tr><td colspan="4" style="text-align:center;">Chưa có lịch sử.</td></tr>' : "";
-            myHistory.forEach(h => {
-                tbody.innerHTML += `<tr><td>${h.time}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`;
-            });
+            myHistory.forEach(h => { tbody.innerHTML += `<tr><td>${h.time}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; });
         }
 
         async function renderAllHistory() {
@@ -604,10 +525,8 @@
                 const res = await fetch(`${API_URL}/history`);
                 const history = await res.json();
                 const tbody = document.getElementById('allHistoryBody');
-                tbody.innerHTML = history.length === 0 ? '<tr><td colspan="5" style="text-align:center;">Chưa có lịch sử nào.</td></tr>' : "";
-                history.forEach(h => {
-                    tbody.innerHTML += `<tr><td>${h.time}</td><td>${h.fullname || h.username}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`;
-                });
+                tbody.innerHTML = history.length === 0 ? '<tr><td colspan="5" style="text-align:center;">Chưa có lịch sử.</td></tr>' : "";
+                history.forEach(h => { tbody.innerHTML += `<tr><td>${h.time}</td><td>${h.fullname || h.username}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; });
             } catch(e) {}
         }
 
@@ -617,13 +536,14 @@
                 const ui = await res.json();
                 document.getElementById('siteTitleTag').textContent = ui.title;
                 document.getElementById('mainTitle').textContent = ui.title;
-                if (ui.banner) {
-                    const bannerImg = document.getElementById('headerBanner');
-                    bannerImg.src = ui.banner;
-                    bannerImg.classList.remove('hidden');
-                }
+                if (ui.banner) { const bannerImg = document.getElementById('headerBanner'); bannerImg.src = ui.banner; bannerImg.classList.remove('hidden'); }
             } catch(e) {}
         }
+        
+        // Modal Event Listeners
+        document.getElementById('btnShowChangePass').addEventListener('click', () => { document.getElementById('modalChangePass').classList.remove('hidden'); });
+        document.getElementById('btnCancelChangePass').addEventListener('click', () => document.getElementById('modalChangePass').classList.add('hidden'));
+        document.getElementById('btnCancelAvatar').addEventListener('click', () => document.getElementById('modalChangeAvatar').classList.add('hidden'));
     });
 </script>
 </body>
