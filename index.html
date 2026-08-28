@@ -471,11 +471,14 @@
                 document.getElementById('btnShowChangeAvatar').classList.add('hidden');
                 topAvatar.classList.add('hidden');
                 document.getElementById('userInfo').textContent = "Chưa đăng nhập";
-                updateMcionDisplay(); return;
+                updateMcionDisplay(); 
+                return;
             }
+            
             document.getElementById('sectionAuth').classList.add('hidden');
             document.getElementById('btnLogout').classList.remove('hidden');
             document.getElementById('btnShowChangePass').classList.remove('hidden');
+            
             if (currentUser.role === "student") {
                 document.getElementById('btnShowChangeAvatar').classList.remove('hidden');
                 topAvatar.src = currentUser.avatar || "https://i.imgur.com/6VBx3io.png";
@@ -483,22 +486,15 @@
                 document.getElementById('userInfo').textContent = `Học sinh: ${currentUser.fullname || currentUser.username}`;
                 document.getElementById('sectionStudent').classList.remove('hidden');
                 document.getElementById('sectionAdmin').classList.add('hidden');
-                loadExamList(); renderMyHistory();
+                loadExamList(); 
+                renderMyHistory();
             } else {
                 topAvatar.classList.add('hidden');
                 document.getElementById('userInfo').textContent = `Admin (${currentUser.username})`;
                 document.getElementById('sectionAdmin').classList.remove('hidden');
-                } else {
-                topAvatar.classList.add('hidden');
-                document.getElementById('userInfo').textContent = `Admin (${currentUser.username})`;
-                document.getElementById('sectionAdmin').classList.remove('hidden');
-                document.getElementById('sectionStudent').classList.add('hidden');
-                
-                renderAllHistory();
-                loadAdminExamList(); // <-- THÊM DÒNG NÀY ĐỂ RENDER BẢNG ĐỀ THI
-            }
                 document.getElementById('sectionStudent').classList.add('hidden');
                 renderAllHistory();
+                loadAdminExamList(); 
             }
             updateMcionDisplay();
         }
@@ -516,6 +512,59 @@
                 });
             } catch(e) {}
         }
+
+        async function loadAdminExamList() {
+            try {
+                const res = await fetch(`${API_URL}/exams`);
+                const exams = await res.json();
+                const tbody = document.getElementById('adminExamListBody');
+                tbody.innerHTML = exams.length === 0 ? '<tr><td colspan="2" style="text-align:center;">Chưa có đề thi.</td></tr>' : "";
+                exams.forEach(code => {
+                    tbody.innerHTML += `<tr>
+                        <td><b>${code}</b></td>
+                        <td><button onclick="deleteExam('${code}')" class="btn-danger" style="padding: 5px 10px;">Xóa</button></td>
+                    </tr>`;
+                });
+            } catch(e) {}
+        }
+
+        window.deleteExam = async function(code) {
+            if(!confirm(`Bạn có chắc chắn muốn xóa đề ${code}?`)) return;
+            try {
+                const res = await fetch(`${API_URL}/exams/${code}`, { method: 'DELETE' });
+                const data = await res.json();
+                if(data.success) { 
+                    alert("✅ Xóa thành công!"); 
+                    loadAdminExamList(); 
+                } else {
+                    alert("❌ Lỗi: " + data.message);
+                }
+            } catch(e) { alert("❌ Lỗi kết nối!"); }
+        };
+
+        window.buyShopItem = async function(itemName, price, avatarUrl) {
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+            if (!currentUser) return alert("Vui lòng đăng nhập!");
+            if (!confirm(`Xác nhận mua ${itemName} với giá ${price} Mcion?`)) return;
+
+            try {
+                const res = await fetch(`${API_URL}/mcion/buy`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser.username, price: price, avatarUrl: avatarUrl })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("🎉 Mua thành công! Avatar đã được cập nhật.");
+                    currentUser.avatar = avatarUrl;
+                    sessionStorage.setItem("current_user", JSON.stringify(currentUser));
+                    updateMcionDisplay();
+                    checkLoginState();
+                } else {
+                    alert("❌ " + data.message);
+                }
+            } catch(e) { alert("❌ Lỗi kết nối!"); }
+        };
 
         async function updateMcionDisplay() {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
@@ -552,61 +601,25 @@
             try {
                 const res = await fetch(`${API_URL}/ui`);
                 const ui = await res.json();
-                document.getElementById('siteTitleTag').textContent = ui.title;
-                document.getElementById('mainTitle').textContent = ui.title;
-                if (ui.banner) { const bannerImg = document.getElementById('headerBanner'); bannerImg.src = ui.banner; bannerImg.classList.remove('hidden'); }
+                if(ui.title) document.getElementById('siteTitleTag').textContent = ui.title;
             } catch(e) {}
         }
-        
-        // Modal Event Listeners
-        document.getElementById('btnShowChangePass').addEventListener('click', () => { document.getElementById('modalChangePass').classList.remove('hidden'); });
-        document.getElementById('btnCancelChangePass').addEventListener('click', () => document.getElementById('modalChangePass').classList.add('hidden'));
-        document.getElementById('btnCancelAvatar').addEventListener('click', () => document.getElementById('modalChangeAvatar').classList.add('hidden'));
-    });
-    // Load danh sách đề cho Admin
-        window.loadAdminExamList = async function() {
-            try {
-                const res = await fetch(`${API_URL}/exams`);
-                const exams = await res.json();
-                const tbody = document.getElementById('adminExamListBody');
-                if (!tbody) return;
-                
-                tbody.innerHTML = exams.length === 0 ? '<tr><td colspan="2" style="text-align:center;">Chưa có đề thi nào.</td></tr>' : "";
-                
-                // Exams trả về mảng các mã đề (VD: ['DE01', 'DE02'])
-                exams.forEach(code => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><b>${code}</b></td>
-                            <td>
-                                <button onclick="deleteExam('${code}')" class="btn-danger" style="padding: 5px 12px; font-size: 13px;">🗑️ Xóa Đề</button>
-                            </td>
-                        </tr>`;
-                });
-            } catch(e) { console.error("Lỗi tải danh sách đề Admin:", e); }
-        };
 
-        // Gửi lệnh Xóa đề lên Server
-        window.deleteExam = async function(examCode) {
-            if (!confirm(`⚠️ Bạn có chắc chắn muốn xóa vĩnh viễn đề thi "${examCode}" không?\n(Hành động này không thể hoàn tác)`)) return;
-            
-            try {
-                const res = await fetch(`${API_URL}/exams/${examCode}`, {
-                    method: 'DELETE'
-                });
-                
-                const data = await res.json();
-                if (data.success || res.ok) {
-                    alert(`✅ Đã xóa đề thi ${examCode} thành công!`);
-                    loadAdminExamList(); // Tải lại bảng admin
-                    loadExamList(); // Tải lại dropdown học sinh
-                } else {
-                    alert("❌ Lỗi: " + (data.message || "Không thể xóa đề thi."));
-                }
-            } catch(e) {
-                alert("❌ Lỗi kết nối đến máy chủ!");
-            }
-        };
+        // ================= XỬ LÝ MODALS =================
+        document.getElementById('btnShowChangePass').addEventListener('click', () => {
+            document.getElementById('modalChangePass').classList.remove('hidden');
+        });
+        document.getElementById('btnCancelChangePass').addEventListener('click', () => {
+            document.getElementById('modalChangePass').classList.add('hidden');
+        });
+        document.getElementById('btnShowChangeAvatar').addEventListener('click', () => {
+            document.getElementById('modalChangeAvatar').classList.remove('hidden');
+        });
+        document.getElementById('btnCancelAvatar').addEventListener('click', () => {
+            document.getElementById('modalChangeAvatar').classList.add('hidden');
+        });
+
+    }); // Kết thúc sự kiện DOMContentLoaded
 </script>
 </body>
 </html>
