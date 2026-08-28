@@ -117,17 +117,17 @@
             <h3>🛒 Cửa Hàng Đổi Thưởng Mcion</h3>
             <div class="shop-grid">
                 <div class="shop-card">
-                    <div style="font-size: 28px;">🐱</div><h4 style="margin: 5px 0;">Mèo Cool</h4>
+                    <div style="font-size: 28px;">🐱</div><h4 style="margin: 5px 0;">Avatar Mèo Cool</h4>
                     <p style="color: #d35400; font-weight: bold; margin-bottom: 8px;">100 Mcion</p>
                     <button onclick="buyShopItem('Avatar Mèo Cool', 100, 'https://i.imgur.com/2Z099v7.png')" class="btn-primary">Mua</button>
                 </div>
                 <div class="shop-card">
-                    <div style="font-size: 28px;">🐶</div><h4 style="margin: 5px 0;">Chó Shiba</h4>
+                    <div style="font-size: 28px;">🐶</div><h4 style="margin: 5px 0;">Avatar Chó Shiba</h4>
                     <p style="color: #d35400; font-weight: bold; margin-bottom: 8px;">150 Mcion</p>
                     <button onclick="buyShopItem('Avatar Chó Shiba', 150, 'https://i.imgur.com/8KM9t1w.png')" class="btn-primary">Mua</button>
                 </div>
                 <div class="shop-card">
-                    <div style="font-size: 28px;">👑</div><h4 style="margin: 5px 0;">Siêu VIP</h4>
+                    <div style="font-size: 28px;">👑</div><h4 style="margin: 5px 0;">Avatar Siêu VIP</h4>
                     <p style="color: #d35400; font-weight: bold; margin-bottom: 8px;">300 Mcion</p>
                     <button onclick="buyShopItem('Avatar Siêu VIP', 300, 'https://i.imgur.com/9v49v0O.png')" class="btn-primary">Mua</button>
                 </div>
@@ -197,6 +197,14 @@
     let examTimerInterval; 
     let currentExamData = null;
 
+    // Danh mục Avatar cửa hàng hỗ trợ tra cứu URL
+    const SHOP_AVATARS = [
+        { name: 'Default', url: 'https://i.imgur.com/6VBx3io.png' },
+        { name: 'Avatar Mèo Cool', url: 'https://i.imgur.com/2Z099v7.png' },
+        { name: 'Avatar Chó Shiba', url: 'https://i.imgur.com/8KM9t1w.png' },
+        { name: 'Avatar Siêu VIP', url: 'https://i.imgur.com/9v49v0O.png' }
+    ];
+
     document.addEventListener("DOMContentLoaded", function() {
         loadUISettings();
         checkLoginState();
@@ -222,14 +230,12 @@
 
             try {
                 const res = await fetch(`${API_URL}/exams/${examCode}`);
-                
                 const contentType = res.headers.get("content-type");
                 if (!contentType || !contentType.includes("application/json")) {
-                    throw new Error("Lỗi máy chủ hoặc máy chủ đang khởi động lại (Mất khoảng 30s). Vui lòng đợi và thử lại!");
+                    throw new Error("Lỗi máy chủ hoặc máy chủ đang khởi động lại. Vui lòng thử lại!");
                 }
 
                 const exam = await res.json();
-                
                 if (!exam || !exam.questions || exam.questions.length === 0) {
                     throw new Error("Đề thi này bị lỗi hoặc chưa có dữ liệu câu hỏi!");
                 }
@@ -328,7 +334,7 @@
             } catch(e) { console.error("Lỗi nộp bài", e); }
         });
 
-        // ================= LƯU ĐỀ EXCEL THEO VỊ TRÍ CỘT =================
+        // ================= LƯU ĐỀ EXCEL =================
         document.getElementById('btnSaveExam').addEventListener('click', async () => {
             const examCode = document.getElementById('inputExamCode').value.trim();
             const timeLimit = parseInt(document.getElementById('inputExamTime').value, 10) || 0;
@@ -392,7 +398,7 @@
             reader.readAsArrayBuffer(file);
         });
 
-        // ================= CÁC CHỨC NĂNG KHÁC (AUTH, MCION, UI) =================
+        // ================= AUTH & USER STATE =================
         document.getElementById('btnRegisterSubmit').addEventListener('click', async () => {
             const fullname = document.getElementById('regFullname').value.trim();
             const username = document.getElementById('regUsername').value.trim();
@@ -430,14 +436,19 @@
                     sessionStorage.setItem("current_user", JSON.stringify(data));
                     checkLoginState();
                 } else alert("❌ " + (data.message || "Đăng nhập thất bại!"));
-            } catch (e) { alert("❌ Lỗi kết nối! Máy chủ có thể đang khởi động, đợi xíu nhé."); }
+            } catch (e) { alert("❌ Lỗi kết nối máy chủ!"); }
         }
 
         document.getElementById('btnLoginStudent').addEventListener('click', () => handleLogin('student'));
         document.getElementById('btnLoginAdmin').addEventListener('click', () => handleLogin('admin'));
-        document.getElementById('btnLogout').addEventListener('click', () => { sessionStorage.removeItem("current_user"); clearInterval(examTimerInterval); document.getElementById('examArea').classList.add('hidden'); checkLoginState(); });
+        document.getElementById('btnLogout').addEventListener('click', () => { 
+            sessionStorage.removeItem("current_user"); 
+            clearInterval(examTimerInterval); 
+            document.getElementById('examArea').classList.add('hidden'); 
+            checkLoginState(); 
+        });
 
-        // SỬA ÉP KIỂU SỐ CHO MCION KHI ADMIN CẤP
+        // ADMIN CẤP MCION
         document.getElementById('btnGrantMcion').addEventListener('click', async () => {
             const username = document.getElementById('targetStudentUser').value.trim();
             const rawAmount = document.getElementById('targetMcionAmount').value.trim();
@@ -543,7 +554,7 @@
             } catch(e) { alert("❌ Lỗi kết nối!"); }
         };
 
-        // SỬA ÉP KIỂU SỐ CHO GIAO DỊCH MUA AVATAR
+        // GIAO DỊCH MUA AVATAR
         window.buyShopItem = async function(itemName, price, avatarUrl) {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return alert("Vui lòng đăng nhập!");
@@ -555,6 +566,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         username: currentUser.username, 
+                        itemName: itemName,
+                        cost: Number(price),
                         price: Number(price), 
                         avatarUrl: avatarUrl 
                     })
@@ -608,11 +621,18 @@
             try {
                 const res = await fetch(`${API_URL}/ui`);
                 const ui = await res.json();
-                if(ui.title) document.getElementById('siteTitleTag').textContent = ui.title;
+                if (ui.title) document.getElementById('siteTitleTag').textContent = ui.title;
+                if (ui.primaryColor) document.documentElement.style.setProperty('--primary-color', ui.primaryColor);
+                if (ui.bgColor) document.documentElement.style.setProperty('--bg-color', ui.bgColor);
+                if (ui.banner) {
+                    const bannerImg = document.getElementById('headerBanner');
+                    bannerImg.src = ui.banner;
+                    bannerImg.classList.remove('hidden');
+                }
             } catch(e) {}
         }
 
-        // ================= XỬ LÝ QUẢN LÝ AVATAR =================
+        // ================= XỬ LÝ QUẢN LÝ AVATAR (ĐÃ SỬA CHUẨN BACKEND) =================
         async function loadMyAvatars() {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             const container = document.getElementById('ownedAvatarList');
@@ -621,48 +641,56 @@
             container.innerHTML = '<p style="color: #7f8c8d; font-size: 14px;">Đang tải danh sách...</p>';
 
             try {
-                const res = await fetch(`${API_URL}/users/${currentUser.username}`);
-                const userData = await res.json();
-                const avatars = userData.unlockedAvatars || (userData.avatar ? [userData.avatar] : []);
-
-                if (avatars.length === 0) {
-                    container.innerHTML = '<p style="color: #7f8c8d; font-size: 14px;">Bạn chưa mua Avatar nào từ Cửa hàng.</p>';
-                    return;
-                }
+                const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
+                const data = await res.json();
+                const inventory = data.inventory || [];
 
                 container.innerHTML = '';
-                avatars.forEach(url => {
+                
+                // Mặc định luôn có Avatar cơ bản
+                const availableAvatars = [
+                    { name: 'Mặc định', url: 'https://i.imgur.com/6VBx3io.png' }
+                ];
+
+                SHOP_AVATARS.forEach(item => {
+                    if (inventory.includes(item.name)) {
+                        availableAvatars.push(item);
+                    }
+                });
+
+                availableAvatars.forEach(item => {
                     const img = document.createElement('img');
-                    img.src = url;
+                    img.src = item.url;
+                    img.title = item.name;
                     img.style.cssText = "width: 60px; height: 60px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; object-fit: cover; transition: all 0.2s;";
                     img.onmouseover = () => img.style.borderColor = '#3498db';
                     img.onmouseout = () => img.style.borderColor = 'transparent';
-                    img.onclick = () => selectAvatar(url);
+                    img.onclick = () => selectAvatar(item.url, item.name);
                     container.appendChild(img);
                 });
             } catch (e) {
-                if (currentUser.avatar) {
-                    container.innerHTML = `<img src="${currentUser.avatar}" onclick="selectAvatar('${currentUser.avatar}')" style="width: 60px; height: 60px; border-radius: 50%; cursor: pointer; border: 3px solid #3498db; object-fit: cover;">`;
-                } else {
-                    container.innerHTML = '<p style="color: red; font-size: 14px;">Không thể tải danh sách Avatar.</p>';
-                }
+                container.innerHTML = '<p style="color: red; font-size: 14px;">Lỗi tải danh sách Avatar.</p>';
             }
         }
 
-        window.selectAvatar = async function(avatarUrl) {
+        window.selectAvatar = async function(avatarUrl, itemName) {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return;
 
             try {
-                const res = await fetch(`${API_URL}/users/${currentUser.username}/avatar`, {
-                    method: 'PUT',
+                const res = await fetch(`${API_URL}/update-avatar`, {
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ avatar: avatarUrl })
+                    body: JSON.stringify({ 
+                        username: currentUser.username, 
+                        avatarUrl: avatarUrl === 'https://i.imgur.com/6VBx3io.png' ? 'default' : avatarUrl, 
+                        itemName: itemName 
+                    })
                 });
                 const data = await res.json();
 
-                if (data.success || res.ok) {
-                    currentUser.avatar = avatarUrl;
+                if (data.success) {
+                    currentUser.avatar = data.user ? data.user.avatar : avatarUrl;
                     sessionStorage.setItem("current_user", JSON.stringify(currentUser));
                     document.getElementById('modalChangeAvatar').classList.add('hidden');
                     checkLoginState();
@@ -671,15 +699,11 @@
                     alert("❌ " + (data.message || "Đổi Avatar thất bại!"));
                 }
             } catch(e) {
-                currentUser.avatar = avatarUrl;
-                sessionStorage.setItem("current_user", JSON.stringify(currentUser));
-                document.getElementById('modalChangeAvatar').classList.add('hidden');
-                checkLoginState();
-                alert("✅ Đổi Avatar thành công!");
+                alert("❌ Lỗi kết nối máy chủ!");
             }
         };
 
-        // ================= XỬ LÝ MODALS =================
+        // ================= XỬ LÝ SỰ KIỆN MODALS =================
         document.getElementById('btnShowChangePass').addEventListener('click', () => {
             document.getElementById('modalChangePass').classList.remove('hidden');
         });
@@ -694,7 +718,44 @@
             document.getElementById('modalChangeAvatar').classList.add('hidden');
         });
 
-    }); // Kết thúc sự kiện DOMContentLoaded
+        // XỬ LÝ SỰ KIỆN XÁC NHẬN ĐỔI MẬT KHẨU
+        document.getElementById('btnSubmitChangePass').addEventListener('click', async () => {
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+            const oldPassword = document.getElementById('cpOldPass').value.trim();
+            const newPassword = document.getElementById('cpNewPass').value.trim();
+            const confirmPass = document.getElementById('cpConfirmPass').value.trim();
+
+            if (!oldPassword || !newPassword) return alert("⚠️ Vui lòng nhập đầy đủ thông tin!");
+            if (newPassword !== confirmPass) return alert("❌ Mật khẩu mới xác nhận không khớp!");
+
+            try {
+                const res = await fetch(`${API_URL}/change-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: currentUser.username,
+                        role: currentUser.role,
+                        oldPassword: oldPassword,
+                        newPassword: newPassword
+                    })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert("🎉 " + data.message);
+                    document.getElementById('modalChangePass').classList.add('hidden');
+                    document.getElementById('cpOldPass').value = '';
+                    document.getElementById('cpNewPass').value = '';
+                    document.getElementById('cpConfirmPass').value = '';
+                } else {
+                    alert("❌ " + data.message);
+                }
+            } catch(e) {
+                alert("❌ Lỗi kết nối máy chủ!");
+            }
+        });
+
+    }); // Kết thúc DOMContentLoaded
 </script>
 </body>
 </html>
