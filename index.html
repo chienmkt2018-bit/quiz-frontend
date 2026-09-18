@@ -50,7 +50,7 @@
 
     <div class="top-bar">
         <div class="user-profile-bar">
-            <img id="topUserAvatar" class="user-avatar-img hidden" src="https://i.imgur.com/6VBx3io.png" alt="Avatar">
+            <img id="topUserAvatar" class="user-avatar-img hidden" src="https://api.dicebear.com/7.x/bottts/svg?seed=Default" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=3498db&color=fff'">
             <div><b>Trạng thái: </b><span id="userInfo">Chưa đăng nhập</span></div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
@@ -116,20 +116,21 @@
         <div class="card-box">
             <h3>🛒 Cửa Hàng Đổi Thưởng Mcion</h3>
             <div class="shop-grid">
+                <!-- Tìm đến khu vực Cửa Hàng Đổi Thưởng Mcion và sửa lại thuộc tính onclick của các nút Mua -->
                 <div class="shop-card">
                     <div style="font-size: 28px;">🐱</div><h4 style="margin: 5px 0;">Avatar Mèo Cool</h4>
                     <p style="color: #d35400; font-weight: bold; margin-bottom: 8px;">100 Mcion</p>
-                    <button onclick="buyShopItem('Avatar Mèo Cool', 100, 'https://i.imgur.com/2Z099v7.png')" class="btn-primary">Mua</button>
+                    <button onclick="buyShopItem('Avatar Mèo Cool', 100, 'https://api.dicebear.com/7.x/bottts/svg?seed=CatCool')" class="btn-primary">Mua</button>
                 </div>
                 <div class="shop-card">
                     <div style="font-size: 28px;">🐶</div><h4 style="margin: 5px 0;">Avatar Chó Shiba</h4>
                     <p style="color: #d35400; font-weight: bold; margin-bottom: 8px;">150 Mcion</p>
-                    <button onclick="buyShopItem('Avatar Chó Shiba', 150, 'https://i.imgur.com/8KM9t1w.png')" class="btn-primary">Mua</button>
+                    <button onclick="buyShopItem('Avatar Chó Shiba', 150, 'https://api.dicebear.com/7.x/bottts/svg?seed=Shiba')" class="btn-primary">Mua</button>
                 </div>
                 <div class="shop-card">
                     <div style="font-size: 28px;">👑</div><h4 style="margin: 5px 0;">Avatar Siêu VIP</h4>
                     <p style="color: #d35400; font-weight: bold; margin-bottom: 8px;">300 Mcion</p>
-                    <button onclick="buyShopItem('Avatar Siêu VIP', 300, 'https://i.imgur.com/9v49v0O.png')" class="btn-primary">Mua</button>
+                    <button onclick="buyShopItem('Avatar Siêu VIP', 300, 'https://api.dicebear.com/7.x/bottts/svg?seed=SuperVIP')" class="btn-primary">Mua</button>
                 </div>
             </div>
         </div>
@@ -199,11 +200,11 @@
 
     // Danh mục Avatar cửa hàng hỗ trợ tra cứu URL
     const SHOP_AVATARS = [
-        { name: 'Default', url: 'https://i.imgur.com/6VBx3io.png' },
-        { name: 'Avatar Mèo Cool', url: 'https://i.imgur.com/2Z099v7.png' },
-        { name: 'Avatar Chó Shiba', url: 'https://i.imgur.com/8KM9t1w.png' },
-        { name: 'Avatar Siêu VIP', url: 'https://i.imgur.com/9v49v0O.png' }
-    ];
+    { name: 'Default', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Default' },
+    { name: 'Avatar Mèo Cool', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=CatCool' },
+    { name: 'Avatar Chó Shiba', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Shiba' },
+    { name: 'Avatar Siêu VIP', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=SuperVIP' }
+];
 
     document.addEventListener("DOMContentLoaded", function() {
         loadUISettings();
@@ -254,11 +255,11 @@
                                     <div class="question-title">Câu ${index + 1}: ${q.question}</div>`;
                     const labels = ['A', 'B', 'C', 'D'];
                     q.options.forEach((opt, i) => {
-                        if (opt) {
+                        if (opt !== undefined && opt !== null && String(opt).trim() !== '') {
                             html += `<label class="option-item">
                                         <input type="radio" name="q${index}" value="${labels[i]}">
                                         ${labels[i]}. ${opt}
-                                     </label>`;
+                                    </label>`;
                         }
                     });
                     html += `</div>`;
@@ -295,9 +296,16 @@
 
         document.getElementById('btnSubmitExam').addEventListener('click', async () => {
             if (!currentExamData) return;
+                
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+            if (!currentUser) return alert("❌ Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại!");
             
+            // Dừng đếm ngược ngay khi bắt đầu nộp bài
+            clearInterval(examTimerInterval);
+
             let correctCount = 0;
             const total = currentExamData.questions.length;
+            if (total === 0) return alert("❌ Đề thi này không có câu hỏi hợp lệ!");
 
             currentExamData.questions.forEach((q, index) => {
                 const selected = document.querySelector(`input[name="q${index}"]:checked`);
@@ -307,10 +315,9 @@
             const score = Number(((correctCount / total) * 10).toFixed(1));
             const earnedMcion = correctCount * 10;
 
-            clearInterval(examTimerInterval);
             alert(`🎉 Nộp bài thành công!\n- Số câu đúng: ${correctCount}/${total}\n- Điểm số: ${score} điểm\n- Thưởng: +${earnedMcion} Mcion!`);
 
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+            // Sử dụng lại biến currentUser đã khai báo ở trên
             const historyData = {
                 username: currentUser.username,
                 fullname: currentUser.fullname || currentUser.username,
@@ -493,7 +500,7 @@
             
             if (currentUser.role === "student") {
                 document.getElementById('btnShowChangeAvatar').classList.remove('hidden');
-                topAvatar.src = currentUser.avatar || "https://i.imgur.com/6VBx3io.png";
+                topAvatar.src = currentUser.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=Default";
                 topAvatar.classList.remove('hidden');
                 document.getElementById('userInfo').textContent = `Học sinh: ${currentUser.fullname || currentUser.username}`;
                 document.getElementById('sectionStudent').classList.remove('hidden');
@@ -588,23 +595,43 @@
         async function updateMcionDisplay() {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
             if (currentUser && currentUser.role === "student") {
-                const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
-                const data = await res.json();
-                const balanceVal = Number(data.balance || 0);
-                document.getElementById('userMcionBalance').textContent = balanceVal.toLocaleString("vi-VN");
-                document.getElementById('mcionBox').classList.remove('hidden');
-            } else document.getElementById('mcionBox').classList.add('hidden');
+                try {
+                    const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
+                    const data = await res.json();
+                    const balanceVal = Number(data.balance || 0);
+                    document.getElementById('userMcionBalance').textContent = balanceVal.toLocaleString("vi-VN");
+                    document.getElementById('mcionBox').classList.remove('hidden');
+                } catch (e) {
+                    console.error("Lỗi cập nhật Mcion:", e);
+                }
+            } else {
+                document.getElementById('mcionBox').classList.add('hidden');
+            }
         }
 
         async function renderMyHistory() {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return;
-            const res = await fetch(`${API_URL}/history`);
-            const history = await res.json();
-            const myHistory = history.filter(h => h.username === currentUser.username);
-            const tbody = document.getElementById('myHistoryBody');
-            tbody.innerHTML = myHistory.length === 0 ? '<tr><td colspan="4" style="text-align:center;">Chưa có lịch sử.</td></tr>' : "";
-            myHistory.forEach(h => { tbody.innerHTML += `<tr><td>${h.time}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; });
+            try {
+                const res = await fetch(`${API_URL}/history`);
+                const history = await res.json();
+                const myHistory = history.filter(h => h.username === currentUser.username);
+                const tbody = document.getElementById('myHistoryBody');
+                
+                if (myHistory.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa có lịch sử.</td></tr>';
+                    return;
+                }
+
+                // Tạo chuỗi HTML trước rồi gán 1 lần duy nhất
+                let htmlStr = '';
+                myHistory.forEach(h => { 
+                    htmlStr += `<tr><td>${h.time}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; 
+                });
+                tbody.innerHTML = htmlStr;
+            } catch (e) {
+                console.error("Lỗi tải lịch sử cá nhân:", e);
+            }
         }
 
         async function renderAllHistory() {
@@ -634,55 +661,58 @@
 
         // ================= XỬ LÝ QUẢN LÝ AVATAR (ĐÃ SỬA CHUẨN BACKEND) =================
         async function loadMyAvatars() {
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
-            const container = document.getElementById('ownedAvatarList');
-            if (!currentUser || !container) return;
+                const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+                const container = document.getElementById('ownedAvatarList');
+                if (!currentUser || !container) return;
 
-            container.innerHTML = '<p style="color: #7f8c8d; font-size: 14px;">Đang tải danh sách...</p>';
+                container.innerHTML = '<p style="color: #7f8c8d; font-size: 14px;">Đang tải danh sách...</p>';
 
-            try {
-                const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
-                const data = await res.json();
-                const inventory = data.inventory || [];
+                try {
+                    const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
+                    const data = await res.json();
+                    const inventory = data.inventory || [];
 
-                container.innerHTML = '';
-                
-                // Mặc định luôn có Avatar cơ bản
-                const availableAvatars = [
-                    { name: 'Mặc định', url: 'https://i.imgur.com/6VBx3io.png' }
-                ];
-
-                SHOP_AVATARS.forEach(item => {
-                    if (inventory.includes(item.name)) {
-                        availableAvatars.push(item);
-                    }
-                });
-
-                availableAvatars.forEach(item => {
-                    // Tạo bọc chứa cả ảnh và tên để không bị cắt chữ hay vỡ giao diện
-                    const wrapper = document.createElement('div');
-                    wrapper.style.cssText = "display: flex; flex-direction: column; align-items: center; cursor: pointer; gap: 5px;";
+                    container.innerHTML = '';
                     
-                    const img = document.createElement('img');
-                    img.src = item.url;
-                    img.title = item.name;
-                    // Thiết lập kích thước chuẩn tuyệt đối cho ảnh đại diện trong modal
-                    img.style.cssText = "width: 60px; height: 60px; border-radius: 50%; border: 3px solid #ddd; object-fit: cover; transition: all 0.2s;";
-                    
-                    const span = document.createElement('span');
-                    span.textContent = item.name;
-                    span.style.cssText = "font-size: 12px; color: #333; font-weight: bold; max-width: 80px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
+                    // Mặc định luôn có Avatar cơ bản
+                    const availableAvatars = [
+                        { name: 'Mặc định', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Default' }
+                    ];
 
-                    wrapper.onmouseover = () => img.style.borderColor = '#3498db';
-                    wrapper.onmouseout = () => img.style.borderColor = '#ddd';
-                    wrapper.onclick = () => selectAvatar(item.url, item.name);
-                    
-                    wrapper.appendChild(img);
-                    wrapper.appendChild(span);
-                    container.appendChild(wrapper);
-                });
-            } catch (e) {
-                container.innerHTML = '<p style="color: red; font-size: 14px;">Lỗi tải danh sách Avatar.</p>';
+                    SHOP_AVATARS.forEach(item => {
+                        if (inventory.includes(item.name)) {
+                            availableAvatars.push(item);
+                        }
+                    });
+
+                    availableAvatars.forEach(item => {
+                        const wrapper = document.createElement('div');
+                        wrapper.style.cssText = "display: flex; flex-direction: column; align-items: center; cursor: pointer; gap: 5px;";
+                        
+                        const img = document.createElement('img');
+                        img.src = item.url;
+                        img.title = item.name;
+                        img.alt = item.name;
+                        // Bắt lỗi nếu link ảnh hỏng thì thay bằng ảnh UI-Avatars
+                        img.onerror = function() {
+                            this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=3498db&color=fff`;
+                        };
+                        img.style.cssText = "width: 60px; height: 60px; border-radius: 50%; border: 3px solid #ddd; object-fit: cover; transition: all 0.2s;";
+                        
+                        const span = document.createElement('span');
+                        span.textContent = item.name;
+                        span.style.cssText = "font-size: 12px; color: #333; font-weight: bold; max-width: 80px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
+
+                        wrapper.onmouseover = () => img.style.borderColor = '#3498db';
+                        wrapper.onmouseout = () => img.style.borderColor = '#ddd';
+                        wrapper.onclick = () => selectAvatar(item.url, item.name);
+                        
+                        wrapper.appendChild(img);
+                        wrapper.appendChild(span);
+                        container.appendChild(wrapper);
+                    });
+                } catch (e) {
+                    container.innerHTML = '<p style="color: red; font-size: 14px;">Lỗi tải danh sách Avatar.</p>';
             }
         }
 
@@ -690,10 +720,10 @@
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return;
 
-            // Chuẩn hóa lại giá trị gửi lên cho khớp với các kiểu dữ liệu Backend thường nhận
             const payload = { 
                 username: currentUser.username, 
-                avatar: avatarUrl, // Đổi từ avatarUrl thành avatar cho đồng bộ backend phổ biến
+                avatar: avatarUrl,
+                avatarUrl: avatarUrl, // Gửi cả 2 trường để khớp mọi Backend
                 itemName: itemName 
             };
 
@@ -706,12 +736,11 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    // Cập nhật lại session storage với avatar mới trả về từ server hoặc URL vừa chọn
-                    currentUser.avatar = data.user && data.user.avatar ? data.user.avatar : avatarUrl;
+                    currentUser.avatar = (data.user && data.user.avatar) ? data.user.avatar : avatarUrl;
                     sessionStorage.setItem("current_user", JSON.stringify(currentUser));
                     
                     document.getElementById('modalChangeAvatar').classList.add('hidden');
-                    checkLoginState(); // Load lại giao diện top bar để hiện avatar mới ngay lập tức
+                    checkLoginState();
                     alert("✅ Đổi Avatar thành công!");
                 } else {
                     alert("❌ " + (data.message || "Đổi Avatar thất bại!"));
