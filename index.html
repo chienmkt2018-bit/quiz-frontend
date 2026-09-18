@@ -677,23 +677,28 @@
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return;
 
+            // Chuẩn hóa lại giá trị gửi lên cho khớp với các kiểu dữ liệu Backend thường nhận
+            const payload = { 
+                username: currentUser.username, 
+                avatar: avatarUrl, // Đổi từ avatarUrl thành avatar cho đồng bộ backend phổ biến
+                itemName: itemName 
+            };
+
             try {
                 const res = await fetch(`${API_URL}/update-avatar`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        username: currentUser.username, 
-                        avatarUrl: avatarUrl === 'https://i.imgur.com/6VBx3io.png' ? 'default' : avatarUrl, 
-                        itemName: itemName 
-                    })
+                    body: JSON.stringify(payload)
                 });
                 const data = await res.json();
 
                 if (data.success) {
-                    currentUser.avatar = data.user ? data.user.avatar : avatarUrl;
+                    // Cập nhật lại session storage với avatar mới trả về từ server hoặc URL vừa chọn
+                    currentUser.avatar = data.user && data.user.avatar ? data.user.avatar : avatarUrl;
                     sessionStorage.setItem("current_user", JSON.stringify(currentUser));
+                    
                     document.getElementById('modalChangeAvatar').classList.add('hidden');
-                    checkLoginState();
+                    checkLoginState(); // Load lại giao diện top bar để hiện avatar mới ngay lập tức
                     alert("✅ Đổi Avatar thành công!");
                 } else {
                     alert("❌ " + (data.message || "Đổi Avatar thất bại!"));
