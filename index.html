@@ -120,17 +120,17 @@
                 <div class="shop-card">
                     <div style="font-size: 28px;">🐱</div><h4 style="margin: 5px 0;">Avatar Mèo Cool</h4>
                     <p style="color: #d35400; font-weight: bold; margin-bottom: 8px;">100 Mcion</p>
-                    <button onclick="buyShopItem('Avatar Mèo Cool', 100, 'https://api.dicebear.com/7.x/bottts/svg?seed=CatCool')" class="btn-primary">Mua</button>
+                    <button onclick="buyShopItem('Avatar Mèo Cool', 100, `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>`)" class="btn-primary">Mua</button>
                 </div>
                 <div class="shop-card">
                     <div style="font-size: 28px;">🐶</div><h4 style="margin: 5px 0;">Avatar Chó Shiba</h4>
                     <p style="color: #d35400; font-weight: bold; margin-bottom: 8px;">150 Mcion</p>
-                    <button onclick="buyShopItem('Avatar Chó Shiba', 150, 'https://api.dicebear.com/7.x/bottts/svg?seed=Shiba')" class="btn-primary">Mua</button>
+                    <button onclick="buyShopItem('Avatar Chó Shiba', 150, `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐶</text></svg>`)" class="btn-primary">Mua</button>
                 </div>
                 <div class="shop-card">
                     <div style="font-size: 28px;">👑</div><h4 style="margin: 5px 0;">Avatar Siêu VIP</h4>
                     <p style="color: #d35400; font-weight: bold; margin-bottom: 8px;">300 Mcion</p>
-                    <button onclick="buyShopItem('Avatar Siêu VIP', 300, 'https://api.dicebear.com/7.x/bottts/svg?seed=SuperVIP')" class="btn-primary">Mua</button>
+                    <button onclick="buyShopItem('Avatar Siêu VIP', 300, `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>`)" class="btn-primary">Mua</button>
                 </div>
             </div>
         </div>
@@ -200,10 +200,10 @@
 
     // Danh mục Avatar cửa hàng hỗ trợ tra cứu URL
     const SHOP_AVATARS = [
-    { name: 'Default', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Default' },
-    { name: 'Avatar Mèo Cool', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=CatCool' },
-    { name: 'Avatar Chó Shiba', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Shiba' },
-    { name: 'Avatar Siêu VIP', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=SuperVIP' }
+        { name: 'Mặc định', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" },
+        { name: 'Avatar Mèo Cool', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>" },
+        { name: 'Avatar Chó Shiba', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐶</text></svg>" },
+        { name: 'Avatar Siêu VIP', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>" }
 ];
 
     document.addEventListener("DOMContentLoaded", function() {
