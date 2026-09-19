@@ -144,6 +144,20 @@
             <div class="form-group"><label>Thời Gian (Phút):</label><input type="number" id="inputExamTime" value="0" min="0"></div>
             <div class="form-group"><label>Chọn File Excel:</label><input type="file" id="excelFileInput" accept=".xlsx, .xls"></div>
             <button id="btnSaveExam" class="btn-success">Lưu Bộ Đề</button>
+            <h3>🎲 Tạo Đề Thi Tự Động (Trộn Ngẫu Nhiên)</h3><br>
+            <div class="form-group">
+                <label>Mã Đề Thi Mới:</label>
+                <input type="text" id="autoExamCode" placeholder="VD: AUTO_DE01">
+            </div>
+            <div class="form-group">
+                <label>Số Lượng Câu Hỏi Cần Lấy:</label>
+                <input type="number" id="autoExamCount" value="10" min="1">
+            </div>
+            <div class="form-group">
+                <label>Thời Gian Làm Bài (Phút):</label>
+                <input type="number" id="autoExamTime" value="15" min="0">
+            </div>
+            <button id="btnAutoGenerateExam" class="btn-warning">🎲 Tạo & Lưu Đề Tự Động</button>
         </div>
 
         <div class="card-box">
@@ -792,7 +806,87 @@
                 alert("❌ Lỗi kết nối máy chủ!");
             }
         });
+// ================= TẠO ĐỀ THI TỰ ĐỘNG (MIX CÂU HỎI) =================
+        document.getElementById('btnAutoGenerateExam').addEventListener('click', async function() {
+            const examCode = document.getElementById('autoExamCode').value.trim();
+            const count = parseInt(document.getElementById('autoExamCount').value, 10) || 10;
+            const timeLimit = parseInt(document.getElementById('autoExamTime').value, 10) || 0;
 
+            if (!examCode) return alert("⚠️ Vui lòng nhập mã đề thi mới!");
+
+            const btn = this;
+            const originalText = btn.textContent;
+            btn.textContent = "⏳ Đang tổng hợp ngân hàng câu hỏi...";
+            btn.disabled = true;
+
+            try {
+                // 1. Tải danh sách tất cả mã đề hiện có
+                const resExams = await fetch(`${API_URL}/exams`);
+                const examCodes = await resExams.json();
+
+                if (!examCodes || examCodes.length === 0) {
+                    throw new Error("Chưa có đề thi nào trên hệ thống để trích xuất câu hỏi!");
+                }
+
+                // 2. Gom toàn bộ câu hỏi từ các đề
+                let questionBank = [];
+                for (const code of examCodes) {
+                    try {
+                        const res = await fetch(`${API_URL}/exams/${code}`);
+                        const examData = await res.json();
+                        if (examData && examData.questions && Array.isArray(examData.questions)) {
+                            questionBank = questionBank.concat(examData.questions);
+                        }
+                    } catch (e) {
+                        console.error(`Lỗi tải đề ${code}`, e);
+                    }
+                }
+
+                if (questionBank.length === 0) {
+                    throw new Error("Không tìm thấy câu hỏi hợp lệ trong ngân hàng dữ liệu!");
+                }
+
+                // 3. Trộn ngẫu nhiên câu hỏi (Thuật toán Fisher-Yates)
+                for (let i = questionBank.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [questionBank[i], questionBank[j]] = [questionBank[j], questionBank[i]];
+                }
+
+                // 4. Cắt lấy số lượng câu hỏi theo yêu cầu
+                const selectedQuestions = questionBank.slice(0, count).map((q, idx) => ({
+                    id: idx + 1,
+                    question: q.question,
+                    options: q.options,
+                    correct: q.correct
+                }));
+
+                // 5. Lưu đề mới lên backend
+                const saveRes = await fetch(`${API_URL}/exams`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        examCode: examCode,
+                        timeLimit: timeLimit,
+                        questions: selectedQuestions
+                    })
+                });
+
+                const result = await saveRes.json();
+                if (result.success) {
+                    alert(`🎉 Tạo thành công đề "${examCode}" với ${selectedQuestions.length} câu hỏi ngẫu nhiên!`);
+                    document.getElementById('autoExamCode').value = '';
+                    loadAdminExamList(); // Cập nhật lại danh sách đề ở Admin
+                } else {
+                    alert("❌ Lỗi: " + result.message);
+                }
+
+            } catch (err) {
+                alert("❌ Lỗi: " + err.message);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
     }); // Kết thúc DOMContentLoaded
 </script>
 </body>
