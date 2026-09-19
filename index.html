@@ -661,36 +661,50 @@
 
         // ================= XỬ LÝ QUẢN LÝ AVATAR (ĐÃ SỬA CHUẨN BACKEND) =================
         async function loadMyAvatars() {
-                const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
-                const container = document.getElementById('ownedAvatarList');
-                if (!currentUser || !container) return;
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+            const container = document.getElementById('ownedAvatarList');
+            if (!currentUser || !container) return;
 
-                container.innerHTML = '<p style="color: #7f8c8d; font-size: 14px;">Đang tải danh sách...</p>';
+            container.innerHTML = '<p style="color: #7f8c8d; font-size: 14px;">Đang tải danh sách...</p>';
 
-                try {
-                    const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
-                    const data = await res.json();
-                    
-                    // Ép kiểu an toàn: Nếu data.inventory không phải mảng thì gán mặc định là mảng rỗng []
-                    const inventory = (data && Array.isArray(data.inventory)) ? data.inventory : [];
+            try {
+                const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
+                const data = await res.json();
+                
+                // Ép kiểu an toàn: Nếu data.inventory không phải mảng thì gán mặc định là mảng rỗng []
+                const inventory = (data && Array.isArray(data.inventory)) ? data.inventory : [];
 
-                    container.innerHTML = '';
-                    
-                    // Mặc định luôn có Avatar cơ bản
-                    const availableAvatars = [
-                        { name: 'Mặc định', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Default' }
-                    ];
+                container.innerHTML = '';
+                
+                // Mặc định luôn có Avatar cơ bản
+                const availableAvatars = [
+                    { name: 'Mặc định', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Default' }
+                ];
 
-                    SHOP_AVATARS.forEach(item => {
-                        if (inventory.includes(item.name)) {
-                            availableAvatars.push(item);
-                        }
-                    });
+                SHOP_AVATARS.forEach(item => {
+                    if (inventory.includes(item.name)) {
+                        availableAvatars.push(item);
+                    }
+                });
 
-                    // ... các đoạn code render bên dưới giữ nguyên
-                } catch (e) {
-                    container.innerHTML = '<p style="color: red; font-size: 14px;">Lỗi tải danh sách Avatar.</p>';
-                }
+                // --- ĐOẠN CODE HIỂN THỊ HÌNH ẢNH AVATAR RA MÀN HÌNH ---
+                availableAvatars.forEach(avt => {
+                    const avatarCard = document.createElement('div');
+                    avatarCard.style.cssText = 'text-align: center; cursor: pointer; padding: 8px; border: 2px solid #3498db; border-radius: 10px; background: #f8f9fa; transition: transform 0.2s;';
+                    avatarCard.onmouseover = () => avatarCard.style.transform = 'scale(1.05)';
+                    avatarCard.onmouseout = () => avatarCard.style.transform = 'scale(1)';
+                    avatarCard.onclick = () => selectAvatar(avt.url, avt.name);
+
+                    avatarCard.innerHTML = `
+                        <img src="${avt.url}" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 5px auto;">
+                        <span style="font-size: 12px; font-weight: bold; color: #2c3e50;">${avt.name}</span>
+                    `;
+                    container.appendChild(avatarCard);
+                });
+
+            } catch (e) {
+                container.innerHTML = '<p style="color: red; font-size: 14px;">Lỗi tải danh sách Avatar.</p>';
+            }
         }
 
         window.selectAvatar = async function(avatarUrl, itemName) {
