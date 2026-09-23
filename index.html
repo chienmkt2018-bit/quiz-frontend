@@ -45,6 +45,11 @@
         .answer-explanation { margin-top: 10px; padding: 8px 12px; border-radius: 5px; font-weight: bold; font-size: 14px; }
         .answer-explanation.correct { background: #e8f8f5; color: #27ae60; border-left: 4px solid #27ae60; }
         .answer-explanation.wrong { background: #fdf2e9; color: #e67e22; border-left: 4px solid #e67e22; }
+
+        /* TAB STYLES */
+        .tab-btn { padding: 8px 16px; border: none; background: none; cursor: pointer; font-weight: bold; color: #666; border-bottom: 3px solid transparent; font-size: 14px; transition: all 0.2s; }
+        .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        .tab-btn:hover { color: var(--primary-color); }
     </style>
 </head>
 <body>
@@ -133,12 +138,30 @@
             <button id="btnSubmitExam" class="btn-primary" style="width: 100%; padding: 12px; margin-top: 15px;">NỘP BÀI THI</button>
         </div>
 
+        <!-- LỊCH SỬ CÁ NHÂN HỌC SINH -->
         <div class="card-box">
-            <h3>Lịch Sử Làm Bài Của Bạn</h3>
-            <table>
-                <thead><tr><th>Thời Gian</th><th>Mã Đề</th><th>Số Câu Đúng</th><th>Điểm Số</th></tr></thead>
-                <tbody id="myHistoryBody"></tbody>
-            </table>
+            <h3>📜 Lịch Sử Làm Bài Của Bạn</h3>
+            <div style="display: flex; gap: 10px; margin: 12px 0; border-bottom: 2px solid #e0e0e0;">
+                <button type="button" class="tab-btn active" id="tabStudentRecentBtn" onclick="switchStudentHistoryTab('recent')">⏱️ Gần Đây (5 Dòng)</button>
+                <button type="button" class="tab-btn" id="tabStudentDetailBtn" onclick="switchStudentHistoryTab('detail')">📑 Chi Tiết Tất Cả</button>
+            </div>
+
+            <div id="tabStudentRecent">
+                <table>
+                    <thead><tr><th>Thời Gian</th><th>Mã Đề</th><th>Số Câu Đúng</th><th>Điểm Số</th></tr></thead>
+                    <tbody id="myHistoryRecentBody"></tbody>
+                </table>
+                <p style="margin-top: 10px; text-align: right;">
+                    <button type="button" class="btn-link" onclick="switchStudentHistoryTab('detail')">Xem tất cả lịch sử →</button>
+                </p>
+            </div>
+
+            <div id="tabStudentDetail" class="hidden">
+                <table>
+                    <thead><tr><th>Thời Gian</th><th>Mã Đề</th><th>Số Câu Đúng</th><th>Điểm Số</th></tr></thead>
+                    <tbody id="myHistoryDetailBody"></tbody>
+                </table>
+            </div>
         </div>
 
         <div class="card-box">
@@ -236,12 +259,35 @@
             <button id="btnGrantMcion" class="btn-warning">Cấp Mcion</button>
         </div>
 
+        <!-- LỊCH SỬ TOÀN HỆ THỐNG - DÀNH CHO ADMIN -->
         <div class="card-box">
-            <h3>Lịch Sử Toàn Hệ Thống</h3>
-            <table>
-                <thead><tr><th>Thời Gian</th><th>Thí Sinh</th><th>Mã Đề</th><th>Kết Quả</th><th>Điểm Số</th></tr></thead>
-                <tbody id="allHistoryBody"></tbody>
-            </table>
+            <h3>📊 Quản Lý Lịch Sử Bài Làm Học Viên</h3>
+            <div style="display: flex; gap: 10px; margin: 12px 0; border-bottom: 2px solid #e0e0e0;">
+                <button type="button" class="tab-btn active" id="tabAdminRecentBtn" onclick="switchAdminHistoryTab('recent')">⏱️ Lịch Sử Gần Đây (5 Dòng)</button>
+                <button type="button" class="tab-btn" id="tabAdminDetailBtn" onclick="switchAdminHistoryTab('detail')">📑 Chi Tiết Lịch Sử</button>
+            </div>
+
+            <!-- TAB 1: 5 DÒNG GẦN ĐÂY -->
+            <div id="tabAdminRecent">
+                <table>
+                    <thead><tr><th>Thời Gian</th><th>Thí Sinh</th><th>Mã Đề</th><th>Kết Quả</th><th>Điểm Số</th></tr></thead>
+                    <tbody id="allHistoryRecentBody"></tbody>
+                </table>
+                <p style="margin-top: 10px; text-align: right;">
+                    <button type="button" class="btn-link" onclick="switchAdminHistoryTab('detail')">Xem toàn bộ lịch sử bài làm →</button>
+                </p>
+            </div>
+
+            <!-- TAB 2: CHI TIẾT + LỌC TÊN HỌC SINH -->
+            <div id="tabAdminDetail" class="hidden">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <input type="text" id="adminHistorySearchInput" placeholder="🔍 Nhập tên học sinh hoặc username để lọc..." oninput="handleAdminHistorySearch()">
+                </div>
+                <table>
+                    <thead><tr><th>Thời Gian</th><th>Thí Sinh</th><th>Mã Đề</th><th>Kết Quả</th><th>Điểm Số</th></tr></thead>
+                    <tbody id="allHistoryDetailBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -273,6 +319,7 @@
     let examTimerInterval; 
     let currentExamData = null;
     let allExamsFromServer = [];
+    let adminSearchTimeout = null;
 
     const SHOP_AVATARS = [
         { name: 'Mặc định', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" },
@@ -431,7 +478,7 @@
             delete btnSubmit.dataset.state;
         });
 
-        // ================= NỘP BÀI THI (SỬ DỤNG FETCHWITHAUTH) =================
+        // ================= NỘP BÀI THI =================
         document.getElementById('btnSubmitExam').addEventListener('click', async function() {
             if (!currentExamData) return;
                 
@@ -510,7 +557,7 @@
                     method: 'POST',
                     body: JSON.stringify(historyData)
                 });
-                renderMyHistory();
+                renderMyHistoryRecent();
                 updateMcionDisplay();
             } catch(e) { console.error("Lỗi nộp bài", e); }
 
@@ -522,7 +569,7 @@
             this.dataset.state = "review";
         });
 
-        // ================= LƯU ĐỀ EXCEL (ADMIN - FETCHWITHAUTH) =================
+        // ================= LƯU ĐỀ EXCEL (ADMIN) =================
         document.getElementById('btnSaveExam').addEventListener('click', async () => {
             const examCode = document.getElementById('inputExamCode').value.trim();
             const subject = document.getElementById('adminSubject').value;
@@ -645,7 +692,7 @@
             checkLoginState();
         });
 
-        // ADMIN CẤP MCION (FETCHWITHAUTH)
+        // ADMIN CẤP MCION
         document.getElementById('btnGrantMcion').addEventListener('click', async () => {
             const username = document.getElementById('targetStudentUser').value.trim();
             const rawAmount = document.getElementById('targetMcionAmount').value.trim();
@@ -695,13 +742,13 @@
                 document.getElementById('sectionStudent').classList.remove('hidden');
                 document.getElementById('sectionAdmin').classList.add('hidden');
                 loadExamList(); 
-                renderMyHistory();
+                renderMyHistoryRecent();
             } else {
                 topAvatar.classList.add('hidden');
                 document.getElementById('userInfo').textContent = `Admin (${currentUser.username})`;
                 document.getElementById('sectionAdmin').classList.remove('hidden');
                 document.getElementById('sectionStudent').classList.add('hidden');
-                renderAllHistory();
+                renderAllHistoryRecent();
                 loadAdminExamList(); 
             }
             updateMcionDisplay();
@@ -751,7 +798,7 @@
             } catch(e) {}
         }
 
-        // XÓA ĐỀ THI (ADMIN - FETCHWITHAUTH)
+        // XÓA ĐỀ THI (ADMIN)
         window.deleteExam = async function(code) {
             if(!confirm(`Bạn có chắc chắn muốn xóa đề ${code}?`)) return;
             try {
@@ -766,7 +813,7 @@
             } catch(e) { alert("❌ Lỗi kết nối!"); }
         };
 
-        // MUA SHOP ITEM (FETCHWITHAUTH)
+        // MUA SHOP ITEM
         window.buyShopItem = async function(itemName, price, avatarUrl) {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return alert("Vui lòng đăng nhập!");
@@ -813,20 +860,41 @@
             }
         }
 
-        async function renderMyHistory() {
+        // ================= HÀM XỬ LÝ LỊCH SỬ HỌC SINH (5 DÒNG & CHI TIẾT) =================
+        function switchStudentHistoryTab(tabName) {
+            const btnRecent = document.getElementById('tabStudentRecentBtn');
+            const btnDetail = document.getElementById('tabStudentDetailBtn');
+            const tabRecent = document.getElementById('tabStudentRecent');
+            const tabDetail = document.getElementById('tabStudentDetail');
+
+            if (tabName === 'recent') {
+                btnRecent.classList.add('active');
+                btnDetail.classList.remove('active');
+                tabRecent.classList.remove('hidden');
+                tabDetail.classList.add('hidden');
+                renderMyHistoryRecent();
+            } else {
+                btnDetail.classList.add('active');
+                btnRecent.classList.remove('active');
+                tabDetail.classList.remove('hidden');
+                tabRecent.classList.add('hidden');
+                renderMyHistoryDetail();
+            }
+        }
+
+        async function renderMyHistoryRecent() {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return;
             try {
-                const res = await fetch(`${API_URL}/history`);
+                const res = await fetch(`${API_URL}/history?limit=5`);
                 const history = await res.json();
-
                 if (!Array.isArray(history)) return;
 
-                const myHistory = history.filter(h => h.username === currentUser.username);
-                const tbody = document.getElementById('myHistoryBody');
-                
+                const myHistory = history.filter(h => h.username === currentUser.username).slice(0, 5);
+                const tbody = document.getElementById('myHistoryRecentBody');
+
                 if (myHistory.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa có lịch sử.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa có lịch sử làm bài.</td></tr>';
                     return;
                 }
 
@@ -835,22 +903,93 @@
                     htmlStr += `<tr><td>${h.time}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; 
                 });
                 tbody.innerHTML = htmlStr;
-            } catch (e) {
-                console.error("Lỗi tải lịch sử cá nhân:", e);
-            }
+            } catch (e) { console.error("Lỗi tải lịch sử gần đây cá nhân:", e); }
         }
 
-        async function renderAllHistory() {
+        async function renderMyHistoryDetail() {
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+            if (!currentUser) return;
             try {
                 const res = await fetch(`${API_URL}/history`);
                 const history = await res.json();
-
                 if (!Array.isArray(history)) return;
 
-                const tbody = document.getElementById('allHistoryBody');
-                tbody.innerHTML = history.length === 0 ? '<tr><td colspan="5" style="text-align:center;">Chưa có lịch sử.</td></tr>' : "";
-                history.forEach(h => { tbody.innerHTML += `<tr><td>${h.time}</td><td>${h.fullname || h.username}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; });
-            } catch(e) {}
+                const myHistory = history.filter(h => h.username === currentUser.username);
+                const tbody = document.getElementById('myHistoryDetailBody');
+
+                if (myHistory.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa có lịch sử làm bài.</td></tr>';
+                    return;
+                }
+
+                let htmlStr = '';
+                myHistory.forEach(h => { 
+                    htmlStr += `<tr><td>${h.time}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; 
+                });
+                tbody.innerHTML = htmlStr;
+            } catch (e) { console.error("Lỗi tải chi tiết lịch sử cá nhân:", e); }
+        }
+
+        // ================= HÀM XỬ LÝ LỊCH SỬ TOÀN HỆ THỐNG (ADMIN) =================
+        function switchAdminHistoryTab(tabName) {
+            const btnRecent = document.getElementById('tabAdminRecentBtn');
+            const btnDetail = document.getElementById('tabAdminDetailBtn');
+            const tabRecent = document.getElementById('tabAdminRecent');
+            const tabDetail = document.getElementById('tabAdminDetail');
+
+            if (tabName === 'recent') {
+                btnRecent.classList.add('active');
+                btnDetail.classList.remove('active');
+                tabRecent.classList.remove('hidden');
+                tabDetail.classList.add('hidden');
+                renderAllHistoryRecent();
+            } else {
+                btnDetail.classList.add('active');
+                btnRecent.classList.remove('active');
+                tabDetail.classList.remove('hidden');
+                tabRecent.classList.add('hidden');
+                renderAllHistoryDetail();
+            }
+        }
+
+        // Lấy 5 dòng lịch sử gần đây toàn hệ thống
+        async function renderAllHistoryRecent() {
+            try {
+                const res = await fetch(`${API_URL}/history?limit=5`);
+                const history = await res.json();
+                if (!Array.isArray(history)) return;
+
+                const tbody = document.getElementById('allHistoryRecentBody');
+                tbody.innerHTML = history.length === 0 ? '<tr><td colspan="5" style="text-align:center;">Chưa có lịch sử bài làm.</td></tr>' : "";
+                history.forEach(h => { 
+                    tbody.innerHTML += `<tr><td>${h.time}</td><td>${h.fullname || h.username}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; 
+                });
+            } catch(e) { console.error("Lỗi tải 5 bản ghi gần đây:", e); }
+        }
+
+        // Lấy chi tiết lịch sử + Lọc theo tên học sinh
+        async function renderAllHistoryDetail(searchTerm = '') {
+            try {
+                const query = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
+                const res = await fetch(`${API_URL}/history${query}`);
+                const history = await res.json();
+                if (!Array.isArray(history)) return;
+
+                const tbody = document.getElementById('allHistoryDetailBody');
+                tbody.innerHTML = history.length === 0 ? '<tr><td colspan="5" style="text-align:center;">Không tìm thấy lịch sử bài làm phù hợp.</td></tr>' : "";
+                history.forEach(h => { 
+                    tbody.innerHTML += `<tr><td>${h.time}</td><td>${h.fullname || h.username}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; 
+                });
+            } catch(e) { console.error("Lỗi tải chi tiết lịch sử:", e); }
+        }
+
+        // Xử lý sự kiện nhập tên học sinh với Debounce 300ms
+        function handleAdminHistorySearch() {
+            clearTimeout(adminSearchTimeout);
+            const val = document.getElementById('adminHistorySearchInput').value.trim();
+            adminSearchTimeout = setTimeout(() => {
+                renderAllHistoryDetail(val);
+            }, 300);
         }
 
         async function loadUISettings() {
@@ -911,7 +1050,7 @@
             }
         }
 
-        // ĐỔI AVATAR (FETCHWITHAUTH)
+        // ĐỔI AVATAR
         window.selectAvatar = async function(avatarUrl, itemName) {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return;
@@ -959,7 +1098,7 @@
             document.getElementById('modalChangeAvatar').classList.add('hidden');
         });
 
-        // ĐỔI MẬT KHẨU (FETCHWITHAUTH)
+        // ĐỔI MẬT KHẨU
         document.getElementById('btnSubmitChangePass').addEventListener('click', async () => {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             const oldPassword = document.getElementById('cpOldPass').value.trim();
@@ -995,7 +1134,7 @@
             }
         });
 
-        // TẠO ĐỀ TỰ ĐỘNG (ADMIN - FETCHWITHAUTH)
+        // TẠO ĐỀ TỰ ĐỘNG
         document.getElementById('btnAutoGenerateExam').addEventListener('click', async function() {
             const examCode = document.getElementById('autoExamCode').value.trim();
             const subject = document.getElementById('autoAdminSubject').value;
