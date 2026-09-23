@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="siteTitleTag">Trang Web Học Tập Của MR Minh</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
-    <!-- Thư viện đọc file Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root { --primary-color: #3498db; --bg-color: #f4f7f6; }
@@ -41,8 +40,6 @@
         .hidden { display: none !important; }
         .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
         .shop-card { background: white; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; text-align: center; }
-        
-        /* CSS CHO TÍNH NĂNG XEM LẠI BÀI THI */
         .option-item.correct-choice { background-color: #d4edda !important; border: 1px solid #28a745 !important; color: #155724 !important; font-weight: bold; }
         .option-item.wrong-choice { background-color: #f8d7da !important; border: 1px solid #dc3545 !important; color: #721c24 !important; text-decoration: line-through; }
         .answer-explanation { margin-top: 10px; padding: 8px 12px; border-radius: 5px; font-weight: bold; font-size: 14px; }
@@ -69,7 +66,7 @@
         </div>
     </div>
 
-    <!-- KHU VỰC ĐĂNG NHẬP / ĐĂNG KÝ -->
+    <!-- KHU VỰC AUTH -->
     <div id="sectionAuth" class="card-box">
         <div id="formLogin">
             <h3>Đăng Nhập Hệ Thống</h3><br>
@@ -284,7 +281,32 @@
         { name: 'Avatar Siêu VIP', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>" }
     ];
 
-    // Thuật toán xáo trộn Fisher-Yates
+    // HÀM HELPER FETCH TỰ ĐỘNG GỬI JWT TOKEN
+    async function fetchWithAuth(url, options = {}) {
+        const token = sessionStorage.getItem("access_token");
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(url, { ...options, headers });
+
+        if (response.status === 401 || response.status === 403) {
+            const errData = await response.json().catch(() => ({}));
+            alert("⚠️ " + (errData.message || "Phiên đăng nhập hết hạn hoặc không đủ quyền!"));
+            if (response.status === 401) {
+                document.getElementById('btnLogout').click();
+            }
+            throw new Error(errData.message || "Unauthorized");
+        }
+
+        return response;
+    }
+
     function shuffleArray(array) {
         let arr = [...array];
         for (let i = arr.length - 1; i > 0; i--) {
@@ -307,7 +329,7 @@
             document.getElementById('formLogin').classList.remove('hidden');
         });
 
-        // ================= XỬ LÝ BẮT ĐẦU LÀM BÀI THI (TÍCH HỢP TRỘN ĐÁP ÁN) =================
+        // ================= BẮT ĐẦU LÀM BÀI =================
         document.getElementById('btnStartExam').addEventListener('click', async function() {
             const examCode = document.getElementById('selectExamCode').value;
             if (!examCode) return alert("⚠️ Vui lòng chọn một mã đề thi!");
@@ -321,7 +343,7 @@
                 const res = await fetch(`${API_URL}/exams/${examCode}`);
                 const contentType = res.headers.get("content-type");
                 if (!contentType || !contentType.includes("application/json")) {
-                    throw new Error("Lỗi máy chủ hoặc máy chủ đang khởi động lại. Vui lòng thử lại!");
+                    throw new Error("Lỗi máy chủ hoặc máy chủ đang khởi động lại!");
                 }
 
                 const exam = await res.json();
@@ -339,12 +361,10 @@
                 const labels = ['A', 'B', 'C', 'D'];
                 let fullHtml = '';
 
-                // XỬ LÝ TRỘN ĐÁP ÁN CHO TỪNG CÂU HỎI
                 exam.questions.forEach((q, index) => {
                     const rawCorrect = String(q.correct || 'A').trim().toUpperCase();
                     const correctIndex = labels.indexOf(rawCorrect) !== -1 ? labels.indexOf(rawCorrect) : 0;
 
-                    // Tạo mảng đối tượng các phương án lựa chọn
                     let optionObjects = q.options
                         .map((opt, i) => ({
                             text: opt,
@@ -352,21 +372,17 @@
                         }))
                         .filter(o => o.text !== undefined && o.text !== null && String(o.text).trim() !== '');
 
-                    // Trộn ngẫu nhiên thứ tự các phương án lựa chọn
                     optionObjects = shuffleArray(optionObjects);
 
-                    // Gán lại nhãn A, B, C, D mới sau khi đã trộn
                     let runtimeCorrect = 'A';
                     optionObjects.forEach((item, idx) => {
                         item.label = labels[idx];
                         if (item.isCorrect) runtimeCorrect = labels[idx];
                     });
 
-                    // Lưu danh sách đáp án đã trộn & đáp án đúng tương ứng vào câu hỏi hiện tại
                     q.shuffledOptions = optionObjects;
                     q.runtimeCorrect = runtimeCorrect;
 
-                    // Dựng chuỗi HTML cho câu hỏi
                     let html = `<div class="question-card" id="qcard_${index}">
                                     <div class="question-title">Câu ${index + 1}: ${q.question}</div>`;
                     
@@ -383,7 +399,6 @@
 
                 container.innerHTML = fullHtml;
 
-                // Đồng hồ đếm ngược
                 clearInterval(examTimerInterval);
                 if (exam.timeLimit > 0) {
                     let time = exam.timeLimit * 60;
@@ -416,14 +431,13 @@
             delete btnSubmit.dataset.state;
         });
 
-        // ================= XỬ LÝ NỘP BÀI THI & XEM LẠI CHI TIẾT ĐÁP ÁN =================
+        // ================= NỘP BÀI THI (SỬ DỤNG FETCHWITHAUTH) =================
         document.getElementById('btnSubmitExam').addEventListener('click', async function() {
             if (!currentExamData) return;
                 
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return alert("❌ Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại!");
             
-            // Nếu đã ở chế độ xem lại -> bấm nút sẽ đóng bài thi
             if (this.dataset.state === "review") {
                 document.getElementById('examArea').classList.add('hidden');
                 this.textContent = "NỘP BÀI THI";
@@ -437,7 +451,6 @@
             const total = currentExamData.questions.length;
             if (total === 0) return alert("❌ Đề thi này không có câu hỏi hợp lệ!");
 
-            // Chấm điểm và tô màu chi tiết kết quả từng câu
             currentExamData.questions.forEach((q, index) => {
                 const selected = document.querySelector(`input[name="q${index}"]:checked`);
                 const userChoice = selected ? selected.value.trim() : null;
@@ -446,10 +459,8 @@
                 const questionCard = document.getElementById(`qcard_${index}`) || document.querySelectorAll('.question-card')[index];
                 const optionInputs = questionCard.querySelectorAll('input[type="radio"]');
 
-                // Vô hiệu hóa không cho đổi đáp án sau khi đã nộp
                 optionInputs.forEach(input => input.disabled = true);
 
-                // Highlight tô màu đáp án Đúng/Sai
                 optionInputs.forEach(input => {
                     const label = input.closest('.option-item');
                     if (input.value === correctChoice) {
@@ -460,11 +471,9 @@
                     }
                 });
 
-                // Lấy nội dung chữ của đáp án đúng để hiển thị Lời giải
                 const correctOptObj = q.shuffledOptions ? q.shuffledOptions.find(o => o.label === correctChoice) : null;
                 const correctTextDisplay = correctOptObj ? `${correctChoice}. ${correctOptObj.text}` : correctChoice;
 
-                // Xóa khung giải thích cũ nếu bấm lại
                 const existingExp = questionCard.querySelector('.answer-explanation');
                 if (existingExp) existingExp.remove();
 
@@ -497,9 +506,8 @@
             };
 
             try {
-                await fetch(`${API_URL}/submit`, {
+                await fetchWithAuth(`${API_URL}/submit`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(historyData)
                 });
                 renderMyHistory();
@@ -514,7 +522,7 @@
             this.dataset.state = "review";
         });
 
-        // ================= LƯU ĐỀ EXCEL =================
+        // ================= LƯU ĐỀ EXCEL (ADMIN - FETCHWITHAUTH) =================
         document.getElementById('btnSaveExam').addEventListener('click', async () => {
             const examCode = document.getElementById('inputExamCode').value.trim();
             const subject = document.getElementById('adminSubject').value;
@@ -562,9 +570,8 @@
 
                     if (questions.length === 0) return alert("❌ Không tìm thấy dữ liệu hợp lệ!");
 
-                    const res = await fetch(`${API_URL}/exams`, {
+                    const res = await fetchWithAuth(`${API_URL}/exams`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ examCode, subject, grade, timeLimit, questions })
                     });
                     const result = await res.json();
@@ -581,7 +588,7 @@
             reader.readAsArrayBuffer(file);
         });
 
-        // ================= AUTH & USER STATE =================
+        // ================= AUTH & TOKEN MANAGEMENT =================
         document.getElementById('btnRegisterSubmit').addEventListener('click', async () => {
             const fullname = document.getElementById('regFullname').value.trim();
             const username = document.getElementById('regUsername').value.trim();
@@ -617,6 +624,9 @@
                 const data = await res.json();
                 if (data.success) {
                     sessionStorage.setItem("current_user", JSON.stringify(data));
+                    if (data.token) {
+                        sessionStorage.setItem("access_token", data.token);
+                    }
                     checkLoginState();
                 } else alert("❌ " + (data.message || "Đăng nhập thất bại!"));
             } catch (e) { alert("❌ Lỗi kết nối máy chủ!"); }
@@ -624,8 +634,10 @@
 
         document.getElementById('btnLoginStudent').addEventListener('click', () => handleLogin('student'));
         document.getElementById('btnLoginAdmin').addEventListener('click', () => handleLogin('admin'));
+        
         document.getElementById('btnLogout').addEventListener('click', () => { 
             sessionStorage.removeItem("current_user"); 
+            sessionStorage.removeItem("access_token");
             clearInterval(examTimerInterval); 
             currentExamData = null;
             document.getElementById('questionsContainer').innerHTML = '';
@@ -633,7 +645,7 @@
             checkLoginState();
         });
 
-        // ADMIN CẤP MCION
+        // ADMIN CẤP MCION (FETCHWITHAUTH)
         document.getElementById('btnGrantMcion').addEventListener('click', async () => {
             const username = document.getElementById('targetStudentUser').value.trim();
             const rawAmount = document.getElementById('targetMcionAmount').value.trim();
@@ -642,9 +654,8 @@
             if (!username || rawAmount === "" || isNaN(amount)) return alert("⚠️ Nhập Username và số Mcion hợp lệ!");
 
             try {
-                const res = await fetch(`${API_URL}/mcion/grant`, {
+                const res = await fetchWithAuth(`${API_URL}/mcion/grant`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, amount })
                 });
                 const data = await res.json();
@@ -696,7 +707,6 @@
             updateMcionDisplay();
         }
 
-        // ================= TẢI DỮ LIỆU ĐỀ THI VÀ BỘ LỌC DỘNG =================
         async function loadExamList() {
             try {
                 const res = await fetch(`${API_URL}/exams`);
@@ -741,10 +751,11 @@
             } catch(e) {}
         }
 
+        // XÓA ĐỀ THI (ADMIN - FETCHWITHAUTH)
         window.deleteExam = async function(code) {
             if(!confirm(`Bạn có chắc chắn muốn xóa đề ${code}?`)) return;
             try {
-                const res = await fetch(`${API_URL}/exams/${code}`, { method: 'DELETE' });
+                const res = await fetchWithAuth(`${API_URL}/exams/${code}`, { method: 'DELETE' });
                 const data = await res.json();
                 if(data.success) { 
                     alert("✅ Xóa thành công!"); 
@@ -755,15 +766,15 @@
             } catch(e) { alert("❌ Lỗi kết nối!"); }
         };
 
+        // MUA SHOP ITEM (FETCHWITHAUTH)
         window.buyShopItem = async function(itemName, price, avatarUrl) {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return alert("Vui lòng đăng nhập!");
             if (!confirm(`Xác nhận mua ${itemName} với giá ${price} Mcion?`)) return;
 
             try {
-                const res = await fetch(`${API_URL}/mcion/buy`, {
+                const res = await fetchWithAuth(`${API_URL}/mcion/buy`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         username: currentUser.username, 
                         itemName: itemName,
@@ -900,6 +911,7 @@
             }
         }
 
+        // ĐỔI AVATAR (FETCHWITHAUTH)
         window.selectAvatar = async function(avatarUrl, itemName) {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return;
@@ -912,9 +924,8 @@
             };
 
             try {
-                const res = await fetch(`${API_URL}/update-avatar`, {
+                const res = await fetchWithAuth(`${API_URL}/update-avatar`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
@@ -934,7 +945,6 @@
             }
         };
 
-        // ================= MODALS EVENT LISTENERS =================
         document.getElementById('btnShowChangePass').addEventListener('click', () => {
             document.getElementById('modalChangePass').classList.remove('hidden');
         });
@@ -949,6 +959,7 @@
             document.getElementById('modalChangeAvatar').classList.add('hidden');
         });
 
+        // ĐỔI MẬT KHẨU (FETCHWITHAUTH)
         document.getElementById('btnSubmitChangePass').addEventListener('click', async () => {
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             const oldPassword = document.getElementById('cpOldPass').value.trim();
@@ -959,9 +970,8 @@
             if (newPassword !== confirmPass) return alert("❌ Mật khẩu mới xác nhận không khớp!");
 
             try {
-                const res = await fetch(`${API_URL}/change-password`, {
+                const res = await fetchWithAuth(`${API_URL}/change-password`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         username: currentUser.username,
                         role: currentUser.role,
@@ -985,7 +995,7 @@
             }
         });
 
-        // ================= TẠO ĐỀ THI TỰ ĐỘNG =================
+        // TẠO ĐỀ TỰ ĐỘNG (ADMIN - FETCHWITHAUTH)
         document.getElementById('btnAutoGenerateExam').addEventListener('click', async function() {
             const examCode = document.getElementById('autoExamCode').value.trim();
             const subject = document.getElementById('autoAdminSubject').value;
@@ -1035,9 +1045,8 @@
                     correct: q.correct
                 }));
 
-                const saveRes = await fetch(`${API_URL}/exams`, {
+                const saveRes = await fetchWithAuth(`${API_URL}/exams`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         examCode: examCode,
                         subject: subject,
@@ -1064,9 +1073,8 @@
             }
         });
             
-    }); // Kết thúc DOMContentLoaded
+    });
 
-    // ================= HÀM LỌC ĐỀ THI DỘNG =================
     function onCategoryFilterChange() {
         const selectedSubject = document.getElementById('studentFilterSubject').value;
         const selectedGrade = document.getElementById('studentFilterGrade').value;
