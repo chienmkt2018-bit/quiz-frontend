@@ -33,7 +33,7 @@
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         .question-card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .question-title { font-weight: bold; margin-bottom: 10px; color: #2c3e50; }
-        .option-item { margin: 6px 0; display: flex; align-items: center; cursor: pointer; }
+        .option-item { margin: 6px 0; display: flex; align-items: center; cursor: pointer; padding: 6px 10px; border-radius: 5px; border: 1px solid transparent; }
         .option-item input { margin-right: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
@@ -41,8 +41,10 @@
         .hidden { display: none !important; }
         .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
         .shop-card { background: white; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; text-align: center; }
-        .option-item.correct-choice { background-color: #d4edda !important; border: 1px solid #28a745; border-radius: 5px; padding: 6px 10px; color: #155724; font-weight: bold; }
-        .option-item.wrong-choice { background-color: #f8d7da !important; border: 1px solid #dc3545; border-radius: 5px; padding: 6px 10px; color: #721c24; text-decoration: line-through; }
+        
+        /* CSS CHO TÍNH NĂNG XEM LẠI BÀI THI */
+        .option-item.correct-choice { background-color: #d4edda !important; border: 1px solid #28a745 !important; color: #155724 !important; font-weight: bold; }
+        .option-item.wrong-choice { background-color: #f8d7da !important; border: 1px solid #dc3545 !important; color: #721c24 !important; text-decoration: line-through; }
         .answer-explanation { margin-top: 10px; padding: 8px 12px; border-radius: 5px; font-weight: bold; font-size: 14px; }
         .answer-explanation.correct { background: #e8f8f5; color: #27ae60; border-left: 4px solid #27ae60; }
         .answer-explanation.wrong { background: #fdf2e9; color: #e67e22; border-left: 4px solid #e67e22; }
@@ -92,7 +94,6 @@
 
     <!-- KHU VỰC HỌC SINH -->
     <div id="sectionStudent" class="hidden">
-        <!-- ĐÃ GỘP THÀNH 1 KHỐI CHỌN ĐỀ THI DUY NHẤT VÀ TÍCH HỢP BỘ LỌC -->
         <div class="card-box">
             <h3>🎯 Chọn Bài Thi Theo Môn Học & Khối Lớp</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
@@ -247,7 +248,7 @@
         </div>
     </div>
 
-    <!-- MODALS (Đổi Mật Khẩu, Đổi Avatar) -->
+    <!-- MODALS -->
     <div id="modalChangePass" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000;">
         <div style="background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px;">
             <h3 style="margin-bottom: 15px; text-align: center;">Đổi Mật Khẩu</h3>
@@ -274,7 +275,7 @@
     const API_URL = "https://quiz-backend-ta9z.onrender.com/api";
     let examTimerInterval; 
     let currentExamData = null;
-    let allExamsFromServer = []; // Mảng toàn cục chứa danh sách đề thi tải từ Backend
+    let allExamsFromServer = [];
 
     const SHOP_AVATARS = [
         { name: 'Mặc định', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" },
@@ -282,6 +283,16 @@
         { name: 'Avatar Chó Shiba', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐶</text></svg>" },
         { name: 'Avatar Siêu VIP', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>" }
     ];
+
+    // Thuật toán xáo trộn Fisher-Yates
+    function shuffleArray(array) {
+        let arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
 
     document.addEventListener("DOMContentLoaded", function() {
         loadUISettings();
@@ -296,7 +307,7 @@
             document.getElementById('formLogin').classList.remove('hidden');
         });
 
-        // ================= XỬ LÝ LÀM BÀI THI =================
+        // ================= XỬ LÝ BẮT ĐẦU LÀM BÀI THI (TÍCH HỢP TRỘN ĐÁP ÁN) =================
         document.getElementById('btnStartExam').addEventListener('click', async function() {
             const examCode = document.getElementById('selectExamCode').value;
             if (!examCode) return alert("⚠️ Vui lòng chọn một mã đề thi!");
@@ -325,25 +336,54 @@
                 document.getElementById('examTitle').textContent = `Bài Thi: ${examCode}`;
                 
                 const container = document.getElementById('questionsContainer');
+                const labels = ['A', 'B', 'C', 'D'];
                 let fullHtml = '';
 
+                // XỬ LÝ TRỘN ĐÁP ÁN CHO TỪNG CÂU HỎI
                 exam.questions.forEach((q, index) => {
-                    let html = `<div class="question-card">
-                                    <div class="question-title">Câu ${index + 1}: ${q.question}</div>`;
-                    const labels = ['A', 'B', 'C', 'D'];
-                    q.options.forEach((opt, i) => {
-                        if (opt !== undefined && opt !== null && String(opt).trim() !== '') {
-                            html += `<label class="option-item">
-                                        <input type="radio" name="q${index}" value="${labels[i]}">
-                                        ${labels[i]}. ${opt}
-                                    </label>`;
-                        }
+                    const rawCorrect = String(q.correct || 'A').trim().toUpperCase();
+                    const correctIndex = labels.indexOf(rawCorrect) !== -1 ? labels.indexOf(rawCorrect) : 0;
+
+                    // Tạo mảng đối tượng các phương án lựa chọn
+                    let optionObjects = q.options
+                        .map((opt, i) => ({
+                            text: opt,
+                            isCorrect: (i === correctIndex)
+                        }))
+                        .filter(o => o.text !== undefined && o.text !== null && String(o.text).trim() !== '');
+
+                    // Trộn ngẫu nhiên thứ tự các phương án lựa chọn
+                    optionObjects = shuffleArray(optionObjects);
+
+                    // Gán lại nhãn A, B, C, D mới sau khi đã trộn
+                    let runtimeCorrect = 'A';
+                    optionObjects.forEach((item, idx) => {
+                        item.label = labels[idx];
+                        if (item.isCorrect) runtimeCorrect = labels[idx];
                     });
+
+                    // Lưu danh sách đáp án đã trộn & đáp án đúng tương ứng vào câu hỏi hiện tại
+                    q.shuffledOptions = optionObjects;
+                    q.runtimeCorrect = runtimeCorrect;
+
+                    // Dựng chuỗi HTML cho câu hỏi
+                    let html = `<div class="question-card" id="qcard_${index}">
+                                    <div class="question-title">Câu ${index + 1}: ${q.question}</div>`;
+                    
+                    q.shuffledOptions.forEach((optObj) => {
+                        html += `<label class="option-item">
+                                    <input type="radio" name="q${index}" value="${optObj.label}">
+                                    ${optObj.label}. ${optObj.text}
+                                </label>`;
+                    });
+
                     html += `</div>`;
                     fullHtml += html;
                 });
 
                 container.innerHTML = fullHtml;
+
+                // Đồng hồ đếm ngược
                 clearInterval(examTimerInterval);
                 if (exam.timeLimit > 0) {
                     let time = exam.timeLimit * 60;
@@ -376,12 +416,14 @@
             delete btnSubmit.dataset.state;
         });
 
+        // ================= XỬ LÝ NỘP BÀI THI & XEM LẠI CHI TIẾT ĐÁP ÁN =================
         document.getElementById('btnSubmitExam').addEventListener('click', async function() {
             if (!currentExamData) return;
                 
             const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
             if (!currentUser) return alert("❌ Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại!");
             
+            // Nếu đã ở chế độ xem lại -> bấm nút sẽ đóng bài thi
             if (this.dataset.state === "review") {
                 document.getElementById('examArea').classList.add('hidden');
                 this.textContent = "NỘP BÀI THI";
@@ -395,16 +437,19 @@
             const total = currentExamData.questions.length;
             if (total === 0) return alert("❌ Đề thi này không có câu hỏi hợp lệ!");
 
+            // Chấm điểm và tô màu chi tiết kết quả từng câu
             currentExamData.questions.forEach((q, index) => {
                 const selected = document.querySelector(`input[name="q${index}"]:checked`);
                 const userChoice = selected ? selected.value.trim() : null;
-                const correctChoice = String(q.correct || '').trim();
+                const correctChoice = q.runtimeCorrect || String(q.correct || 'A').trim().toUpperCase();
 
-                const questionCard = document.querySelectorAll('.question-card')[index];
+                const questionCard = document.getElementById(`qcard_${index}`) || document.querySelectorAll('.question-card')[index];
                 const optionInputs = questionCard.querySelectorAll('input[type="radio"]');
 
+                // Vô hiệu hóa không cho đổi đáp án sau khi đã nộp
                 optionInputs.forEach(input => input.disabled = true);
 
+                // Highlight tô màu đáp án Đúng/Sai
                 optionInputs.forEach(input => {
                     const label = input.closest('.option-item');
                     if (input.value === correctChoice) {
@@ -415,14 +460,22 @@
                     }
                 });
 
+                // Lấy nội dung chữ của đáp án đúng để hiển thị Lời giải
+                const correctOptObj = q.shuffledOptions ? q.shuffledOptions.find(o => o.label === correctChoice) : null;
+                const correctTextDisplay = correctOptObj ? `${correctChoice}. ${correctOptObj.text}` : correctChoice;
+
+                // Xóa khung giải thích cũ nếu bấm lại
+                const existingExp = questionCard.querySelector('.answer-explanation');
+                if (existingExp) existingExp.remove();
+
                 const expDiv = document.createElement('div');
                 if (userChoice === correctChoice) {
                     correctCount++;
                     expDiv.className = 'answer-explanation correct';
-                    expDiv.innerHTML = `✅ Đúng! Đáp án chuẩn: <b>${correctChoice}</b>`;
+                    expDiv.innerHTML = `✅ Chính xác! Đáp án đúng: <b>${correctTextDisplay}</b>`;
                 } else {
                     expDiv.className = 'answer-explanation wrong';
-                    expDiv.innerHTML = `❌ Sai! Bạn chọn: <b>${userChoice || 'Bỏ trống'}</b> | Đáp án đúng: <b>${correctChoice}</b>`;
+                    expDiv.innerHTML = `❌ Chưa chính xác! Lựa chọn của bạn: <b>${userChoice ? userChoice : 'Bỏ trống'}</b> | Đáp án đúng: <b>${correctTextDisplay}</b>`;
                 }
                 questionCard.appendChild(expDiv);
             });
@@ -430,7 +483,7 @@
             const score = Number(((correctCount / total) * 10).toFixed(1));
             const earnedMcion = correctCount * 10;
 
-            alert(`🎉 Nộp bài thành công!\n- Số câu đúng: ${correctCount}/${total}\n- Điểm số: ${score} điểm\n- Thưởng: +${earnedMcion} Mcion!\n\n👇 Bạn có thể cuộn xuống để xem chi tiết đáp án bên dưới.`);
+            alert(`🎉 Nộp bài thành công!\n- Số câu đúng: ${correctCount}/${total}\n- Điểm số: ${score} điểm\n- Thưởng: +${earnedMcion} Mcion!\n\n👇 Hãy cuộn xuống bên dưới để xem lại chi tiết đáp án đúng/sai của từng câu.`);
 
             const historyData = {
                 username: currentUser.username,
@@ -461,7 +514,7 @@
             this.dataset.state = "review";
         });
 
-        // ================= LƯU ĐỀ EXCEL (CÓ MÔN & KHỐI LỚP) =================
+        // ================= LƯU ĐỀ EXCEL =================
         document.getElementById('btnSaveExam').addEventListener('click', async () => {
             const examCode = document.getElementById('inputExamCode').value.trim();
             const subject = document.getElementById('adminSubject').value;
@@ -650,7 +703,6 @@
                 const exams = await res.json();
                 if (!Array.isArray(exams)) return;
 
-                // Chuẩn hóa dữ liệu nhận về từ API (hỗ trợ cả chuỗi và object)
                 allExamsFromServer = exams.map(e => {
                     if (typeof e === 'string') return { code: e, subject: 'Toán', grade: 'Lớp 1' };
                     return {
@@ -661,7 +713,7 @@
                     };
                 });
 
-                onCategoryFilterChange(); // Cập nhật dropdown theo bộ lọc hiện tại
+                onCategoryFilterChange();
             } catch(e) { console.error("Lỗi tải danh sách đề:", e); }
         }
 
@@ -933,7 +985,7 @@
             }
         });
 
-        // ================= TẠO ĐỀ THI TỰ ĐỘNG (MIX CÂU HỎI & CÓ MÔN / LỚP) =================
+        // ================= TẠO ĐỀ THI TỰ ĐỘNG =================
         document.getElementById('btnAutoGenerateExam').addEventListener('click', async function() {
             const examCode = document.getElementById('autoExamCode').value.trim();
             const subject = document.getElementById('autoAdminSubject').value;
@@ -974,11 +1026,7 @@
                     throw new Error("Không tìm thấy câu hỏi hợp lệ trong ngân hàng dữ liệu!");
                 }
 
-                // Trộn Fisher-Yates
-                for (let i = questionBank.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [questionBank[i], questionBank[j]] = [questionBank[j], questionBank[i]];
-                }
+                questionBank = shuffleArray(questionBank);
 
                 const selectedQuestions = questionBank.slice(0, count).map((q, idx) => ({
                     id: idx + 1,
@@ -1018,7 +1066,7 @@
             
     }); // Kết thúc DOMContentLoaded
 
-    // ================= HÀM LỌC ĐỀ THI DỘNG CHO HỌC SINH =================
+    // ================= HÀM LỌC ĐỀ THI DỘNG =================
     function onCategoryFilterChange() {
         const selectedSubject = document.getElementById('studentFilterSubject').value;
         const selectedGrade = document.getElementById('studentFilterGrade').value;
@@ -1027,7 +1075,6 @@
         if (!examSelectEl) return;
         examSelectEl.innerHTML = '';
 
-        // Lọc danh sách đề thi lấy trực tiếp từ Backend
         const filteredExams = allExamsFromServer.filter(exam => {
             const matchSubject = (selectedSubject === 'ALL') || (exam.subject === selectedSubject);
             const matchGrade = (selectedGrade === 'ALL') || (exam.grade === selectedGrade);
