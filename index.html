@@ -316,151 +316,39 @@
 
 <script>
     const API_URL = "https://quiz-backend-ta9z.onrender.com/api";
-    let examTimerInterval; 
+    let examTimerInterval = null; 
     let currentExamData = null;
     let allExamsFromServer = [];
     let adminSearchTimeout = null;
 
     const SHOP_AVATARS = [
-        { name: 'Mặc định', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" },
+        { name: 'Mặc định', url: "https://api.dicebear.com/7.x/bottts/svg?seed=Default" },
         { name: 'Avatar Mèo Cool', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>" },
         { name: 'Avatar Chó Shiba', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐶</text></svg>" },
         { name: 'Avatar Siêu VIP', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>" }
     ];
 
-    // --- CÁC HÀM XỬ LÝ LỊCH SỬ ĐƯỢC EXPORT RA WINDOW GLOBAL SCOPE ---
-    window.switchStudentHistoryTab = function(tabName) {
-        const btnRecent = document.getElementById('tabStudentRecentBtn');
-        const btnDetail = document.getElementById('tabStudentDetailBtn');
-        const tabRecent = document.getElementById('tabStudentRecent');
-        const tabDetail = document.getElementById('tabStudentDetail');
+    // --- HELPER & UTILITY FUNCTIONS ---
+    
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 
-        if (!btnRecent || !btnDetail || !tabRecent || !tabDetail) return;
-
-        if (tabName === 'recent') {
-            btnRecent.classList.add('active');
-            btnDetail.classList.remove('active');
-            tabRecent.classList.remove('hidden');
-            tabDetail.classList.add('hidden');
-            renderMyHistoryRecent();
-        } else {
-            btnDetail.classList.add('active');
-            btnRecent.classList.remove('active');
-            tabDetail.classList.remove('hidden');
-            tabRecent.classList.add('hidden');
-            renderMyHistoryDetail();
+    function shuffleArray(array) {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
         }
-    };
+        return arr;
+    }
 
-    window.renderMyHistoryRecent = async function() {
-        const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
-        if (!currentUser) return;
-        try {
-            const res = await fetch(`${API_URL}/history?search=${encodeURIComponent(currentUser.username)}`);
-            const history = await res.json();
-            if (!Array.isArray(history)) return;
-
-            const myHistory = history.filter(h => h.username === currentUser.username).slice(0, 5);
-            const tbody = document.getElementById('myHistoryRecentBody');
-
-            if (myHistory.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa có lịch sử làm bài.</td></tr>';
-                return;
-            }
-
-            let htmlStr = '';
-            myHistory.forEach(h => { 
-                htmlStr += `<tr><td>${h.time}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; 
-            });
-            tbody.innerHTML = htmlStr;
-        } catch (e) { console.error("Lỗi tải lịch sử gần đây cá nhân:", e); }
-    };
-
-    window.renderMyHistoryDetail = async function() {
-        const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
-        if (!currentUser) return;
-        try {
-            const res = await fetch(`${API_URL}/history?search=${encodeURIComponent(currentUser.username)}`);
-            const history = await res.json();
-            if (!Array.isArray(history)) return;
-
-            const myHistory = history.filter(h => h.username === currentUser.username);
-            const tbody = document.getElementById('myHistoryDetailBody');
-
-            if (myHistory.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa có lịch sử làm bài.</td></tr>';
-                return;
-            }
-
-            let htmlStr = '';
-            myHistory.forEach(h => { 
-                htmlStr += `<tr><td>${h.time}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; 
-            });
-            tbody.innerHTML = htmlStr;
-        } catch (e) { console.error("Lỗi tải chi tiết lịch sử cá nhân:", e); }
-    };
-
-    window.switchAdminHistoryTab = function(tabName) {
-        const btnRecent = document.getElementById('tabAdminRecentBtn');
-        const btnDetail = document.getElementById('tabAdminDetailBtn');
-        const tabRecent = document.getElementById('tabAdminRecent');
-        const tabDetail = document.getElementById('tabAdminDetail');
-
-        if (!btnRecent || !btnDetail || !tabRecent || !tabDetail) return;
-
-        if (tabName === 'recent') {
-            btnRecent.classList.add('active');
-            btnDetail.classList.remove('active');
-            tabRecent.classList.remove('hidden');
-            tabDetail.classList.add('hidden');
-            renderAllHistoryRecent();
-        } else {
-            btnDetail.classList.add('active');
-            btnRecent.classList.remove('active');
-            tabDetail.classList.remove('hidden');
-            tabRecent.classList.add('hidden');
-            renderAllHistoryDetail();
-        }
-    };
-
-    window.renderAllHistoryRecent = async function() {
-        try {
-            const res = await fetch(`${API_URL}/history?limit=5`);
-            const history = await res.json();
-            if (!Array.isArray(history)) return;
-
-            const tbody = document.getElementById('allHistoryRecentBody');
-            tbody.innerHTML = history.length === 0 ? '<tr><td colspan="5" style="text-align:center;">Chưa có lịch sử bài làm.</td></tr>' : "";
-            history.forEach(h => { 
-                tbody.innerHTML += `<tr><td>${h.time}</td><td>${h.fullname || h.username}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; 
-            });
-        } catch(e) { console.error("Lỗi tải 5 bản ghi gần đây:", e); }
-    };
-
-    window.renderAllHistoryDetail = async function(searchTerm = '') {
-        try {
-            const query = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
-            const res = await fetch(`${API_URL}/history${query}`);
-            const history = await res.json();
-            if (!Array.isArray(history)) return;
-
-            const tbody = document.getElementById('allHistoryDetailBody');
-            tbody.innerHTML = history.length === 0 ? '<tr><td colspan="5" style="text-align:center;">Không tìm thấy lịch sử bài làm phù hợp.</td></tr>' : "";
-            history.forEach(h => { 
-                tbody.innerHTML += `<tr><td>${h.time}</td><td>${h.fullname || h.username}</td><td><b>${h.examCode}</b></td><td>${h.correctCount}/${h.totalQuestions}</td><td><b style="color: #e74c3c;">${h.score}đ</b></td></tr>`; 
-            });
-        } catch(e) { console.error("Lỗi tải chi tiết lịch sử:", e); }
-    };
-
-    window.handleAdminHistorySearch = function() {
-        clearTimeout(adminSearchTimeout);
-        const val = document.getElementById('adminHistorySearchInput').value.trim();
-        adminSearchTimeout = setTimeout(() => {
-            renderAllHistoryDetail(val);
-        }, 300);
-    };
-
-    // HÀM HELPER FETCH TỰ ĐỘNG GỬI JWT TOKEN
     async function fetchWithAuth(url, options = {}) {
         const token = sessionStorage.getItem("access_token");
         const headers = {
@@ -478,7 +366,7 @@
             const errData = await response.json().catch(() => ({}));
             alert("⚠️ " + (errData.message || "Phiên đăng nhập hết hạn hoặc không đủ quyền!"));
             if (response.status === 401) {
-                document.getElementById('btnLogout').click();
+                document.getElementById('btnLogout')?.click();
             }
             throw new Error(errData.message || "Unauthorized");
         }
@@ -486,30 +374,244 @@
         return response;
     }
 
-    function shuffleArray(array) {
-        let arr = [...array];
-        for (let i = arr.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [arr[i], arr[j]] = [arr[j], arr[i]];
+    function renderHistoryTableRows(tbodyId, historyList, showCandidate = false, emptyMsg = "Chưa có lịch sử bài làm.") {
+        const tbody = document.getElementById(tbodyId);
+        if (!tbody) return;
+
+        if (!Array.isArray(historyList) || historyList.length === 0) {
+            const colSpan = showCandidate ? 5 : 4;
+            tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;">${escapeHtml(emptyMsg)}</td></tr>`;
+            return;
         }
-        return arr;
+
+        const htmlStr = historyList.map(h => {
+            const candidateCell = showCandidate ? `<td>${escapeHtml(h.fullname || h.username)}</td>` : '';
+            return `<tr>
+                <td>${escapeHtml(h.time)}</td>
+                ${candidateCell}
+                <td><b>${escapeHtml(h.examCode)}</b></td>
+                <td>${Number(h.correctCount || 0)}/${Number(h.totalQuestions || 0)}</td>
+                <td><b style="color: #e74c3c;">${escapeHtml(h.score)}đ</b></td>
+            </tr>`;
+        }).join('');
+
+        tbody.innerHTML = htmlStr;
     }
+
+    // --- GLOBAL SCOPE FUNCTIONS ---
+
+    window.switchStudentHistoryTab = function(tabName) {
+        const btnRecent = document.getElementById('tabStudentRecentBtn');
+        const btnDetail = document.getElementById('tabStudentDetailBtn');
+        const tabRecent = document.getElementById('tabStudentRecent');
+        const tabDetail = document.getElementById('tabStudentDetail');
+
+        if (!btnRecent || !btnDetail || !tabRecent || !tabDetail) return;
+
+        const isRecent = tabName === 'recent';
+        btnRecent.classList.toggle('active', isRecent);
+        btnDetail.classList.toggle('active', !isRecent);
+        tabRecent.classList.toggle('hidden', !isRecent);
+        tabDetail.classList.toggle('hidden', isRecent);
+
+        if (isRecent) renderMyHistoryRecent();
+        else renderMyHistoryDetail();
+    };
+
+    window.renderMyHistoryRecent = async function() {
+        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
+        if (!currentUser) return;
+        try {
+            const res = await fetch(`${API_URL}/history?search=${encodeURIComponent(currentUser.username)}`);
+            const history = await res.json();
+            if (!Array.isArray(history)) return;
+
+            const myHistory = history.filter(h => h.username === currentUser.username).slice(0, 5);
+            renderHistoryTableRows('myHistoryRecentBody', myHistory, false, "Chưa có lịch sử làm bài.");
+        } catch (e) { console.error("Lỗi tải lịch sử gần đây cá nhân:", e); }
+    };
+
+    window.renderMyHistoryDetail = async function() {
+        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
+        if (!currentUser) return;
+        try {
+            const res = await fetch(`${API_URL}/history?search=${encodeURIComponent(currentUser.username)}`);
+            const history = await res.json();
+            if (!Array.isArray(history)) return;
+
+            const myHistory = history.filter(h => h.username === currentUser.username);
+            renderHistoryTableRows('myHistoryDetailBody', myHistory, false, "Chưa có lịch sử làm bài.");
+        } catch (e) { console.error("Lỗi tải chi tiết lịch sử cá nhân:", e); }
+    };
+
+    window.switchAdminHistoryTab = function(tabName) {
+        const btnRecent = document.getElementById('tabAdminRecentBtn');
+        const btnDetail = document.getElementById('tabAdminDetailBtn');
+        const tabRecent = document.getElementById('tabAdminRecent');
+        const tabDetail = document.getElementById('tabAdminDetail');
+
+        if (!btnRecent || !btnDetail || !tabRecent || !tabDetail) return;
+
+        const isRecent = tabName === 'recent';
+        btnRecent.classList.toggle('active', isRecent);
+        btnDetail.classList.toggle('active', !isRecent);
+        tabRecent.classList.toggle('hidden', !isRecent);
+        tabDetail.classList.toggle('hidden', isRecent);
+
+        if (isRecent) renderAllHistoryRecent();
+        else renderAllHistoryDetail();
+    };
+
+    window.renderAllHistoryRecent = async function() {
+        try {
+            const res = await fetch(`${API_URL}/history?limit=5`);
+            const history = await res.json();
+            if (!Array.isArray(history)) return;
+
+            renderHistoryTableRows('allHistoryRecentBody', history, true, "Chưa có lịch sử bài làm.");
+        } catch(e) { console.error("Lỗi tải 5 bản ghi gần đây:", e); }
+    };
+
+    window.renderAllHistoryDetail = async function(searchTerm = '') {
+        try {
+            const query = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
+            const res = await fetch(`${API_URL}/history${query}`);
+            const history = await res.json();
+            if (!Array.isArray(history)) return;
+
+            renderHistoryTableRows('allHistoryDetailBody', history, true, "Không tìm thấy lịch sử bài làm phù hợp.");
+        } catch(e) { console.error("Lỗi tải chi tiết lịch sử:", e); }
+    };
+
+    window.handleAdminHistorySearch = function() {
+        clearTimeout(adminSearchTimeout);
+        const val = document.getElementById('adminHistorySearchInput').value.trim();
+        adminSearchTimeout = setTimeout(() => {
+            renderAllHistoryDetail(val);
+        }, 300);
+    };
+
+    window.deleteExam = async function(code) {
+        if(!confirm(`Bạn có chắc chắn muốn xóa đề ${code}?`)) return;
+        try {
+            const res = await fetchWithAuth(`${API_URL}/exams/${code}`, { method: 'DELETE' });
+            const data = await res.json();
+            if(data.success) { 
+                alert("✅ Xóa thành công!"); 
+                loadAdminExamList(); 
+                loadExamList();
+            } else {
+                alert("❌ Lỗi: " + data.message);
+            }
+        } catch(e) { alert("❌ Lỗi kết nối!"); }
+    };
+
+    window.buyShopItem = async function(itemName, price, avatarUrl) {
+        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
+        if (!currentUser) return alert("Vui lòng đăng nhập!");
+        if (!confirm(`Xác nhận mua ${itemName} với giá ${price} Mcion?`)) return;
+
+        try {
+            const res = await fetchWithAuth(`${API_URL}/mcion/buy`, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    username: currentUser.username, 
+                    itemName: itemName,
+                    cost: Number(price),
+                    avatarUrl: avatarUrl 
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("🎉 Mua thành công! Avatar đã được cập nhật.");
+                if (data.user) {
+                    sessionStorage.setItem("current_user", JSON.stringify(data.user));
+                }
+                updateMcionDisplay();
+                checkLoginState();
+            } else {
+                alert("❌ " + data.message);
+            }
+        } catch(e) { alert("❌ Lỗi kết nối!"); }
+    };
+
+    window.selectAvatar = async function(avatarUrl, itemName) {
+        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
+        if (!currentUser) return;
+
+        const payloadAvatar = (itemName === 'Mặc định') ? 'default' : avatarUrl;
+
+        try {
+            const res = await fetchWithAuth(`${API_URL}/update-avatar`, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    username: currentUser.username, 
+                    avatar: payloadAvatar,
+                    avatarUrl: payloadAvatar,
+                    itemName: itemName 
+                })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                if (data.user) {
+                    sessionStorage.setItem("current_user", JSON.stringify(data.user));
+                }
+                document.getElementById('modalChangeAvatar')?.classList.add('hidden');
+                checkLoginState();
+                alert("✅ Đổi Avatar thành công!");
+            } else {
+                alert("❌ " + (data.message || "Đổi Avatar thất bại!"));
+            }
+        } catch(e) {
+            alert("❌ Lỗi kết nối máy chủ!");
+        }
+    };
+
+    function onCategoryFilterChange() {
+        const selectedSubject = document.getElementById('studentFilterSubject').value;
+        const selectedGrade = document.getElementById('studentFilterGrade').value;
+        const examSelectEl = document.getElementById('selectExamCode');
+
+        if (!examSelectEl) return;
+
+        const filteredExams = allExamsFromServer.filter(exam => {
+            const matchSubject = (selectedSubject === 'ALL') || (exam.subject === selectedSubject);
+            const matchGrade = (selectedGrade === 'ALL') || (exam.grade === selectedGrade);
+            return matchSubject && matchGrade;
+        });
+
+        if (filteredExams.length === 0) {
+            examSelectEl.innerHTML = '<option value="">-- Không tìm thấy đề thi phù hợp --</option>';
+            return;
+        }
+
+        const optionsHtml = ['<option value="">-- Chọn mã đề thi --</option>']
+            .concat(filteredExams.map(exam => 
+                `<option value="${escapeHtml(exam.code)}">[${escapeHtml(exam.subject || 'Môn khác')} - ${escapeHtml(exam.grade || 'Lớp khác')}] ${escapeHtml(exam.code)} (${exam.timeLimit || 15} phút)</option>`
+            ))
+            .join('');
+
+        examSelectEl.innerHTML = optionsHtml;
+    }
+
+    // --- MAIN EVENT INITIALIZATION ---
 
     document.addEventListener("DOMContentLoaded", function() {
         loadUISettings();
         checkLoginState();
 
-        document.getElementById('btnToggleToRegister').addEventListener('click', () => {
-            document.getElementById('formLogin').classList.add('hidden');
-            document.getElementById('formRegister').classList.remove('hidden');
+        document.getElementById('btnToggleToRegister')?.addEventListener('click', () => {
+            document.getElementById('formLogin')?.classList.add('hidden');
+            document.getElementById('formRegister')?.classList.remove('hidden');
         });
-        document.getElementById('btnToggleToLogin').addEventListener('click', () => {
-            document.getElementById('formRegister').classList.add('hidden');
-            document.getElementById('formLogin').classList.remove('hidden');
+        document.getElementById('btnToggleToLogin')?.addEventListener('click', () => {
+            document.getElementById('formRegister')?.classList.add('hidden');
+            document.getElementById('formLogin')?.classList.remove('hidden');
         });
 
         // ================= BẮT ĐẦU LÀM BÀI =================
-        document.getElementById('btnStartExam').addEventListener('click', async function() {
+        document.getElementById('btnStartExam')?.addEventListener('click', async function() {
             const examCode = document.getElementById('selectExamCode').value;
             if (!examCode) return alert("⚠️ Vui lòng chọn một mã đề thi!");
 
@@ -519,7 +621,7 @@
             btn.disabled = true;
 
             try {
-                const res = await fetch(`${API_URL}/exams/${examCode}`);
+                const res = await fetch(`${API_URL}/exams/${encodeURIComponent(examCode)}`);
                 const contentType = res.headers.get("content-type");
                 if (!contentType || !contentType.includes("application/json")) {
                     throw new Error("Lỗi máy chủ hoặc máy chủ đang khởi động lại!");
@@ -530,25 +632,30 @@
                     throw new Error("Đề thi này bị lỗi hoặc chưa có dữ liệu câu hỏi!");
                 }
 
-                currentExamData = exam;
-                currentExamData.examCode = examCode;
+                currentExamData = { ...exam, examCode };
 
-                document.getElementById('examArea').classList.remove('hidden');
+                const btnSubmit = document.getElementById('btnSubmitExam');
+                if (btnSubmit) {
+                    btnSubmit.textContent = "NỘP BÀI THI";
+                    btnSubmit.className = "btn-primary";
+                    btnSubmit.style.width = "100%";
+                    btnSubmit.style.padding = "12px";
+                    btnSubmit.style.marginTop = "15px";
+                    delete btnSubmit.dataset.state;
+                }
+
+                document.getElementById('examArea')?.classList.remove('hidden');
                 document.getElementById('examTitle').textContent = `Bài Thi: ${examCode}`;
                 
                 const container = document.getElementById('questionsContainer');
                 const labels = ['A', 'B', 'C', 'D'];
-                let fullHtml = '';
 
-                exam.questions.forEach((q, index) => {
+                const questionsHtml = exam.questions.map((q, index) => {
                     const rawCorrect = String(q.correct || 'A').trim().toUpperCase();
                     const correctIndex = labels.indexOf(rawCorrect) !== -1 ? labels.indexOf(rawCorrect) : 0;
 
-                    let optionObjects = q.options
-                        .map((opt, i) => ({
-                            text: opt,
-                            isCorrect: (i === correctIndex)
-                        }))
+                    let optionObjects = (q.options || [])
+                        .map((opt, i) => ({ text: opt, isCorrect: i === correctIndex }))
                         .filter(o => o.text !== undefined && o.text !== null && String(o.text).trim() !== '');
 
                     optionObjects = shuffleArray(optionObjects);
@@ -562,40 +669,39 @@
                     q.shuffledOptions = optionObjects;
                     q.runtimeCorrect = runtimeCorrect;
 
-                    let html = `<div class="question-card" id="qcard_${index}">
-                                    <div class="question-title">Câu ${index + 1}: ${q.question}</div>`;
-                    
-                    q.shuffledOptions.forEach((optObj) => {
-                        html += `<label class="option-item">
-                                    <input type="radio" name="q${index}" value="${optObj.label}">
-                                    ${optObj.label}. ${optObj.text}
-                                </label>`;
-                    });
+                    const optionsHtml = q.shuffledOptions.map(optObj => 
+                        `<label class="option-item">
+                            <input type="radio" name="q${index}" value="${optObj.label}">
+                            ${optObj.label}. ${escapeHtml(optObj.text)}
+                        </label>`
+                    ).join('');
 
-                    html += `</div>`;
-                    fullHtml += html;
-                });
+                    return `<div class="question-card" id="qcard_${index}">
+                                <div class="question-title">Câu ${index + 1}: ${escapeHtml(q.question)}</div>
+                                ${optionsHtml}
+                            </div>`;
+                }).join('');
 
-                container.innerHTML = fullHtml;
+                container.innerHTML = questionsHtml;
 
                 clearInterval(examTimerInterval);
                 if (exam.timeLimit > 0) {
                     let time = exam.timeLimit * 60;
-                    document.getElementById('examTimerDisplay').classList.remove('hidden');
+                    document.getElementById('examTimerDisplay')?.classList.remove('hidden');
                     examTimerInterval = setInterval(() => {
                         time--;
-                        let m = Math.floor(time / 60);
-                        let s = time % 60;
+                        const m = Math.floor(time / 60);
+                        const s = time % 60;
                         document.getElementById('timeRemaining').textContent = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
                         
                         if (time <= 0) {
                             clearInterval(examTimerInterval);
                             alert("⏳ Đã hết thời gian, hệ thống tự động nộp bài!");
-                            document.getElementById('btnSubmitExam').click();
+                            document.getElementById('btnSubmitExam')?.click();
                         }
                     }, 1000);
                 } else {
-                    document.getElementById('examTimerDisplay').classList.add('hidden');
+                    document.getElementById('examTimerDisplay')?.classList.add('hidden');
                 }
 
             } catch (err) {
@@ -604,22 +710,19 @@
                 btn.textContent = originalText;
                 btn.disabled = false;
             }
-            const btnSubmit = document.getElementById('btnSubmitExam');
-            btnSubmit.textContent = "NỘP BÀI THI";
-            btnSubmit.className = "btn-primary";
-            delete btnSubmit.dataset.state;
         });
 
         // ================= NỘP BÀI THI =================
-        document.getElementById('btnSubmitExam').addEventListener('click', async function() {
+        document.getElementById('btnSubmitExam')?.addEventListener('click', async function() {
             if (!currentExamData) return;
                 
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
             if (!currentUser) return alert("❌ Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại!");
             
             if (this.dataset.state === "review") {
-                document.getElementById('examArea').classList.add('hidden');
+                document.getElementById('examArea')?.classList.add('hidden');
                 this.textContent = "NỘP BÀI THI";
+                this.className = "btn-primary";
                 delete this.dataset.state;
                 return;
             }
@@ -635,26 +738,26 @@
                 const userChoice = selected ? selected.value.trim() : null;
                 const correctChoice = q.runtimeCorrect || String(q.correct || 'A').trim().toUpperCase();
 
-                const questionCard = document.getElementById(`qcard_${index}`) || document.querySelectorAll('.question-card')[index];
+                const questionCard = document.getElementById(`qcard_${index}`);
+                if (!questionCard) return;
+
                 const optionInputs = questionCard.querySelectorAll('input[type="radio"]');
 
-                optionInputs.forEach(input => input.disabled = true);
-
                 optionInputs.forEach(input => {
+                    input.disabled = true;
                     const label = input.closest('.option-item');
                     if (input.value === correctChoice) {
-                        label.classList.add('correct-choice');
+                        label?.classList.add('correct-choice');
                     }
                     if (userChoice && input.value === userChoice && userChoice !== correctChoice) {
-                        label.classList.add('wrong-choice');
+                        label?.classList.add('wrong-choice');
                     }
                 });
 
                 const correctOptObj = q.shuffledOptions ? q.shuffledOptions.find(o => o.label === correctChoice) : null;
-                const correctTextDisplay = correctOptObj ? `${correctChoice}. ${correctOptObj.text}` : correctChoice;
+                const correctTextDisplay = correctOptObj ? `${correctChoice}. ${escapeHtml(correctOptObj.text)}` : correctChoice;
 
-                const existingExp = questionCard.querySelector('.answer-explanation');
-                if (existingExp) existingExp.remove();
+                questionCard.querySelector('.answer-explanation')?.remove();
 
                 const expDiv = document.createElement('div');
                 if (userChoice === correctChoice) {
@@ -663,7 +766,7 @@
                     expDiv.innerHTML = `✅ Chính xác! Đáp án đúng: <b>${correctTextDisplay}</b>`;
                 } else {
                     expDiv.className = 'answer-explanation wrong';
-                    expDiv.innerHTML = `❌ Chưa chính xác! Lựa chọn của bạn: <b>${userChoice ? userChoice : 'Bỏ trống'}</b> | Đáp án đúng: <b>${correctTextDisplay}</b>`;
+                    expDiv.innerHTML = `❌ Chưa chính xác! Lựa chọn của bạn: <b>${userChoice ? escapeHtml(userChoice) : 'Bỏ trống'}</b> | Đáp án đúng: <b>${correctTextDisplay}</b>`;
                 }
                 questionCard.appendChild(expDiv);
             });
@@ -677,9 +780,9 @@
                 username: currentUser.username,
                 fullname: currentUser.fullname || currentUser.username,
                 examCode: currentExamData.examCode,
-                correctCount: correctCount,
+                correctCount,
                 totalQuestions: total,
-                score: score,
+                score,
                 time: new Date().toLocaleString('vi-VN'),
                 earnedMcion: Number(earnedMcion)
             };
@@ -702,7 +805,7 @@
         });
 
         // ================= LƯU ĐỀ EXCEL (ADMIN) =================
-        document.getElementById('btnSaveExam').addEventListener('click', async () => {
+        document.getElementById('btnSaveExam')?.addEventListener('click', async () => {
             const examCode = document.getElementById('inputExamCode').value.trim();
             const subject = document.getElementById('adminSubject').value;
             const grade = document.getElementById('adminGrade').value;
@@ -710,7 +813,7 @@
             const fileInput = document.getElementById('excelFileInput');
 
             if (!examCode) return alert("⚠️ Vui lòng nhập mã đề thi!");
-            if (fileInput.files.length === 0) return alert("⚠️ Vui lòng chọn file Excel!");
+            if (!fileInput.files || fileInput.files.length === 0) return alert("⚠️ Vui lòng chọn file Excel!");
 
             const file = fileInput.files[0];
             const reader = new FileReader();
@@ -734,6 +837,13 @@
                     for (let i = startIndex; i < validRows.length; i++) {
                         const row = validRows[i];
                         if (!row[0]) continue;
+
+                        let correctVal = (row[5] !== undefined && row[5] !== null) ? String(row[5]).trim().toUpperCase() : 'A';
+                        if (correctVal === '1') correctVal = 'A';
+                        else if (correctVal === '2') correctVal = 'B';
+                        else if (correctVal === '3') correctVal = 'C';
+                        else if (correctVal === '4') correctVal = 'D';
+
                         questions.push({
                             id: questions.length + 1,
                             question: String(row[0]).trim(),
@@ -743,7 +853,7 @@
                                 row[3] ? String(row[3]).trim() : '',
                                 row[4] ? String(row[4]).trim() : ''
                             ],
-                            correct: (row[5] !== undefined && row[5] !== null) ? String(row[5]).trim().toUpperCase() : 'A'
+                            correct: correctVal
                         });
                     }
 
@@ -761,14 +871,15 @@
                         document.getElementById('inputExamTime').value = '15';
                         fileInput.value = '';
                         loadAdminExamList();
+                        loadExamList();
                     } else alert("❌ " + result.message);
                 } catch (err) { alert("❌ Lỗi: " + err.message); }
             };
             reader.readAsArrayBuffer(file);
         });
 
-        // ================= AUTH & TOKEN MANAGEMENT =================
-        document.getElementById('btnRegisterSubmit').addEventListener('click', async () => {
+        // ================= AUTH & USER MANAGEMENT =================
+        document.getElementById('btnRegisterSubmit')?.addEventListener('click', async () => {
             const fullname = document.getElementById('regFullname').value.trim();
             const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value.trim();
@@ -784,8 +895,10 @@
                     body: JSON.stringify({ fullname, username, password })
                 });
                 const data = await res.json();
-                if (data.success) { alert("🎉 Đăng ký thành công!"); document.getElementById('btnToggleToLogin').click(); }
-                else alert("❌ " + data.message);
+                if (data.success) { 
+                    alert("🎉 Đăng ký thành công!"); 
+                    document.getElementById('btnToggleToLogin')?.click(); 
+                } else alert("❌ " + data.message);
             } catch (err) { alert("❌ Lỗi kết nối!"); }
         });
 
@@ -811,21 +924,23 @@
             } catch (e) { alert("❌ Lỗi kết nối máy chủ!"); }
         }
 
-        document.getElementById('btnLoginStudent').addEventListener('click', () => handleLogin('student'));
-        document.getElementById('btnLoginAdmin').addEventListener('click', () => handleLogin('admin'));
+        document.getElementById('btnLoginStudent')?.addEventListener('click', () => handleLogin('student'));
+        document.getElementById('btnLoginAdmin')?.addEventListener('click', () => handleLogin('admin'));
         
-        document.getElementById('btnLogout').addEventListener('click', () => { 
+        document.getElementById('btnLogout')?.addEventListener('click', () => { 
             sessionStorage.removeItem("current_user"); 
             sessionStorage.removeItem("access_token");
             clearInterval(examTimerInterval); 
             currentExamData = null;
-            document.getElementById('questionsContainer').innerHTML = '';
-            document.getElementById('examArea').classList.add('hidden'); 
+            
+            const qContainer = document.getElementById('questionsContainer');
+            if (qContainer) qContainer.innerHTML = '';
+            document.getElementById('examArea')?.classList.add('hidden'); 
             checkLoginState();
         });
 
         // ADMIN CẤP MCION
-        document.getElementById('btnGrantMcion').addEventListener('click', async () => {
+        document.getElementById('btnGrantMcion')?.addEventListener('click', async () => {
             const username = document.getElementById('targetStudentUser').value.trim();
             const rawAmount = document.getElementById('targetMcionAmount').value.trim();
             const amount = Number(rawAmount);
@@ -846,261 +961,25 @@
             } catch (err) { alert("❌ Lỗi kết nối!"); }
         });
 
-        function checkLoginState() {
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-            const topAvatar = document.getElementById('topUserAvatar');
-            if (!currentUser) {
-                document.getElementById('sectionAuth').classList.remove('hidden');
-                document.getElementById('sectionStudent').classList.add('hidden');
-                document.getElementById('sectionAdmin').classList.add('hidden');
-                document.getElementById('btnLogout').classList.add('hidden');
-                document.getElementById('btnShowChangePass').classList.add('hidden');
-                document.getElementById('btnShowChangeAvatar').classList.add('hidden');
-                topAvatar.classList.add('hidden');
-                document.getElementById('userInfo').textContent = "Chưa đăng nhập";
-                updateMcionDisplay(); 
-                return;
-            }
-            
-            document.getElementById('sectionAuth').classList.add('hidden');
-            document.getElementById('btnLogout').classList.remove('hidden');
-            document.getElementById('btnShowChangePass').classList.remove('hidden');
-            
-            if (currentUser.role === "student") {
-                document.getElementById('btnShowChangeAvatar').classList.remove('hidden');
-                topAvatar.src = currentUser.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=Default";
-                topAvatar.classList.remove('hidden');
-                document.getElementById('userInfo').textContent = `Học sinh: ${currentUser.fullname || currentUser.username}`;
-                document.getElementById('sectionStudent').classList.remove('hidden');
-                document.getElementById('sectionAdmin').classList.add('hidden');
-                loadExamList(); 
-                renderMyHistoryRecent();
-            } else {
-                topAvatar.classList.add('hidden');
-                document.getElementById('userInfo').textContent = `Admin (${currentUser.username})`;
-                document.getElementById('sectionAdmin').classList.remove('hidden');
-                document.getElementById('sectionStudent').classList.add('hidden');
-                renderAllHistoryRecent();
-                loadAdminExamList(); 
-            }
-            updateMcionDisplay();
-        }
-
-        async function loadExamList() {
-            try {
-                const res = await fetch(`${API_URL}/exams`);
-                const exams = await res.json();
-                if (!Array.isArray(exams)) return;
-
-                allExamsFromServer = exams.map(e => {
-                    if (typeof e === 'string') return { code: e, subject: 'Toán', grade: 'Lớp 1' };
-                    return {
-                        code: e.examCode || e.code,
-                        subject: e.subject || 'Toán',
-                        grade: e.grade || 'Lớp 1',
-                        timeLimit: e.timeLimit || 15
-                    };
-                });
-
-                onCategoryFilterChange();
-            } catch(e) { console.error("Lỗi tải danh sách đề:", e); }
-        }
-
-        async function loadAdminExamList() {
-            try {
-                const res = await fetch(`${API_URL}/exams`);
-                const exams = await res.json();
-                if (!Array.isArray(exams)) return;
-
-                const tbody = document.getElementById('adminExamListBody');
-                tbody.innerHTML = exams.length === 0 ? '<tr><td colspan="4" style="text-align:center;">Chưa có đề thi.</td></tr>' : "";
-                
-                exams.forEach(e => {
-                    const code = typeof e === 'string' ? e : (e.examCode || e.code);
-                    const subject = e.subject || 'Chưa gán';
-                    const grade = e.grade || 'Chưa gán';
-
-                    tbody.innerHTML += `<tr>
-                        <td><b>${code}</b></td>
-                        <td>${subject}</td>
-                        <td>${grade}</td>
-                        <td><button onclick="deleteExam('${code}')" class="btn-danger" style="padding: 5px 10px;">Xóa</button></td>
-                    </tr>`;
-                });
-            } catch(e) {}
-        }
-
-        // XÓA ĐỀ THI (ADMIN)
-        window.deleteExam = async function(code) {
-            if(!confirm(`Bạn có chắc chắn muốn xóa đề ${code}?`)) return;
-            try {
-                const res = await fetchWithAuth(`${API_URL}/exams/${code}`, { method: 'DELETE' });
-                const data = await res.json();
-                if(data.success) { 
-                    alert("✅ Xóa thành công!"); 
-                    loadAdminExamList(); 
-                } else {
-                    alert("❌ Lỗi: " + data.message);
-                }
-            } catch(e) { alert("❌ Lỗi kết nối!"); }
-        };
-
-        // MUA SHOP ITEM
-        window.buyShopItem = async function(itemName, price, avatarUrl) {
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
-            if (!currentUser) return alert("Vui lòng đăng nhập!");
-            if (!confirm(`Xác nhận mua ${itemName} với giá ${price} Mcion?`)) return;
-
-            try {
-                const res = await fetchWithAuth(`${API_URL}/mcion/buy`, {
-                    method: 'POST',
-                    body: JSON.stringify({ 
-                        username: currentUser.username, 
-                        itemName: itemName,
-                        cost: Number(price),
-                        price: Number(price), 
-                        avatarUrl: avatarUrl 
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert("🎉 Mua thành công! Avatar đã được cập nhật.");
-                    currentUser.avatar = avatarUrl;
-                    sessionStorage.setItem("current_user", JSON.stringify(currentUser));
-                    updateMcionDisplay();
-                    checkLoginState();
-                } else {
-                    alert("❌ " + data.message);
-                }
-            } catch(e) { alert("❌ Lỗi kết nối!"); }
-        };
-
-        async function updateMcionDisplay() {
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-            if (currentUser && currentUser.role === "student") {
-                try {
-                    const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
-                    const data = await res.json();
-                    const balanceVal = Number(data.balance || 0);
-                    document.getElementById('userMcionBalance').textContent = balanceVal.toLocaleString("vi-VN");
-                    document.getElementById('mcionBox').classList.remove('hidden');
-                } catch (e) {
-                    console.error("Lỗi cập nhật Mcion:", e);
-                }
-            } else {
-                document.getElementById('mcionBox').classList.add('hidden');
-            }
-        }
-
-        async function loadUISettings() {
-            try {
-                const res = await fetch(`${API_URL}/ui`);
-                const ui = await res.json();
-                if (ui.title) document.getElementById('siteTitleTag').textContent = ui.title;
-                if (ui.primaryColor) document.documentElement.style.setProperty('--primary-color', ui.primaryColor);
-                if (ui.bgColor) document.documentElement.style.setProperty('--bg-color', ui.bgColor);
-                if (ui.banner) {
-                    const bannerImg = document.getElementById('headerBanner');
-                    bannerImg.src = ui.banner;
-                    bannerImg.classList.remove('hidden');
-                }
-            } catch(e) {}
-        }
-
-        async function loadMyAvatars() {
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
-            const container = document.getElementById('ownedAvatarList');
-            if (!currentUser || !container) return;
-
-            container.innerHTML = '<p style="color: #7f8c8d; font-size: 14px;">Đang tải danh sách...</p>';
-
-            try {
-                const res = await fetch(`${API_URL}/mcion/${currentUser.username}`);
-                const data = await res.json();
-                const inventory = (data && Array.isArray(data.inventory)) ? data.inventory : [];
-
-                container.innerHTML = '';
-                
-                const availableAvatars = [
-                    { name: 'Mặc định', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Default' }
-                ];
-
-                SHOP_AVATARS.forEach(item => {
-                    if (inventory.includes(item.name)) {
-                        availableAvatars.push(item);
-                    }
-                });
-
-                availableAvatars.forEach(avt => {
-                    const avatarCard = document.createElement('div');
-                    avatarCard.style.cssText = 'text-align: center; cursor: pointer; padding: 8px; border: 2px solid #3498db; border-radius: 10px; background: #f8f9fa; transition: transform 0.2s;';
-                    avatarCard.onmouseover = () => avatarCard.style.transform = 'scale(1.05)';
-                    avatarCard.onmouseout = () => avatarCard.style.transform = 'scale(1)';
-                    avatarCard.onclick = () => selectAvatar(avt.url, avt.name);
-
-                    avatarCard.innerHTML = `
-                        <img src="${avt.url}" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 5px auto;">
-                        <span style="font-size: 12px; font-weight: bold; color: #2c3e50;">${avt.name}</span>
-                    `;
-                    container.appendChild(avatarCard);
-                });
-
-            } catch (e) {
-                container.innerHTML = '<p style="color: red; font-size: 14px;">Lỗi tải danh sách Avatar.</p>';
-            }
-        }
-
-        // ĐỔI AVATAR
-        window.selectAvatar = async function(avatarUrl, itemName) {
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
-            if (!currentUser) return;
-
-            const payload = { 
-                username: currentUser.username, 
-                avatar: avatarUrl,
-                avatarUrl: avatarUrl,
-                itemName: itemName 
-            };
-
-            try {
-                const res = await fetchWithAuth(`${API_URL}/update-avatar`, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    currentUser.avatar = (data.user && data.user.avatar) ? data.user.avatar : avatarUrl;
-                    sessionStorage.setItem("current_user", JSON.stringify(currentUser));
-                    
-                    document.getElementById('modalChangeAvatar').classList.add('hidden');
-                    checkLoginState();
-                    alert("✅ Đổi Avatar thành công!");
-                } else {
-                    alert("❌ " + (data.message || "Đổi Avatar thất bại!"));
-                }
-            } catch(e) {
-                alert("❌ Lỗi kết nối máy chủ!");
-            }
-        };
-
-        document.getElementById('btnShowChangePass').addEventListener('click', () => {
-            document.getElementById('modalChangePass').classList.remove('hidden');
+        // MODAL EVENTS
+        document.getElementById('btnShowChangePass')?.addEventListener('click', () => {
+            document.getElementById('modalChangePass')?.classList.remove('hidden');
         });
-        document.getElementById('btnCancelChangePass').addEventListener('click', () => {
-            document.getElementById('modalChangePass').classList.add('hidden');
+        document.getElementById('btnCancelChangePass')?.addEventListener('click', () => {
+            document.getElementById('modalChangePass')?.classList.add('hidden');
         });
-        document.getElementById('btnShowChangeAvatar').addEventListener('click', () => {
-            document.getElementById('modalChangeAvatar').classList.remove('hidden');
+        document.getElementById('btnShowChangeAvatar')?.addEventListener('click', () => {
+            document.getElementById('modalChangeAvatar')?.classList.remove('hidden');
             loadMyAvatars();
         });
-        document.getElementById('btnCancelAvatar').addEventListener('click', () => {
-            document.getElementById('modalChangeAvatar').classList.add('hidden');
+        document.getElementById('btnCancelAvatar')?.addEventListener('click', () => {
+            document.getElementById('modalChangeAvatar')?.classList.add('hidden');
         });
 
-        // ĐỔI MẬT KHẨU
-        document.getElementById('btnSubmitChangePass').addEventListener('click', async () => {
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+        document.getElementById('btnSubmitChangePass')?.addEventListener('click', async () => {
+            const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
+            if (!currentUser) return;
+
             const oldPassword = document.getElementById('cpOldPass').value.trim();
             const newPassword = document.getElementById('cpNewPass').value.trim();
             const confirmPass = document.getElementById('cpConfirmPass').value.trim();
@@ -1114,15 +993,15 @@
                     body: JSON.stringify({
                         username: currentUser.username,
                         role: currentUser.role,
-                        oldPassword: oldPassword,
-                        newPassword: newPassword
+                        oldPassword,
+                        newPassword
                     })
                 });
                 const data = await res.json();
 
                 if (data.success) {
                     alert("🎉 " + data.message);
-                    document.getElementById('modalChangePass').classList.add('hidden');
+                    document.getElementById('modalChangePass')?.classList.add('hidden');
                     document.getElementById('cpOldPass').value = '';
                     document.getElementById('cpNewPass').value = '';
                     document.getElementById('cpConfirmPass').value = '';
@@ -1134,8 +1013,8 @@
             }
         });
 
-        // TẠO ĐỀ TỰ ĐỘNG
-        document.getElementById('btnAutoGenerateExam').addEventListener('click', async function() {
+        // ================= TẠO ĐỀ TỰ ĐỘNG =================
+        document.getElementById('btnAutoGenerateExam')?.addEventListener('click', async function() {
             const examCode = document.getElementById('autoExamCode').value.trim();
             const subject = document.getElementById('autoAdminSubject').value;
             const grade = document.getElementById('autoAdminGrade').value;
@@ -1157,26 +1036,51 @@
                     throw new Error("Chưa có đề thi nào trên hệ thống để trích xuất câu hỏi!");
                 }
 
-                let questionBank = [];
-                for (const item of examCodes) {
-                    const code = typeof item === 'string' ? item : item.examCode;
-                    try {
-                        const res = await fetch(`${API_URL}/exams/${code}`);
-                        const examData = await res.json();
-                        if (examData && examData.questions && Array.isArray(examData.questions)) {
-                            questionBank = questionBank.concat(examData.questions);
-                        }
-                    } catch (e) {
-                        console.error(`Lỗi tải đề ${code}`, e);
-                    }
+                const targetExams = examCodes.filter(item => {
+                    if (typeof item === 'string') return true; 
+                    const matchSubject = !item.subject || item.subject === subject;
+                    const matchGrade = !item.grade || item.grade === grade;
+                    return matchSubject && matchGrade;
+                });
+
+                if (targetExams.length === 0) {
+                    throw new Error(`Không tìm thấy đề thi nào thuộc môn [${subject} - ${grade}] trên hệ thống!`);
                 }
 
+                const fetchPromises = targetExams.map(item => {
+                    const code = typeof item === 'string' ? item : (item.examCode || item.code);
+                    return fetch(`${API_URL}/exams/${encodeURIComponent(code)}`)
+                        .then(res => res.json())
+                        .catch(() => null);
+                });
+
+                const examResults = await Promise.allSettled(fetchPromises);
+                let questionBank = [];
+
+                examResults.forEach(result => {
+                    if (result.status === 'fulfilled' && result.value) {
+                        const examData = result.value;
+                        const isMatchSubject = !examData.subject || examData.subject === subject;
+                        const isMatchGrade = !examData.grade || examData.grade === grade;
+
+                        if (isMatchSubject && isMatchGrade && Array.isArray(examData.questions)) {
+                            questionBank.push(...examData.questions);
+                        }
+                    }
+                });
+
                 if (questionBank.length === 0) {
-                    throw new Error("Không tìm thấy câu hỏi hợp lệ trong ngân hàng dữ liệu!");
+                    throw new Error(`Không tìm thấy câu hỏi hợp lệ nào thuộc môn [${subject} - ${grade}]!`);
+                }
+
+                if (questionBank.length < count) {
+                    const confirmContinue = confirm(`⚠️ Ngân hàng chỉ có ${questionBank.length} câu hỏi thuộc [${subject} - ${grade}] (ít hơn ${count} câu bạn yêu cầu).\n\nBạn có muốn tiếp tục tạo đề thi với ${questionBank.length} câu hỏi này không?`);
+                    if (!confirmContinue) return;
                 }
 
                 questionBank = shuffleArray(questionBank);
 
+                // Lọc sạch dữ liệu câu hỏi trước khi lưu
                 const selectedQuestions = questionBank.slice(0, count).map((q, idx) => ({
                     id: idx + 1,
                     question: q.question,
@@ -1187,10 +1091,10 @@
                 const saveRes = await fetchWithAuth(`${API_URL}/exams`, {
                     method: 'POST',
                     body: JSON.stringify({
-                        examCode: examCode,
-                        subject: subject,
-                        grade: grade,
-                        timeLimit: timeLimit,
+                        examCode,
+                        subject,
+                        grade,
+                        timeLimit,
                         questions: selectedQuestions
                     })
                 });
@@ -1200,6 +1104,7 @@
                     alert(`🎉 Tạo thành công đề "${examCode}" (${subject} - ${grade}) với ${selectedQuestions.length} câu hỏi!`);
                     document.getElementById('autoExamCode').value = '';
                     loadAdminExamList();
+                    loadExamList();
                 } else {
                     alert("❌ Lỗi: " + result.message);
                 }
@@ -1211,42 +1116,188 @@
                 btn.disabled = false;
             }
         });
-            
     });
 
-    function onCategoryFilterChange() {
-        const selectedSubject = document.getElementById('studentFilterSubject').value;
-        const selectedGrade = document.getElementById('studentFilterGrade').value;
-        const examSelectEl = document.getElementById('selectExamCode');
+    // --- APP STATE CONTROL FUNCTIONS ---
 
-        if (!examSelectEl) return;
-        examSelectEl.innerHTML = '';
-
-        const filteredExams = allExamsFromServer.filter(exam => {
-            const matchSubject = (selectedSubject === 'ALL') || (exam.subject === selectedSubject);
-            const matchGrade = (selectedGrade === 'ALL') || (exam.grade === selectedGrade);
-            return matchSubject && matchGrade;
-        });
-
-        if (filteredExams.length === 0) {
-            const opt = document.createElement('option');
-            opt.value = "";
-            opt.textContent = "-- Không tìm thấy đề thi phù hợp --";
-            examSelectEl.appendChild(opt);
+    function checkLoginState() {
+        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
+        const topAvatar = document.getElementById('topUserAvatar');
+        
+        if (!currentUser) {
+            document.getElementById('sectionAuth')?.classList.remove('hidden');
+            document.getElementById('sectionStudent')?.classList.add('hidden');
+            document.getElementById('sectionAdmin')?.classList.add('hidden');
+            document.getElementById('btnLogout')?.classList.add('hidden');
+            document.getElementById('btnShowChangePass')?.classList.add('hidden');
+            document.getElementById('btnShowChangeAvatar')?.classList.add('hidden');
+            topAvatar?.classList.add('hidden');
+            
+            const userInfoEl = document.getElementById('userInfo');
+            if (userInfoEl) userInfoEl.textContent = "Chưa đăng nhập";
+            
+            updateMcionDisplay(); 
             return;
         }
+        
+        document.getElementById('sectionAuth')?.classList.add('hidden');
+        document.getElementById('btnLogout')?.classList.remove('hidden');
+        document.getElementById('btnShowChangePass')?.classList.remove('hidden');
+        
+        if (currentUser.role === "student") {
+            document.getElementById('btnShowChangeAvatar')?.classList.remove('hidden');
+            if (topAvatar) {
+                topAvatar.src = currentUser.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=Default";
+                topAvatar.classList.remove('hidden');
+            }
+            document.getElementById('userInfo').textContent = `Học sinh: ${currentUser.fullname || currentUser.username}`;
+            document.getElementById('sectionStudent')?.classList.remove('hidden');
+            document.getElementById('sectionAdmin')?.classList.add('hidden');
+            
+            loadExamList(); 
+            renderMyHistoryRecent();
+        } else {
+            topAvatar?.classList.add('hidden');
+            document.getElementById('userInfo').textContent = `Admin (${currentUser.username})`;
+            document.getElementById('sectionAdmin')?.classList.remove('hidden');
+            document.getElementById('sectionStudent')?.classList.add('hidden');
+            
+            renderAllHistoryRecent();
+            loadAdminExamList(); 
+        }
+        updateMcionDisplay();
+    }
 
-        const defaultOpt = document.createElement('option');
-        defaultOpt.value = "";
-        defaultOpt.textContent = "-- Chọn mã đề thi --";
-        examSelectEl.appendChild(defaultOpt);
+    async function loadExamList() {
+        try {
+            const res = await fetch(`${API_URL}/exams`);
+            const exams = await res.json();
+            if (!Array.isArray(exams)) return;
 
-        filteredExams.forEach(exam => {
-            const opt = document.createElement('option');
-            opt.value = exam.code;
-            opt.textContent = `[${exam.subject || 'Môn khác'} - ${exam.grade || 'Lớp khác'}] ${exam.code} (${exam.timeLimit || 15} phút)`;
-            examSelectEl.appendChild(opt);
-        });
+            allExamsFromServer = exams.map(e => {
+                if (typeof e === 'string') return { code: e, subject: 'Toán', grade: 'Lớp 1' };
+                return {
+                    code: e.examCode || e.code,
+                    subject: e.subject || 'Toán',
+                    grade: e.grade || 'Lớp 1',
+                    timeLimit: e.timeLimit || 15
+                };
+            });
+
+            onCategoryFilterChange();
+        } catch(e) { console.error("Lỗi tải danh sách đề:", e); }
+    }
+
+    async function loadAdminExamList() {
+        try {
+            const res = await fetch(`${API_URL}/exams`);
+            const exams = await res.json();
+            if (!Array.isArray(exams)) return;
+
+            const tbody = document.getElementById('adminExamListBody');
+            if (!tbody) return;
+
+            if (exams.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa có đề thi.</td></tr>';
+                return;
+            }
+
+            const htmlStr = exams.map(e => {
+                const code = typeof e === 'string' ? e : (e.examCode || e.code);
+                const subject = (typeof e === 'object' && e.subject) ? e.subject : 'Chưa gán';
+                const grade = (typeof e === 'object' && e.grade) ? e.grade : 'Chưa gán';
+
+                return `<tr>
+                    <td><b>${escapeHtml(code)}</b></td>
+                    <td>${escapeHtml(subject)}</td>
+                    <td>${escapeHtml(grade)}</td>
+                    <td><button onclick="deleteExam('${escapeHtml(code)}')" class="btn-danger" style="padding: 5px 10px;">Xóa</button></td>
+                </tr>`;
+            }).join('');
+
+            tbody.innerHTML = htmlStr;
+        } catch(e) {}
+    }
+
+    async function updateMcionDisplay() {
+        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
+        if (currentUser && currentUser.role === "student") {
+            try {
+                const res = await fetch(`${API_URL}/mcion/${encodeURIComponent(currentUser.username)}`);
+                const data = await res.json();
+                const balanceVal = Number(data.balance || 0);
+                document.getElementById('userMcionBalance').textContent = balanceVal.toLocaleString("vi-VN");
+                document.getElementById('mcionBox')?.classList.remove('hidden');
+            } catch (e) {
+                console.error("Lỗi cập nhật Mcion:", e);
+            }
+        } else {
+            document.getElementById('mcionBox')?.classList.add('hidden');
+        }
+    }
+
+    async function loadUISettings() {
+        try {
+            const res = await fetch(`${API_URL}/ui`);
+            const ui = await res.json();
+            if (ui.title) {
+                document.title = ui.title;
+                const mainTitleEl = document.getElementById('mainTitle');
+                if (mainTitleEl) mainTitleEl.textContent = ui.title;
+            }
+            if (ui.primaryColor) document.documentElement.style.setProperty('--primary-color', ui.primaryColor);
+            if (ui.bgColor) document.documentElement.style.setProperty('--bg-color', ui.bgColor);
+            if (ui.banner) {
+                const bannerImg = document.getElementById('headerBanner');
+                if (bannerImg) {
+                    bannerImg.src = ui.banner;
+                    bannerImg.classList.remove('hidden');
+                }
+            }
+        } catch(e) {}
+    }
+
+    async function loadMyAvatars() {
+        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
+        const container = document.getElementById('ownedAvatarList');
+        if (!currentUser || !container) return;
+
+        container.innerHTML = '<p style="color: #7f8c8d; font-size: 14px;">Đang tải danh sách...</p>';
+
+        try {
+            const res = await fetch(`${API_URL}/mcion/${encodeURIComponent(currentUser.username)}`);
+            const data = await res.json();
+            const inventory = (data && Array.isArray(data.inventory)) ? data.inventory : [];
+
+            const availableAvatars = [
+                { name: 'Mặc định', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Default' }
+            ];
+
+            SHOP_AVATARS.forEach(item => {
+                if (inventory.includes(item.name)) {
+                    availableAvatars.push(item);
+                }
+            });
+
+            container.innerHTML = '';
+            
+            availableAvatars.forEach(avt => {
+                const avatarCard = document.createElement('div');
+                avatarCard.style.cssText = 'text-align: center; cursor: pointer; padding: 8px; border: 2px solid #3498db; border-radius: 10px; background: #f8f9fa; transition: transform 0.2s;';
+                avatarCard.onmouseover = () => avatarCard.style.transform = 'scale(1.05)';
+                avatarCard.onmouseout = () => avatarCard.style.transform = 'scale(1)';
+                avatarCard.onclick = () => selectAvatar(avt.url, avt.name);
+
+                avatarCard.innerHTML = `
+                    <img src="${avt.url}" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 5px auto;">
+                    <span style="font-size: 12px; font-weight: bold; color: #2c3e50;">${escapeHtml(avt.name)}</span>
+                `;
+                container.appendChild(avatarCard);
+            });
+
+        } catch (e) {
+            container.innerHTML = '<p style="color: red; font-size: 14px;">Lỗi tải danh sách Avatar.</p>';
+        }
     }
 </script>
 </body>
