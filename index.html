@@ -216,28 +216,22 @@
                 </div>
             </article>
 
-            <!-- CỬA HÀNG MCION -->
+            <!-- CỬA HÀNG MCION NÂNG CẤP VỚI BỘ LỌC DANH MỤC -->
             <article class="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 p-5 rounded-xl">
-                <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-white">🛒 Cửa Hàng Đổi Thưởng Mcion</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl text-center shadow-sm hover:-translate-y-1 transition">
-                        <div class="text-4xl mb-2">🐱</div>
-                        <h4 class="font-bold text-base mb-1">Avatar Mèo Cool</h4>
-                        <p class="text-amber-500 font-bold mb-3 text-sm">100 Mcion</p>
-                        <button onclick="buyShopItem('Avatar Mèo Cool', 100, `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>`)" class="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg text-sm transition">Mua</button>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white">🛒 Cửa Hàng Đổi Thưởng Mcion</h3>
+                    <!-- Thanh Tab Chọn Danh Mục Đổi Thưởng -->
+                    <div class="flex gap-2 flex-wrap" id="shopCategoryTabs">
+                        <button type="button" onclick="filterShopCategory('ALL', this)" class="shop-cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-primary-600 text-white transition shadow-sm">✨ Tất Cả</button>
+                        <button type="button" onclick="filterShopCategory('AVATAR', this)" class="shop-cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition">🖼️ Avatar</button>
+                        <button type="button" onclick="filterShopCategory('ITEM', this)" class="shop-cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition">✏️ Vật Phẩm Học Tập</button>
+                        <button type="button" onclick="filterShopCategory('GIFT', this)" class="shop-cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition">🎁 Thẻ Quà Tặng</button>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl text-center shadow-sm hover:-translate-y-1 transition">
-                        <div class="text-4xl mb-2">🐶</div>
-                        <h4 class="font-bold text-base mb-1">Avatar Chó Shiba</h4>
-                        <p class="text-amber-500 font-bold mb-3 text-sm">150 Mcion</p>
-                        <button onclick="buyShopItem('Avatar Chó Shiba', 150, `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐶</text></svg>`)" class="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg text-sm transition">Mua</button>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl text-center shadow-sm hover:-translate-y-1 transition">
-                        <div class="text-4xl mb-2">👑</div>
-                        <h4 class="font-bold text-base mb-1">Avatar Siêu VIP</h4>
-                        <p class="text-amber-500 font-bold mb-3 text-sm">300 Mcion</p>
-                        <button onclick="buyShopItem('Avatar Siêu VIP', 300, `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>`)" class="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg text-sm transition">Mua</button>
-                    </div>
+                </div>
+
+                <!-- Dựng danh sách vật phẩm linh hoạt từ JavaScript -->
+                <div id="shopGridContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Được render tự động qua hàm renderShopItems() -->
                 </div>
             </article>
         </section>
@@ -424,11 +418,27 @@
     let allExamsFromServer = [];
     let adminSearchTimeout = null;
 
+    // DANH SÁCH VẬT PHẨM ĐỔI THƯỞNG ĐA DẠNG CÓ PHÂN LOẠI CATEGORY
+    const SHOP_ITEMS = [
+        // AVATARS
+        { name: 'Avatar Mèo Cool', category: 'AVATAR', price: 100, icon: '🐱', avatarUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>" },
+        { name: 'Avatar Chó Shiba', category: 'AVATAR', price: 150, icon: '🐶', avatarUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐶</text></svg>" },
+        { name: 'Avatar Siêu VIP', category: 'AVATAR', price: 300, icon: '👑', avatarUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>" },
+        { name: 'Avatar Rồng Thần', category: 'AVATAR', price: 500, icon: '🐲', avatarUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐲</text></svg>" },
+        
+        // VẬT PHẨM HỌC TẬP
+        { name: 'Bút Chì May Mắn', category: 'ITEM', price: 50, icon: '✏️', avatarUrl: null },
+        { name: 'Sổ Tay Học Tập', category: 'ITEM', price: 120, icon: '📔', avatarUrl: null },
+        { name: 'Bộ Thước Kẻ Thông Minh', category: 'ITEM', price: 200, icon: '📐', avatarUrl: null },
+
+        // THẺ QUÀ TẶNG
+        { name: 'Voucher Trà Sữa 20K', category: 'GIFT', price: 400, icon: '🧋', avatarUrl: null },
+        { name: 'Voucher Mua Sách 50K', category: 'GIFT', price: 800, icon: '🎟️', avatarUrl: null }
+    ];
+
     const SHOP_AVATARS = [
         { name: 'Mặc định', url: "https://api.dicebear.com/7.x/bottts/svg?seed=Default" },
-        { name: 'Avatar Mèo Cool', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>" },
-        { name: 'Avatar Chó Shiba', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐶</text></svg>" },
-        { name: 'Avatar Siêu VIP', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>" }
+        ...SHOP_ITEMS.filter(item => item.category === 'AVATAR').map(a => ({ name: a.name, url: a.avatarUrl }))
     ];
 
     function escapeHtml(str) {
@@ -444,6 +454,43 @@
         }
         return arr;
     }
+
+    // RENDER SHOP ITEMS CÓ BỘ LỌC DANH MỤC
+    function renderShopItems(filterCategory = 'ALL') {
+        const container = document.getElementById('shopGridContainer');
+        if (!container) return;
+
+        const filteredList = (filterCategory === 'ALL') 
+            ? SHOP_ITEMS 
+            : SHOP_ITEMS.filter(item => item.category === filterCategory);
+
+        if (filteredList.length === 0) {
+            container.innerHTML = `<div class="col-span-full text-center py-6 text-gray-500 dark:text-gray-400">Không có vật phẩm nào trong danh mục này.</div>`;
+            return;
+        }
+
+        container.innerHTML = filteredList.map(item => `
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl text-center shadow-sm hover:-translate-y-1 transition flex flex-col justify-between">
+                <div>
+                    <div class="text-4xl mb-2">${item.icon}</div>
+                    <h4 class="font-bold text-base mb-1">${escapeHtml(item.name)}</h4>
+                    <p class="text-amber-500 font-bold mb-3 text-sm">🪙 ${item.price} Mcion</p>
+                </div>
+                <button onclick="buyShopItem('${escapeHtml(item.name)}', ${item.price}, '${item.avatarUrl || ''}')" class="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg text-sm transition">Đổi Ngay</button>
+            </div>
+        `).join('');
+    }
+
+    // CHUYỂN TAB DANH MỤC SHOP
+    window.filterShopCategory = function(category, btnElement) {
+        document.querySelectorAll('.shop-cat-btn').forEach(btn => {
+            btn.className = "shop-cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition";
+        });
+        if (btnElement) {
+            btnElement.className = "shop-cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-primary-600 text-white transition shadow-sm";
+        }
+        renderShopItems(category);
+    };
 
     async function fetchWithAuth(url, options = {}) {
         const token = sessionStorage.getItem("access_token");
@@ -575,14 +622,14 @@
     window.buyShopItem = async function(itemName, price, avatarUrl) {
         const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
         if (!currentUser) return alert("Vui lòng đăng nhập!");
-        if (!confirm(`Xác nhận mua ${itemName} với giá ${price} Mcion?`)) return;
+        if (!confirm(`Xác nhận đổi vật phẩm "${itemName}" với giá ${price} Mcion?`)) return;
         try {
             const res = await fetchWithAuth(`${API_URL}/mcion/buy`, {
                 method: 'POST', body: JSON.stringify({ username: currentUser.username, itemName: itemName, cost: Number(price), avatarUrl: avatarUrl })
             });
             const data = await res.json();
             if (data.success) {
-                alert("🎉 Mua thành công! Avatar đã được cập nhật.");
+                alert("🎉 Mua thành công!");
                 if (data.user) sessionStorage.setItem("current_user", JSON.stringify(data.user));
                 updateMcionDisplay(); checkLoginState();
             } else { alert("❌ " + data.message); }
@@ -627,6 +674,7 @@
     document.addEventListener("DOMContentLoaded", function() {
         loadUISettings();
         checkLoginState();
+        renderShopItems(); // Render danh sách Cửa hàng Mcion lần đầu
 
         // DARK MODE TOGGLE
         const themeToggle = document.getElementById('btnToggleTheme');
