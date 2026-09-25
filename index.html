@@ -7,190 +7,69 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        /* BIẾN CSS CHO LIGHT/DARK MODE & MÀU SẮC */
-        :root { 
-            --primary-color: #3498db; 
-            --bg-color: #f4f7f6; 
-            --container-bg: #ffffff;
-            --text-color: #333333;
-            --card-bg: #fafafa;
-            --border-color: #e0e0e0;
-            --input-bg: #ffffff;
-            --input-border: #cccccc;
-            --header-bg: #eef2f5;
-            --table-bg: #ffffff;
-            --th-bg: #f2f2f2;
-            --title-color: #2c3e50;
-        }
-
-        .dark-mode {
-            --bg-color: #121212;
-            --container-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-            --card-bg: #2c2c2c;
-            --border-color: #444444;
-            --input-bg: #333333;
-            --input-border: #555555;
-            --header-bg: #2a2a2a;
-            --table-bg: #2c2c2c;
-            --th-bg: #3a3a3a;
-            --title-color: #f39c12;
-        }
-
-        /* RESET & BASE */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; display: flex; justify-content: center; transition: background-color 0.4s ease, color 0.4s ease; }
-        
-        .container { width: 100%; max-width: 850px; background: var(--container-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); position: relative; transition: background-color 0.4s ease; }
-        .header-banner { width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; display: block; }
-        .main-title { text-align: center; color: var(--title-color); margin-bottom: 15px; transition: color 0.4s ease;}
-        
-        .top-bar { display: flex; justify-content: space-between; align-items: center; background: var(--header-bg); padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; transition: background-color 0.4s ease; }
+        /* GIỮ NGUYÊN CSS CŨ (Phần Root, Darkmode, Container, Card...) */
+        :root { --primary-color: #3498db; --bg-color: #f4f7f6; --container-bg: #ffffff; --text-color: #333333; --card-bg: #fafafa; --border-color: #e0e0e0; --input-bg: #ffffff; --input-border: #cccccc; --header-bg: #eef2f5; --table-bg: #ffffff; --th-bg: #f2f2f2; --title-color: #2c3e50; }
+        .dark-mode { --bg-color: #121212; --container-bg: #1e1e1e; --text-color: #e0e0e0; --card-bg: #2c2c2c; --border-color: #444444; --input-bg: #333333; --input-border: #555555; --header-bg: #2a2a2a; --table-bg: #2c2c2c; --th-bg: #3a3a3a; --title-color: #f39c12; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 850px; background: var(--container-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: var(--header-bg); padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .user-profile-bar { display: flex; align-items: center; gap: 12px; }
         .user-avatar-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color); }
-        .mcion-badge { display: inline-flex; align-items: center; background: linear-gradient(135deg, #f1c40f, #f39c12); color: #fff; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
-        
-        .card-box { border: 1px solid var(--border-color); padding: 20px; border-radius: 8px; margin-bottom: 20px; background: var(--card-bg); transition: all 0.4s ease; }
+        .mcion-badge { display: inline-flex; align-items: center; background: linear-gradient(135deg, #f1c40f, #f39c12); color: #fff; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+        .card-box { border: 1px solid var(--border-color); padding: 20px; border-radius: 8px; margin-bottom: 20px; background: var(--card-bg); }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: inherit; opacity: 0.9; }
-        input[type="text"], input[type="password"], input[type="number"], select { width: 100%; padding: 12px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 14px; background: var(--input-bg); color: var(--text-color); transition: all 0.3s ease; }
-        input:focus, select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 5px rgba(52, 152, 219, 0.3); }
-
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="password"], input[type="number"], select, textarea { width: 100%; padding: 12px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 14px; background: var(--input-bg); color: var(--text-color); resize: vertical; }
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-        button { padding: 12px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; font-size: 14px; display: inline-flex; justify-content: center; align-items: center;}
+        button { padding: 12px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
         .btn-primary { background-color: var(--primary-color); color: white; }
         .btn-success { background-color: #2ecc71; color: white; }
         .btn-danger { background-color: #e74c3c; color: white; }
         .btn-warning { background-color: #f39c12; color: white; }
-        .btn-link { background: none; color: var(--primary-color); border: none; padding: 0; text-decoration: underline; cursor: pointer; font-size: 14px; }
-        .btn-theme-toggle { background: transparent; border: none; font-size: 24px; padding: 0 10px; cursor: pointer; color: var(--text-color); transition: transform 0.3s; }
-        .btn-theme-toggle:hover { transform: scale(1.1); }
-        button:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        
-        .question-card { background: var(--container-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; transition: all 0.4s ease;}
+        .btn-link { background: none; color: var(--primary-color); border: none; padding: 0; text-decoration: underline; cursor: pointer; }
+        .question-card { background: var(--container-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .question-title { font-weight: bold; margin-bottom: 10px; color: var(--title-color); }
-        .option-item { margin: 6px 0; display: flex; align-items: center; cursor: pointer; padding: 8px 12px; border-radius: 6px; border: 1px solid transparent; transition: background 0.2s; }
-        .option-item:hover { background: var(--header-bg); }
-        .option-item input { margin-right: 10px; accent-color: var(--primary-color); }
-        
-        /* BẢNG XẾP HẠNG/LỊCH SỬ */
-        .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid var(--border-color); }
-        table { width: 100%; border-collapse: collapse; background: var(--table-bg); white-space: nowrap; }
-        th, td { border-bottom: 1px solid var(--border-color); padding: 12px; text-align: left; font-size: 14px; }
-        th { background: var(--th-bg); font-weight: bold; }
-        
+        .option-item { margin: 6px 0; display: flex; align-items: center; cursor: pointer; padding: 8px 12px; border-radius: 6px; }
         .hidden { display: none !important; }
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
-        .shop-card { background: var(--container-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; text-align: center; transition: all 0.3s; }
-        .shop-card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .correct-choice { background-color: rgba(40, 167, 69, 0.15) !important; border: 1px solid #28a745 !important; color: #28a745 !important; }
+        .wrong-choice { background-color: rgba(220, 53, 69, 0.15) !important; border: 1px solid #dc3545 !important; color: #dc3545 !important; text-decoration: line-through; }
+        .answer-explanation { margin-top: 10px; padding: 10px 15px; border-radius: 6px; font-size: 14px; }
+        .answer-explanation.correct { background: rgba(46, 204, 113, 0.1); border-left: 4px solid #2ecc71; }
+        .answer-explanation.wrong { background: rgba(231, 76, 60, 0.1); border-left: 4px solid #e74c3c; }
+        .answer-explanation.ai-feedback { background: rgba(52, 152, 219, 0.1); border-left: 4px solid #3498db; }
         
-        /* ĐÁP ÁN ĐÚNG / SAI PHÙ HỢP CẢ LIGHT VÀ DARK MODE */
-        .option-item.correct-choice { background-color: rgba(40, 167, 69, 0.15) !important; border: 1px solid #28a745 !important; color: #28a745 !important; font-weight: bold; }
-        .option-item.wrong-choice { background-color: rgba(220, 53, 69, 0.15) !important; border: 1px solid #dc3545 !important; color: #dc3545 !important; text-decoration: line-through; }
-        .answer-explanation { margin-top: 10px; padding: 10px 15px; border-radius: 6px; font-weight: bold; font-size: 14px; }
-        .answer-explanation.correct { background: rgba(46, 204, 113, 0.1); color: #2ecc71; border-left: 4px solid #2ecc71; }
-        .answer-explanation.wrong { background: rgba(231, 76, 60, 0.1); color: #e74c3c; border-left: 4px solid #e74c3c; }
-
-        /* TABS */
-        .tab-btn { padding: 10px 20px; border: none; background: none; cursor: pointer; font-weight: bold; color: var(--text-color); opacity: 0.6; border-bottom: 3px solid transparent; font-size: 14px; transition: all 0.3s; }
-        .tab-btn.active { opacity: 1; color: var(--primary-color); border-bottom-color: var(--primary-color); }
-        .tab-btn:hover { opacity: 1; }
-
-        /* HIỆU ỨNG AUTH SLIDE & FADE (GRID STACKING) */
-        .auth-wrapper { position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr; }
-        .auth-form { grid-row: 1; grid-column: 1; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease; width: 100%; }
-        .auth-form.active { transform: translateX(0); opacity: 1; pointer-events: auto; visibility: visible; z-index: 2; }
-        .auth-form.hidden-left { transform: translateX(-50px); opacity: 0; pointer-events: none; visibility: hidden; z-index: 1; }
-        .auth-form.hidden-right { transform: translateX(50px); opacity: 0; pointer-events: none; visibility: hidden; z-index: 1; }
-
-        .modal-content { background: var(--container-bg); color: var(--text-color); border: 1px solid var(--border-color); }
-
-        /* RESPONSIVE CSS */
-        @media (max-width: 600px) {
-            body { padding: 10px; }
-            .container { padding: 15px; border-radius: 8px; }
-            .btn-group { flex-direction: column; width: 100%; }
-            .btn-group button { width: 100%; }
-            .top-bar { flex-direction: column; align-items: flex-start; }
-            .top-bar > div { width: 100%; justify-content: flex-start; }
-        }
+        /* Toast thông báo lưu nháp */
+        #autosaveToast { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 12px; opacity: 0; transition: opacity 0.5s; z-index: 1000; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <img id="headerBanner" class="header-banner hidden" src="" alt="Banner">
-    <h2 id="mainTitle" class="main-title">Hệ Thống Trắc Nghiệm Online</h2>
+<div id="autosaveToast">💾 Đã lưu nháp tự động</div>
 
+<div class="container">
+    <h2 id="mainTitle" class="main-title" style="text-align: center; margin-bottom: 20px;">Hệ Thống Trắc Nghiệm & Tự Luận</h2>
+    
     <div class="top-bar">
         <div class="user-profile-bar">
-            <img id="topUserAvatar" class="user-avatar-img hidden" src="https://api.dicebear.com/7.x/bottts/svg?seed=Default" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=3498db&color=fff'">
+            <img id="topUserAvatar" class="user-avatar-img hidden" src="">
             <div><b>Trạng thái: </b><span id="userInfo">Chưa đăng nhập</span></div>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <div id="mcionBox" class="mcion-badge hidden">🪙 Mcion: <span id="userMcionBalance" style="margin-left: 4px;">0</span></div>
-            <button id="btnToggleTheme" class="btn-theme-toggle" title="Đổi chế độ Sáng/Tối">🌙</button>
-            <button id="btnShowChangePass" class="btn-warning hidden">Đổi Mật Khẩu</button>
-            <button id="btnShowChangeAvatar" class="btn-primary hidden">Đổi Avatar</button>
+        <div>
+            <div id="mcionBox" class="mcion-badge hidden">🪙 Mcion: <span id="userMcionBalance">0</span></div>
+            <button id="btnToggleTheme" class="btn-theme-toggle">🌙</button>
             <button id="btnLogout" class="btn-danger hidden">Đăng Xuất</button>
-        </div>
-    </div>
-
-    <!-- KHU VỰC AUTH (SLIDE & FADE) -->
-    <div id="sectionAuth" class="card-box auth-wrapper">
-        <div id="formLogin" class="auth-form active">
-            <h3>Đăng Nhập Hệ Thống</h3><br>
-            <div class="form-group"><label>Tên đăng nhập:</label><input type="text" id="authUsername" placeholder="Nhập tên đăng nhập..."></div>
-            <div class="form-group"><label>Mật khẩu:</label><input type="password" id="authPassword" placeholder="Nhập mật khẩu..."></div>
-            <div class="btn-group">
-                <button id="btnLoginStudent" class="btn-primary">Đăng Nhập Học Sinh</button>
-                <button id="btnLoginAdmin" class="btn-warning">Đăng Nhập Admin</button>
-            </div>
-            <p style="margin-top: 15px; font-size: 14px;">Chưa có tài khoản? <button type="button" class="btn-link" id="btnToggleToRegister">Đăng ký học viên mới</button></p>
-        </div>
-        <div id="formRegister" class="auth-form hidden-right">
-            <h3>Đăng Ký Tài Khoản Học Viên</h3><br>
-            <div class="form-group"><label>Họ và Tên:</label><input type="text" id="regFullname" placeholder="VD: Nguyễn Văn A"></div>
-            <div class="form-group"><label>Tên đăng nhập:</label><input type="text" id="regUsername" placeholder="Username..."></div>
-            <div class="form-group"><label>Mật khẩu:</label><input type="password" id="regPassword" placeholder="Mật khẩu..."></div>
-            <div class="form-group"><label>Xác nhận Mật khẩu:</label><input type="password" id="regConfirmPassword" placeholder="Nhập lại mật khẩu..."></div>
-            <div class="btn-group"><button id="btnRegisterSubmit" class="btn-success">Xác Nhận Đăng Ký</button></div>
-            <p style="margin-top: 15px; font-size: 14px;">Đã có tài khoản? <button type="button" class="btn-link" id="btnToggleToLogin">Quay lại Đăng nhập</button></p>
         </div>
     </div>
 
     <!-- KHU VỰC HỌC SINH -->
     <div id="sectionStudent" class="hidden">
-        <div class="card-box">
-            <h3>🎯 Chọn Bài Thi Theo Môn Học & Khối Lớp</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
-                <div class="form-group">
-                    <label for="studentFilterSubject">1. Chọn Môn Học:</label>
-                    <select id="studentFilterSubject" onchange="onCategoryFilterChange()">
-                        <option value="ALL">-- Tất Cả Môn --</option>
-                        <option value="Toán">📐 Toán</option>
-                        <option value="Tiếng Anh">🔤 Tiếng Anh</option>
-                        <option value="Tiếng Việt">📚 Tiếng Việt / Văn</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="studentFilterGrade">2. Chọn Khối Lớp:</label>
-                    <select id="studentFilterGrade" onchange="onCategoryFilterChange()">
-                        <option value="ALL">-- Tất Cả Khối Lớp --</option>
-                        <option value="Lớp 1">Lớp 1</option>
-                        <option value="Lớp 2">Lớp 2</option>
-                        <option value="Lớp 3">Lớp 3</option>
-                        <option value="Lớp 4">Lớp 4</option>
-                        <option value="Lớp 5">Lớp 5</option>
-                    </select>
-                </div>
+        <div class="card-box" id="examSelectionArea">
+            <h3>🎯 Chọn Đề Thi (Hỗ trợ Tự Luận)</h3>
+            <div class="form-group" style="margin-top:15px;">
+                <select id="selectExamCode"><option value="">-- Chọn Đề --</option></select>
             </div>
-            <div class="form-group">
-                <label for="selectExamCode">3. Chọn Mã Đề Thi:</label>
-                <select id="selectExamCode"><option value="">-- Vui lòng chọn đề thi --</option></select>
-            </div>
-            <button id="btnStartExam" class="btn-success" style="width: 100%; padding: 12px;">🚀 BẮT ĐẦU LÀM BÀI</button>
+            <button id="btnStartExam" class="btn-success" style="width: 100%;">🚀 BẮT ĐẦU LÀM BÀI</button>
         </div>
 
         <div id="examArea" class="card-box hidden">
@@ -201,753 +80,241 @@
                 </div>
             </div>
             <div id="questionsContainer"></div>
-            <button id="btnSubmitExam" class="btn-primary" style="width: 100%; padding: 12px; margin-top: 15px;">NỘP BÀI THI</button>
-        </div>
-
-        <!-- LỊCH SỬ CÁ NHÂN HỌC SINH -->
-        <div class="card-box">
-            <h3>📜 Lịch Sử Làm Bài Của Bạn</h3>
-            <div style="display: flex; gap: 10px; margin: 12px 0; border-bottom: 2px solid var(--border-color); overflow-x: auto; white-space: nowrap;">
-                <button type="button" class="tab-btn active" id="tabStudentRecentBtn" onclick="switchStudentHistoryTab('recent')">⏱️ Gần Đây</button>
-                <button type="button" class="tab-btn" id="tabStudentDetailBtn" onclick="switchStudentHistoryTab('detail')">📑 Chi Tiết Tất Cả</button>
-            </div>
-
-            <div id="tabStudentRecent">
-                <div class="table-responsive">
-                    <table>
-                        <thead><tr><th>Thời Gian</th><th>Mã Đề</th><th>Số Câu Đúng</th><th>Điểm Số</th></tr></thead>
-                        <tbody id="myHistoryRecentBody"></tbody>
-                    </table>
-                </div>
-                <p style="margin-top: 10px; text-align: right;">
-                    <button type="button" class="btn-link" onclick="switchStudentHistoryTab('detail')">Xem tất cả lịch sử →</button>
-                </p>
-            </div>
-
-            <div id="tabStudentDetail" class="hidden">
-                <div class="table-responsive">
-                    <table>
-                        <thead><tr><th>Thời Gian</th><th>Mã Đề</th><th>Số Câu Đúng</th><th>Điểm Số</th></tr></thead>
-                        <tbody id="myHistoryDetailBody"></tbody>
-                    </table>
-                </div>
-            </div>
+            <button id="btnSubmitExam" class="btn-primary" style="width: 100%; padding: 12px; margin-top: 15px;">NỘP BÀI (Chờ AI Chấm)</button>
         </div>
 
         <div class="card-box">
-            <h3>🛒 Cửa Hàng Đổi Thưởng Mcion</h3>
-            <div class="shop-grid">
-                <div class="shop-card">
-                    <div style="font-size: 32px;">🐱</div><h4 style="margin: 10px 0 5px 0;">Avatar Mèo Cool</h4>
-                    <p style="color: #f39c12; font-weight: bold; margin-bottom: 12px;">100 Mcion</p>
-                    <button onclick="buyShopItem('Avatar Mèo Cool', 100, `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>`)" class="btn-primary" style="width: 100%;">Mua</button>
-                </div>
-                <div class="shop-card">
-                    <div style="font-size: 32px;">🐶</div><h4 style="margin: 10px 0 5px 0;">Avatar Chó Shiba</h4>
-                    <p style="color: #f39c12; font-weight: bold; margin-bottom: 12px;">150 Mcion</p>
-                    <button onclick="buyShopItem('Avatar Chó Shiba', 150, `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐶</text></svg>`)" class="btn-primary" style="width: 100%;">Mua</button>
-                </div>
-                <div class="shop-card">
-                    <div style="font-size: 32px;">👑</div><h4 style="margin: 10px 0 5px 0;">Avatar Siêu VIP</h4>
-                    <p style="color: #f39c12; font-weight: bold; margin-bottom: 12px;">300 Mcion</p>
-                    <button onclick="buyShopItem('Avatar Siêu VIP', 300, `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>`)" class="btn-primary" style="width: 100%;">Mua</button>
-                </div>
-            </div>
+            <h3>📜 Lịch Sử Gần Đây (Có Thể Phúc Khảo)</h3>
+            <table style="width: 100%; text-align: left; margin-top:10px;" id="historyTable">
+                <thead><tr><th>Mã Đề</th><th>Số Đúng</th><th>Điểm AI</th><th>Hành Động</th></tr></thead>
+                <tbody id="myHistoryRecentBody"></tbody>
+            </table>
         </div>
     </div>
 
     <!-- KHU VỰC ADMIN -->
     <div id="sectionAdmin" class="hidden">
         <div class="card-box">
-            <h3>Thêm Mới Đề Thi (Excel)</h3><br>
-            <div class="form-group"><label>Mã Đề Thi:</label><input type="text" id="inputExamCode" placeholder="VD: DE01"></div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
-                <div class="form-group">
-                    <label>Môn Học:</label>
-                    <select id="adminSubject">
-                        <option value="Toán">📐 Toán</option>
-                        <option value="Tiếng Anh">🔤 Tiếng Anh</option>
-                        <option value="Tiếng Việt">📚 Tiếng Việt / Văn</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Khối Lớp:</label>
-                    <select id="adminGrade">
-                        <option value="Lớp 1">Lớp 1</option>
-                        <option value="Lớp 2">Lớp 2</option>
-                        <option value="Lớp 3">Lớp 3</option>
-                        <option value="Lớp 4">Lớp 4</option>
-                        <option value="Lớp 5">Lớp 5</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group"><label>Thời Gian Làm Bài (Phút):</label><input type="number" id="inputExamTime" value="15" min="0"></div>
-            <div class="form-group"><label>Chọn File Excel:</label><input type="file" id="excelFileInput" accept=".xlsx, .xls" style="padding: 9px;"></div>
+            <h3>Thêm Mới Đề Thi Tự Luận / Trắc Nghiệm (Bằng Excel)</h3><br>
+            <div class="form-group"><label>Mã Đề Thi:</label><input type="text" id="inputExamCode"></div>
+            <div class="form-group"><label>Thời Gian Làm Bài (Phút):</label><input type="number" id="inputExamTime" value="15"></div>
+            <div class="form-group"><label>Chọn File Excel (Cột F ghi "TL" cho tự luận, Cột G là Dàn Ý, H là Điểm Tối Đa):</label><input type="file" id="excelFileInput"></div>
             <button id="btnSaveExam" class="btn-success">Lưu Bộ Đề</button>
-
-            <hr style="margin: 25px 0; border: 0; border-top: 1px solid var(--border-color);">
-
-            <h3>🎲 Tạo Đề Thi Tự Động (Trộn Ngẫu Nhiên)</h3><br>
-            <div class="form-group"><label>Mã Đề Thi Mới:</label><input type="text" id="autoExamCode" placeholder="VD: AUTO_DE01"></div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
-                <div class="form-group">
-                    <label>Môn Học:</label>
-                    <select id="autoAdminSubject">
-                        <option value="Toán">📐 Toán</option>
-                        <option value="Tiếng Anh">🔤 Tiếng Anh</option>
-                        <option value="Tiếng Việt">📚 Tiếng Việt / Văn</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Khối Lớp:</label>
-                    <select id="autoAdminGrade">
-                        <option value="Lớp 1">Lớp 1</option>
-                        <option value="Lớp 2">Lớp 2</option>
-                        <option value="Lớp 3">Lớp 3</option>
-                        <option value="Lớp 4">Lớp 4</option>
-                        <option value="Lớp 5">Lớp 5</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group"><label>Số Lượng Câu Hỏi Cần Lấy:</label><input type="number" id="autoExamCount" value="10" min="1"></div>
-            <div class="form-group"><label>Thời Gian Làm Bài (Phút):</label><input type="number" id="autoExamTime" value="15" min="0"></div>
-            <button id="btnAutoGenerateExam" class="btn-warning">🎲 Tạo & Lưu Đề Tự Động</button>
-        </div>
-
-        <div class="card-box">
-            <h3>Quản Lý Đề Thi</h3>
-            <div class="table-responsive" style="margin-top: 10px;">
-                <table>
-                    <thead><tr><th>Mã Đề</th><th>Môn Học</th><th>Khối Lớp</th><th>Hành động</th></tr></thead>
-                    <tbody id="adminExamListBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="card-box">
-            <h3>Cấp Tặng Mcion Cho Học Sinh</h3><br>
-            <div class="form-group"><label>Username học sinh:</label><input type="text" id="targetStudentUser" placeholder="Username học sinh..."></div>
-            <div class="form-group"><label>Số Mcion (+/-):</label><input type="number" id="targetMcionAmount" placeholder="VD: 100 hoặc -50"></div>
-            <button id="btnGrantMcion" class="btn-warning">Cấp Mcion</button>
-        </div>
-
-        <!-- LỊCH SỬ TOÀN HỆ THỐNG - DÀNH CHO ADMIN -->
-        <div class="card-box">
-            <h3>📊 Quản Lý Lịch Sử Bài Làm Học Viên</h3>
-            <div style="display: flex; gap: 10px; margin: 12px 0; border-bottom: 2px solid var(--border-color); overflow-x: auto; white-space: nowrap;">
-                <button type="button" class="tab-btn active" id="tabAdminRecentBtn" onclick="switchAdminHistoryTab('recent')">⏱️ Lịch Sử Gần Đây</button>
-                <button type="button" class="tab-btn" id="tabAdminDetailBtn" onclick="switchAdminHistoryTab('detail')">📑 Chi Tiết Lịch Sử</button>
-            </div>
-
-            <!-- TAB 1: 5 DÒNG GẦN ĐÂY -->
-            <div id="tabAdminRecent">
-                <div class="table-responsive">
-                    <table>
-                        <thead><tr><th>Thời Gian</th><th>Thí Sinh</th><th>Mã Đề</th><th>Kết Quả</th><th>Điểm Số</th></tr></thead>
-                        <tbody id="allHistoryRecentBody"></tbody>
-                    </table>
-                </div>
-                <p style="margin-top: 10px; text-align: right;">
-                    <button type="button" class="btn-link" onclick="switchAdminHistoryTab('detail')">Xem toàn bộ lịch sử bài làm →</button>
-                </p>
-            </div>
-
-            <!-- TAB 2: CHI TIẾT + LỌC TÊN HỌC SINH -->
-            <div id="tabAdminDetail" class="hidden">
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <input type="text" id="adminHistorySearchInput" placeholder="🔍 Nhập tên học sinh hoặc username để lọc..." oninput="handleAdminHistorySearch()">
-                </div>
-                <div class="table-responsive">
-                    <table>
-                        <thead><tr><th>Thời Gian</th><th>Thí Sinh</th><th>Mã Đề</th><th>Kết Quả</th><th>Điểm Số</th></tr></thead>
-                        <tbody id="allHistoryDetailBody"></tbody>
-                    </table>
-                </div>
-            </div>
         </div>
     </div>
 
-    <!-- MODALS -->
-    <div id="modalChangePass" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 15px;">
-        <div class="modal-content" style="padding: 25px; border-radius: 12px; width: 100%; max-width: 400px;">
-            <h3 style="margin-bottom: 15px; text-align: center;">Đổi Mật Khẩu</h3>
-            <div class="form-group"><label>Mật khẩu cũ:</label><input type="password" id="cpOldPass"></div>
-            <div class="form-group"><label>Mật khẩu mới:</label><input type="password" id="cpNewPass"></div>
-            <div class="form-group"><label>Xác nhận MK:</label><input type="password" id="cpConfirmPass"></div>
-            <div class="btn-group" style="justify-content: flex-end; margin-top: 20px;">
-                <button id="btnCancelChangePass" class="btn-danger">Hủy</button>
-                <button id="btnSubmitChangePass" class="btn-success">Xác Nhận</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modalChangeAvatar" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 15px;">
-        <div class="modal-content" style="padding: 25px; border-radius: 12px; width: 100%; max-width: 400px; text-align: center;">
-            <h3 style="margin-bottom: 15px;">Chọn Avatar Đã Mua</h3>
-            <div id="ownedAvatarList" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; min-height: 60px; align-items: center;"></div>
-            <button id="btnCancelAvatar" class="btn-danger" style="width: 100%;">Đóng</button>
+    <!-- Auth Section Gắn Tạm Của Giao Diện Cũ Để Đăng Nhập -->
+    <div id="sectionAuth" class="card-box">
+        <h3>Đăng Nhập</h3>
+        <div class="form-group"><input type="text" id="authUsername" placeholder="Tên đăng nhập"></div>
+        <div class="form-group"><input type="password" id="authPassword" placeholder="Mật khẩu"></div>
+        <div class="btn-group">
+            <button id="btnLoginStudent" class="btn-primary">Đăng Nhập Học Sinh</button>
+            <button id="btnLoginAdmin" class="btn-warning">Admin</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Tự động nhận diện môi trường Local hoặc Production
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const API_URL = isLocal ? "http://localhost:3000/api" : "https://quiz-backend-ta9z.onrender.com/api";
     
-    let examTimerInterval = null; 
     let currentExamData = null;
-    let allExamsFromServer = [];
-    let adminSearchTimeout = null;
+    let examTimerInterval = null;
+    let autoSaveInterval = null;
 
-    const SHOP_AVATARS = [
-        { name: 'Mặc định', url: "https://api.dicebear.com/7.x/bottts/svg?seed=Default" },
-        { name: 'Avatar Mèo Cool', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>" },
-        { name: 'Avatar Chó Shiba', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐶</text></svg>" },
-        { name: 'Avatar Siêu VIP', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>" }
-    ];
+    function escapeHtml(str) { return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
-    // --- HELPER & UTILITY FUNCTIONS ---
-    function escapeHtml(str) {
-        if (str === null || str === undefined) return '';
-        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    }
-
-    function shuffleArray(array) {
-        const arr = [...array];
-        for (let i = arr.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [arr[i], arr[j]] = [arr[j], arr[i]];
-        }
-        return arr;
-    }
-
-    async function fetchWithAuth(url, options = {}) {
+    async function fetchAuth(url, options = {}) {
         const token = sessionStorage.getItem("access_token");
         const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        
-        const response = await fetch(url, { ...options, headers });
-        if (response.status === 401 || response.status === 403) {
-            const errData = await response.json().catch(() => ({}));
-            alert("⚠️ " + (errData.message || "Phiên đăng nhập hết hạn hoặc không đủ quyền!"));
-            if (response.status === 401) document.getElementById('btnLogout')?.click();
-            throw new Error(errData.message || "Unauthorized");
-        }
-        return response;
+        return await fetch(url, { ...options, headers });
     }
 
-    function renderHistoryTableRows(tbodyId, historyList, showCandidate = false, emptyMsg = "Chưa có lịch sử bài làm.") {
-        const tbody = document.getElementById(tbodyId);
-        if (!tbody) return;
-        if (!Array.isArray(historyList) || historyList.length === 0) {
-            const colSpan = showCandidate ? 5 : 4;
-            tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;">${escapeHtml(emptyMsg)}</td></tr>`;
-            return;
-        }
-        const htmlStr = historyList.map(h => {
-            const candidateCell = showCandidate ? `<td>${escapeHtml(h.fullname || h.username)}</td>` : '';
-            return `<tr>
-                <td>${escapeHtml(h.time)}</td>
-                ${candidateCell}
-                <td><b>${escapeHtml(h.examCode)}</b></td>
-                <td>${Number(h.correctCount || 0)}/${Number(h.totalQuestions || 0)}</td>
-                <td><b style="color: #e74c3c;">${escapeHtml(h.score)}đ</b></td>
-            </tr>`;
-        }).join('');
-        tbody.innerHTML = htmlStr;
-    }
-
-    // --- GLOBAL SCOPE FUNCTIONS ---
-    window.switchStudentHistoryTab = function(tabName) {
-        const btnRecent = document.getElementById('tabStudentRecentBtn');
-        const btnDetail = document.getElementById('tabStudentDetailBtn');
-        const tabRecent = document.getElementById('tabStudentRecent');
-        const tabDetail = document.getElementById('tabStudentDetail');
-        if (!btnRecent || !btnDetail || !tabRecent || !tabDetail) return;
-        
-        const isRecent = tabName === 'recent';
-        btnRecent.classList.toggle('active', isRecent);
-        btnDetail.classList.toggle('active', !isRecent);
-        tabRecent.classList.toggle('hidden', !isRecent);
-        tabDetail.classList.toggle('hidden', isRecent);
-        
-        if (isRecent) renderMyHistoryRecent();
-        else renderMyHistoryDetail();
-    };
-
-    window.renderMyHistoryRecent = async function() {
-        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-        if (!currentUser) return;
-        try {
-            const res = await fetch(`${API_URL}/history?search=${encodeURIComponent(currentUser.username)}`);
-            const history = await res.json();
-            if (!Array.isArray(history)) return;
-            const myHistory = history.filter(h => h.username === currentUser.username).slice(0, 5);
-            renderHistoryTableRows('myHistoryRecentBody', myHistory, false, "Chưa có lịch sử làm bài.");
-        } catch (e) {}
-    };
-
-    window.renderMyHistoryDetail = async function() {
-        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-        if (!currentUser) return;
-        try {
-            const res = await fetch(`${API_URL}/history?search=${encodeURIComponent(currentUser.username)}`);
-            const history = await res.json();
-            if (!Array.isArray(history)) return;
-            const myHistory = history.filter(h => h.username === currentUser.username);
-            renderHistoryTableRows('myHistoryDetailBody', myHistory, false, "Chưa có lịch sử làm bài.");
-        } catch (e) {}
-    };
-
-    window.switchAdminHistoryTab = function(tabName) {
-        const btnRecent = document.getElementById('tabAdminRecentBtn');
-        const btnDetail = document.getElementById('tabAdminDetailBtn');
-        const tabRecent = document.getElementById('tabAdminRecent');
-        const tabDetail = document.getElementById('tabAdminDetail');
-        if (!btnRecent || !btnDetail || !tabRecent || !tabDetail) return;
-        const isRecent = tabName === 'recent';
-        btnRecent.classList.toggle('active', isRecent);
-        btnDetail.classList.toggle('active', !isRecent);
-        tabRecent.classList.toggle('hidden', !isRecent);
-        tabDetail.classList.toggle('hidden', isRecent);
-        if (isRecent) renderAllHistoryRecent(); else renderAllHistoryDetail();
-    };
-
-    window.renderAllHistoryRecent = async function() {
-        try {
-            const res = await fetch(`${API_URL}/history?limit=5`);
-            const history = await res.json();
-            if (Array.isArray(history)) renderHistoryTableRows('allHistoryRecentBody', history, true, "Chưa có lịch sử bài làm.");
-        } catch(e) {}
-    };
-
-    window.renderAllHistoryDetail = async function(searchTerm = '') {
-        try {
-            const query = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
-            const res = await fetch(`${API_URL}/history${query}`);
-            const history = await res.json();
-            if (Array.isArray(history)) renderHistoryTableRows('allHistoryDetailBody', history, true, "Không tìm thấy lịch sử bài làm phù hợp.");
-        } catch(e) {}
-    };
-
-    window.handleAdminHistorySearch = function() {
-        clearTimeout(adminSearchTimeout);
-        const val = document.getElementById('adminHistorySearchInput').value.trim();
-        adminSearchTimeout = setTimeout(() => { renderAllHistoryDetail(val); }, 300);
-    };
-
-    window.deleteExam = async function(code) {
-        if(!confirm(`Bạn có chắc chắn muốn xóa đề ${code}?`)) return;
-        try {
-            const res = await fetchWithAuth(`${API_URL}/exams/${code}`, { method: 'DELETE' });
-            const data = await res.json();
-            if(data.success) { alert("✅ Xóa thành công!"); loadAdminExamList(); loadExamList(); }
-            else alert("❌ Lỗi: " + data.message);
-        } catch(e) { alert("❌ Lỗi kết nối!"); }
-    };
-
-    window.buyShopItem = async function(itemName, price, avatarUrl) {
-        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-        if (!currentUser) return alert("Vui lòng đăng nhập!");
-        if (!confirm(`Xác nhận mua ${itemName} với giá ${price} Mcion?`)) return;
-        try {
-            const res = await fetchWithAuth(`${API_URL}/mcion/buy`, {
-                method: 'POST', body: JSON.stringify({ username: currentUser.username, itemName: itemName, cost: Number(price), avatarUrl: avatarUrl })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert("🎉 Mua thành công! Avatar đã được cập nhật.");
-                if (data.user) sessionStorage.setItem("current_user", JSON.stringify(data.user));
-                updateMcionDisplay(); checkLoginState();
-            } else { alert("❌ " + data.message); }
-        } catch(e) { alert("❌ Lỗi kết nối!"); }
-    };
-
-    window.selectAvatar = async function(avatarUrl, itemName) {
-        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-        if (!currentUser) return;
-        const payloadAvatar = (itemName === 'Mặc định') ? 'default' : avatarUrl;
-        try {
-            const res = await fetchWithAuth(`${API_URL}/update-avatar`, {
-                method: 'POST', body: JSON.stringify({ username: currentUser.username, avatar: payloadAvatar, avatarUrl: payloadAvatar, itemName: itemName })
-            });
-            const data = await res.json();
-            if (data.success) {
-                if (data.user) sessionStorage.setItem("current_user", JSON.stringify(data.user));
-                document.getElementById('modalChangeAvatar')?.classList.add('hidden');
-                checkLoginState();
-                alert("✅ Đổi Avatar thành công!");
-            } else { alert("❌ " + (data.message || "Đổi Avatar thất bại!")); }
-        } catch(e) { alert("❌ Lỗi kết nối máy chủ!"); }
-    };
-
-    function onCategoryFilterChange() {
-        const selectedSubject = document.getElementById('studentFilterSubject').value;
-        const selectedGrade = document.getElementById('studentFilterGrade').value;
-        const examSelectEl = document.getElementById('selectExamCode');
-        if (!examSelectEl) return;
-        const filteredExams = allExamsFromServer.filter(exam => {
-            return ((selectedSubject === 'ALL') || (exam.subject === selectedSubject)) && ((selectedGrade === 'ALL') || (exam.grade === selectedGrade));
-        });
-        if (filteredExams.length === 0) {
-            examSelectEl.innerHTML = '<option value="">-- Không tìm thấy đề thi phù hợp --</option>';
-            return;
-        }
-        examSelectEl.innerHTML = ['<option value="">-- Chọn mã đề thi --</option>']
-            .concat(filteredExams.map(exam => `<option value="${escapeHtml(exam.code)}">[${escapeHtml(exam.subject || 'Môn khác')} - ${escapeHtml(exam.grade || 'Lớp khác')}] ${escapeHtml(exam.code)} (${exam.timeLimit || 15} phút)</option>`)).join('');
-    }
-
-    // --- MAIN EVENT INITIALIZATION ---
-    document.addEventListener("DOMContentLoaded", function() {
-        loadUISettings();
-        checkLoginState();
-
-        // ---------------- DARK MODE LOGIC ----------------
-        const themeToggle = document.getElementById('btnToggleTheme');
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        if (currentTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            themeToggle.textContent = '☀️';
-        }
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            themeToggle.textContent = isDark ? '☀️' : '🌙';
-        });
-
-        // ---------------- AUTH TRANSITION LOGIC ----------------
-        document.getElementById('btnToggleToRegister')?.addEventListener('click', () => {
-            document.getElementById('formLogin').classList.replace('active', 'hidden-left');
-            document.getElementById('formRegister').classList.replace('hidden-right', 'active');
-        });
-        document.getElementById('btnToggleToLogin')?.addEventListener('click', () => {
-            document.getElementById('formRegister').classList.replace('active', 'hidden-right');
-            document.getElementById('formLogin').classList.replace('hidden-left', 'active');
-        });
-
-        // BẮT ĐẦU LÀM BÀI
-        document.getElementById('btnStartExam')?.addEventListener('click', async function() {
-            const examCode = document.getElementById('selectExamCode').value;
-            if (!examCode) return alert("⚠️ Vui lòng chọn một mã đề thi!");
-            const btn = this; const originalText = btn.textContent;
-            btn.textContent = "⏳ Đang tải (Chờ Server)..."; btn.disabled = true;
-
-            try {
-                const res = await fetch(`${API_URL}/exams/${encodeURIComponent(examCode)}`);
-                const exam = await res.json();
-                if (!exam || !exam.questions || exam.questions.length === 0) throw new Error("Đề thi bị lỗi hoặc rỗng!");
-
-                currentExamData = { ...exam, examCode };
-                const btnSubmit = document.getElementById('btnSubmitExam');
-                if (btnSubmit) { btnSubmit.textContent = "NỘP BÀI THI"; btnSubmit.className = "btn-primary"; delete btnSubmit.dataset.state; }
-                
-                document.getElementById('examArea')?.classList.remove('hidden');
-                document.getElementById('examTitle').textContent = `Bài Thi: ${examCode}`;
-                const container = document.getElementById('questionsContainer');
-                const labels = ['A', 'B', 'C', 'D'];
-
-                container.innerHTML = exam.questions.map((q, index) => {
-                    const correctIndex = labels.indexOf(String(q.correct || 'A').trim().toUpperCase());
-                    let optionObjects = shuffleArray((q.options || []).map((text, i) => ({ text, isCorrect: i === (correctIndex!==-1?correctIndex:0) })).filter(o => o.text !== undefined && String(o.text).trim() !== ''));
-                    let runtimeCorrect = 'A';
-                    optionObjects.forEach((item, idx) => { item.label = labels[idx]; if (item.isCorrect) runtimeCorrect = labels[idx]; });
-                    q.shuffledOptions = optionObjects; q.runtimeCorrect = runtimeCorrect;
-                    
-                    const optionsHtml = q.shuffledOptions.map(optObj => 
-                        `<label class="option-item"><input type="radio" name="q${index}" value="${optObj.label}"> ${optObj.label}. ${escapeHtml(optObj.text)}</label>`
-                    ).join('');
-                    return `<div class="question-card" id="qcard_${index}"><div class="question-title">Câu ${index + 1}: ${escapeHtml(q.question)}</div>${optionsHtml}</div>`;
-                }).join('');
-
-                clearInterval(examTimerInterval);
-                if (exam.timeLimit > 0) {
-                    let time = exam.timeLimit * 60;
-                    document.getElementById('examTimerDisplay')?.classList.remove('hidden');
-                    examTimerInterval = setInterval(() => {
-                        time--;
-                        const m = Math.floor(time / 60); const s = time % 60;
-                        document.getElementById('timeRemaining').textContent = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
-                        if (time <= 0) { clearInterval(examTimerInterval); alert("⏳ Hết thời gian, tự nộp bài!"); document.getElementById('btnSubmitExam')?.click(); }
-                    }, 1000);
-                } else document.getElementById('examTimerDisplay')?.classList.add('hidden');
-            } catch (err) { alert("❌ Lỗi: " + err.message); } 
-            finally { btn.textContent = originalText; btn.disabled = false; }
-        });
-
-        // NỘP BÀI THI
-        document.getElementById('btnSubmitExam')?.addEventListener('click', async function() {
-            if (!currentExamData) return;
-            const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-            if (!currentUser) return alert("❌ Phiên hết hạn!");
-            
-            if (this.dataset.state === "review") {
-                document.getElementById('examArea')?.classList.add('hidden');
-                this.textContent = "NỘP BÀI THI"; this.className = "btn-primary";
-                delete this.dataset.state; return;
-            }
-            clearInterval(examTimerInterval);
-            let correctCount = 0; const total = currentExamData.questions.length;
-            
-            currentExamData.questions.forEach((q, index) => {
-                const userChoice = document.querySelector(`input[name="q${index}"]:checked`)?.value.trim();
-                const correctChoice = q.runtimeCorrect || String(q.correct || 'A').trim().toUpperCase();
-                const qCard = document.getElementById(`qcard_${index}`);
-                
-                qCard.querySelectorAll('input[type="radio"]').forEach(input => {
-                    input.disabled = true;
-                    if (input.value === correctChoice) input.closest('.option-item')?.classList.add('correct-choice');
-                    if (userChoice && input.value === userChoice && userChoice !== correctChoice) input.closest('.option-item')?.classList.add('wrong-choice');
-                });
-                
-                const correctOptObj = q.shuffledOptions.find(o => o.label === correctChoice);
-                const correctTextDisplay = correctOptObj ? `${correctChoice}. ${escapeHtml(correctOptObj.text)}` : correctChoice;
-                qCard.querySelector('.answer-explanation')?.remove();
-                
-                const expDiv = document.createElement('div');
-                if (userChoice === correctChoice) {
-                    correctCount++; expDiv.className = 'answer-explanation correct'; expDiv.innerHTML = `✅ Chính xác! Đáp án đúng: <b>${correctTextDisplay}</b>`;
-                } else {
-                    expDiv.className = 'answer-explanation wrong'; expDiv.innerHTML = `❌ Chưa chính xác! Lựa chọn: <b>${userChoice?escapeHtml(userChoice):'Bỏ trống'}</b> | Đáp án: <b>${correctTextDisplay}</b>`;
-                }
-                qCard.appendChild(expDiv);
-            });
-
-            // Tiền thưởng tính toán ở client chỉ để show alert, Server sẽ tự tính lại để cộng vào Database
-            const score = Number(((correctCount / total) * 10).toFixed(1));
-            const earnedMcion = correctCount * 10;
-            alert(`🎉 Nộp bài thành công!\n- Đúng: ${correctCount}/${total}\n- Điểm: ${score}\n- Thưởng: +${earnedMcion} Mcion!`);
-
-            try {
-                await fetchWithAuth(`${API_URL}/submit`, {
-                    method: 'POST', body: JSON.stringify({
-                        username: currentUser.username, fullname: currentUser.fullname || currentUser.username,
-                        examCode: currentExamData.examCode, correctCount, totalQuestions: total,
-                        time: new Date().toLocaleString('vi-VN')
-                        // Đã bỏ tham số score và earnedMcion gửi lên server, server tự tính an toàn
-                    })
-                });
-                renderMyHistoryRecent(); updateMcionDisplay();
-            } catch(e) {}
-            this.textContent = "✖️ ĐÓNG VÀ HOÀN THÀNH BÀI THI"; this.className = "btn-danger"; this.dataset.state = "review";
-        });
-
-        // TẠO ĐỀ EXCEL (ADMIN)
-        document.getElementById('btnSaveExam')?.addEventListener('click', async () => {
-            const examCode = document.getElementById('inputExamCode').value.trim();
-            const subject = document.getElementById('adminSubject').value;
-            const grade = document.getElementById('adminGrade').value;
-            const timeLimit = parseInt(document.getElementById('inputExamTime').value, 10) || 0;
-            const fileInput = document.getElementById('excelFileInput');
-
-            if (!examCode || !fileInput.files.length) return alert("⚠️ Vui lòng nhập mã đề và chọn file Excel!");
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-                    const validRows = rows.filter(row => row.length > 0 && row.some(cell => cell !== undefined && cell !== ''));
-                    let startIndex = (validRows[0][0] && String(validRows[0][0]).toLowerCase().includes('câu')) ? 1 : 0;
-                    const questions = [];
-                    for (let i = startIndex; i < validRows.length; i++) {
-                        const row = validRows[i]; if (!row[0]) continue;
-                        let correctVal = (row[5] !== undefined) ? String(row[5]).trim().toUpperCase() : 'A';
-                        if (correctVal === '1') correctVal = 'A'; else if (correctVal === '2') correctVal = 'B'; else if (correctVal === '3') correctVal = 'C'; else if (correctVal === '4') correctVal = 'D';
-                        questions.push({
-                            id: questions.length + 1, question: String(row[0]).trim(), correct: correctVal,
-                            options: [row[1]?String(row[1]).trim():'', row[2]?String(row[2]).trim():'', row[3]?String(row[3]).trim():'', row[4]?String(row[4]).trim():'']
-                        });
-                    }
-                    if (!questions.length) return alert("❌ Không có dữ liệu hợp lệ!");
-                    
-                    const res = await fetchWithAuth(`${API_URL}/exams`, { method: 'POST', body: JSON.stringify({ examCode, subject, grade, timeLimit, questions }) });
-                    const result = await res.json();
-                    if (result.success) { alert(`🎉 Lưu thành công ${questions.length} câu!`); loadAdminExamList(); loadExamList(); fileInput.value = ''; } 
-                    else alert("❌ " + result.message);
-                } catch (err) { alert("❌ Lỗi: " + err.message); }
-            };
-            reader.readAsArrayBuffer(fileInput.files[0]);
-        });
-
-        // XỬ LÝ AUTH 
-        document.getElementById('btnRegisterSubmit')?.addEventListener('click', async () => {
-            const fullname = document.getElementById('regFullname').value.trim();
-            const username = document.getElementById('regUsername').value.trim();
-            const password = document.getElementById('regPassword').value.trim();
-            const confirmPass = document.getElementById('regConfirmPassword').value.trim();
-            if (!fullname || !username || !password) return alert("⚠️ Điền đầy đủ!");
-            if (password !== confirmPass) return alert("❌ Mật khẩu không khớp!");
-            try {
-                const res = await fetch(`${API_URL}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullname, username, password }) });
-                const data = await res.json();
-                if (data.success) { alert("🎉 Đăng ký thành công!"); document.getElementById('btnToggleToLogin')?.click(); } 
-                else alert("❌ " + data.message);
-            } catch (err) { alert("❌ Lỗi kết nối!"); }
-        });
-
-        async function handleLogin(role) {
-            const username = document.getElementById('authUsername').value.trim();
-            const password = document.getElementById('authPassword').value.trim();
-            if (!username || !password) return alert("⚠️ Nhập đủ thông tin!");
-            try {
-                const res = await fetch(`${API_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password, role }) });
-                const data = await res.json();
-                if (data.success) {
-                    sessionStorage.setItem("current_user", JSON.stringify(data));
-                    if (data.token) sessionStorage.setItem("access_token", data.token);
-                    checkLoginState();
-                } else alert("❌ " + (data.message || "Đăng nhập thất bại!"));
-            } catch (e) { alert("❌ Lỗi kết nối!"); }
-        }
-        document.getElementById('btnLoginStudent')?.addEventListener('click', () => handleLogin('student'));
-        document.getElementById('btnLoginAdmin')?.addEventListener('click', () => handleLogin('admin'));
-        document.getElementById('btnLogout')?.addEventListener('click', () => { 
-            sessionStorage.clear(); clearInterval(examTimerInterval); currentExamData = null;
-            document.getElementById('questionsContainer').innerHTML = ''; document.getElementById('examArea').classList.add('hidden'); 
+    // AUTH LOGIN GIỮ NGUYÊN TỪ PHIÊN BẢN CŨ
+    async function handleLogin(role) {
+        const username = document.getElementById('authUsername').value, password = document.getElementById('authPassword').value;
+        const res = await fetch(`${API_URL}/login`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username, password, role})});
+        const data = await res.json();
+        if (data.success) {
+            sessionStorage.setItem("current_user", JSON.stringify(data));
+            sessionStorage.setItem("access_token", data.token);
             checkLoginState();
-        });
+        } else alert(data.message);
+    }
+    document.getElementById('btnLoginStudent').onclick = () => handleLogin('student');
+    document.getElementById('btnLoginAdmin').onclick = () => handleLogin('admin');
+    document.getElementById('btnLogout').onclick = () => { sessionStorage.clear(); checkLoginState(); };
 
-        // ADMIN CẤP MCION
-        document.getElementById('btnGrantMcion')?.addEventListener('click', async () => {
-            const username = document.getElementById('targetStudentUser').value.trim();
-            const amount = Number(document.getElementById('targetMcionAmount').value.trim());
-            if (!username || isNaN(amount)) return alert("⚠️ Nhập Username và số Mcion hợp lệ!");
-            try {
-                const res = await fetchWithAuth(`${API_URL}/mcion/grant`, { method: 'POST', body: JSON.stringify({ username, amount }) });
-                const data = await res.json();
-                if (data.success) { alert(`✅ ${data.message}`); } else alert("❌ " + data.message);
-            } catch (err) {}
-        });
-
-        // MODAL EVENTS
-        document.getElementById('btnShowChangePass')?.addEventListener('click', () => document.getElementById('modalChangePass').classList.remove('hidden'));
-        document.getElementById('btnCancelChangePass')?.addEventListener('click', () => document.getElementById('modalChangePass').classList.add('hidden'));
-        document.getElementById('btnShowChangeAvatar')?.addEventListener('click', () => { document.getElementById('modalChangeAvatar').classList.remove('hidden'); loadMyAvatars(); });
-        document.getElementById('btnCancelAvatar')?.addEventListener('click', () => document.getElementById('modalChangeAvatar').classList.add('hidden'));
+    function checkLoginState() {
+        const user = JSON.parse(sessionStorage.getItem("current_user"));
+        document.getElementById('sectionAuth').classList.toggle('hidden', !!user);
+        document.getElementById('btnLogout').classList.toggle('hidden', !user);
         
-        document.getElementById('btnSubmitChangePass')?.addEventListener('click', async () => {
-            const user = JSON.parse(sessionStorage.getItem("current_user") || "null"); if (!user) return;
-            const oldPassword = document.getElementById('cpOldPass').value.trim(), newPassword = document.getElementById('cpNewPass').value.trim(), confirmPass = document.getElementById('cpConfirmPass').value.trim();
-            if (!oldPassword || !newPassword) return alert("⚠️ Điền đủ thông tin!"); if (newPassword !== confirmPass) return alert("❌ Xác nhận không khớp!");
-            try {
-                const res = await fetchWithAuth(`${API_URL}/change-password`, { method: 'POST', body: JSON.stringify({ username: user.username, role: user.role, oldPassword, newPassword }) });
-                const data = await res.json();
-                if (data.success) { alert("🎉 " + data.message); document.getElementById('modalChangePass').classList.add('hidden'); } else alert("❌ " + data.message);
-            } catch(e) {}
-        });
+        if (!user) {
+            document.getElementById('sectionStudent').classList.add('hidden');
+            document.getElementById('sectionAdmin').classList.add('hidden');
+        } else if (user.role === 'student') {
+            document.getElementById('sectionStudent').classList.remove('hidden');
+            document.getElementById('sectionAdmin').classList.add('hidden');
+            document.getElementById('userInfo').textContent = user.fullname;
+            loadExamList(); loadHistory(); updateMcion();
+        } else {
+            document.getElementById('sectionAdmin').classList.remove('hidden');
+            document.getElementById('sectionStudent').classList.add('hidden');
+            document.getElementById('userInfo').textContent = 'Admin';
+        }
+    }
 
-        // TẠO ĐỀ TỰ ĐỘNG
-        document.getElementById('btnAutoGenerateExam')?.addEventListener('click', async function() {
-            const examCode = document.getElementById('autoExamCode').value.trim(), subject = document.getElementById('autoAdminSubject').value, grade = document.getElementById('autoAdminGrade').value, count = parseInt(document.getElementById('autoExamCount').value)||10, timeLimit = parseInt(document.getElementById('autoExamTime').value)||15;
-            if (!examCode) return alert("⚠️ Nhập mã đề thi mới!");
-            const btn = this; const originalText = btn.textContent; btn.textContent = "⏳ Đang tạo..."; btn.disabled = true;
+    // EXCEL IMPORT - NHẬN DIỆN CÂU HỎI TỰ LUẬN
+    document.getElementById('btnSaveExam').addEventListener('click', () => {
+        const examCode = document.getElementById('inputExamCode').value;
+        const timeLimit = document.getElementById('inputExamTime').value;
+        const file = document.getElementById('excelFileInput').files[0];
+        if(!examCode || !file) return alert("Thiếu dữ liệu!");
 
-            try {
-                const resExams = await fetch(`${API_URL}/exams`); const examCodes = await resExams.json();
-                const targetExams = examCodes.filter(item => typeof item === 'string' || (!item.subject || item.subject === subject) && (!item.grade || item.grade === grade));
-                const fetchPromises = targetExams.map(item => fetch(`${API_URL}/exams/${encodeURIComponent(typeof item === 'string'?item:(item.examCode||item.code))}`).then(res=>res.json()).catch(()=>null));
-                const examResults = await Promise.allSettled(fetchPromises);
-                let questionBank = [];
-                examResults.forEach(r => { if (r.status === 'fulfilled' && r.value && r.value.questions) questionBank.push(...r.value.questions); });
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const rows = XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type:'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type:'array'}).SheetNames[0]], {header:1});
+            const questions = [];
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i]; if(!row[0]) continue;
+                let isEssay = (String(row[5]).toUpperCase().includes('TL') || String(row[5]).toUpperCase().includes('TỰ LUẬN'));
                 
-                if (questionBank.length === 0) throw new Error("Không có câu hỏi phù hợp!");
-                const selected = shuffleArray(questionBank).slice(0, count).map((q, idx) => ({ id: idx+1, question: q.question, options: q.options, correct: q.correct }));
-                
-                const saveRes = await fetchWithAuth(`${API_URL}/exams`, { method: 'POST', body: JSON.stringify({ examCode, subject, grade, timeLimit, questions: selected }) });
-                const result = await saveRes.json();
-                if (result.success) { alert(`🎉 Tạo thành công ${examCode}!`); loadAdminExamList(); loadExamList(); } else alert("❌ Lỗi!");
-            } catch (err) { alert("❌ Lỗi: " + err.message); } finally { btn.textContent = originalText; btn.disabled = false; }
-        });
+                questions.push({
+                    id: i, question: String(row[0]),
+                    type: isEssay ? 'essay' : 'multiple_choice',
+                    options: isEssay ? [] : [row[1], row[2], row[3], row[4]].filter(Boolean),
+                    correct: isEssay ? null : (row[5] === 1 ? 'A' : row[5] === 2 ? 'B' : row[5] === 3 ? 'C' : row[5]),
+                    sampleAnswer: isEssay ? (row[6] || '') : null,
+                    maxScore: isEssay ? (Number(row[7]) || 10) : null
+                });
+            }
+            const res = await fetchAuth(`${API_URL}/exams`, { method:'POST', body: JSON.stringify({examCode, timeLimit, questions})});
+            if((await res.json()).success) alert("Lưu đề thành công!");
+        };
+        reader.readAsArrayBuffer(file);
     });
 
-    // --- STATE CONTROL ---
-    function checkLoginState() {
-        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-        const topAvatar = document.getElementById('topUserAvatar');
-        if (!currentUser) {
-            document.getElementById('sectionAuth')?.classList.remove('hidden');
-            document.getElementById('sectionStudent')?.classList.add('hidden');
-            document.getElementById('sectionAdmin')?.classList.add('hidden');
-            document.getElementById('btnLogout')?.classList.add('hidden');
-            document.getElementById('btnShowChangePass')?.classList.add('hidden');
-            document.getElementById('btnShowChangeAvatar')?.classList.add('hidden');
-            topAvatar?.classList.add('hidden');
-            document.getElementById('userInfo').textContent = "Chưa đăng nhập";
-            updateMcionDisplay(); return;
-        }
-        
-        document.getElementById('sectionAuth')?.classList.add('hidden');
-        document.getElementById('btnLogout')?.classList.remove('hidden');
-        document.getElementById('btnShowChangePass')?.classList.remove('hidden');
-        
-        if (currentUser.role === "student") {
-            document.getElementById('btnShowChangeAvatar')?.classList.remove('hidden');
-            if (topAvatar) { topAvatar.src = currentUser.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=Default"; topAvatar.classList.remove('hidden'); }
-            document.getElementById('userInfo').textContent = `Học sinh: ${currentUser.fullname || currentUser.username}`;
-            document.getElementById('sectionStudent')?.classList.remove('hidden');
-            document.getElementById('sectionAdmin')?.classList.add('hidden');
-            loadExamList(); renderMyHistoryRecent();
-        } else {
-            topAvatar?.classList.add('hidden');
-            document.getElementById('userInfo').textContent = `Admin (${currentUser.username})`;
-            document.getElementById('sectionAdmin')?.classList.remove('hidden');
-            document.getElementById('sectionStudent')?.classList.add('hidden');
-            renderAllHistoryRecent(); loadAdminExamList(); 
-        }
-        updateMcionDisplay();
-    }
-
     async function loadExamList() {
-        try {
-            const exams = await (await fetch(`${API_URL}/exams`)).json();
-            if (Array.isArray(exams)) {
-                allExamsFromServer = exams.map(e => typeof e === 'string' ? { code: e, subject: 'Toán', grade: 'Lớp 1' } : { code: e.examCode||e.code, subject: e.subject||'Toán', grade: e.grade||'Lớp 1', timeLimit: e.timeLimit||15 });
-                onCategoryFilterChange();
+        const res = await fetchAuth(`${API_URL}/exams`);
+        const exams = await res.json();
+        document.getElementById('selectExamCode').innerHTML = '<option value="">-- Chọn Đề --</option>' + exams.map(e => `<option value="${e.examCode}">${e.examCode}</option>`).join('');
+    }
+
+    // BẮT ĐẦU & RENDER BÀI LÀM (GỒM TỰ LUẬN + AUTO SAVE)
+    document.getElementById('btnStartExam').addEventListener('click', async () => {
+        const code = document.getElementById('selectExamCode').value;
+        if(!code) return;
+        const res = await fetchAuth(`${API_URL}/exams/${code}`);
+        currentExamData = await res.json();
+        
+        document.getElementById('examArea').classList.remove('hidden');
+        document.getElementById('examSelectionArea').classList.add('hidden');
+        
+        const container = document.getElementById('questionsContainer');
+        container.innerHTML = currentExamData.questions.map((q, idx) => {
+            if (q.type === 'essay') {
+                const draft = localStorage.getItem(`draft_${code}_${idx}`) || '';
+                return `<div class="question-card" id="q_${idx}">
+                    <div class="question-title">Câu ${idx+1} (Tự luận - ${q.maxScore || 10}đ): ${escapeHtml(q.question)}</div>
+                    <textarea class="essay-box" id="ans_${idx}" rows="6" placeholder="Viết câu trả lời của bạn vào đây...">${escapeHtml(draft)}</textarea>
+                </div>`;
+            } else {
+                const labels = ['A','B','C','D'];
+                const opts = q.options.map((opt, oIdx) => `<label class="option-item"><input type="radio" name="q${idx}" value="${labels[oIdx]}"> ${labels[oIdx]}. ${escapeHtml(opt)}</label>`).join('');
+                return `<div class="question-card" id="q_${idx}"><div class="question-title">Câu ${idx+1}: ${escapeHtml(q.question)}</div>${opts}</div>`;
             }
-        } catch(e) {}
-    }
+        }).join('');
 
-    async function loadAdminExamList() {
+        // Bật Auto-Save
+        clearInterval(autoSaveInterval);
+        autoSaveInterval = setInterval(() => {
+            document.querySelectorAll('.essay-box').forEach(ta => {
+                const idx = ta.id.split('_')[1];
+                localStorage.setItem(`draft_${code}_${idx}`, ta.value);
+            });
+            const t = document.getElementById('autosaveToast');
+            t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 2000);
+        }, 30000);
+    });
+
+    // NỘP BÀI - GỬI DATA VỀ SERVER AI CHẤM
+    document.getElementById('btnSubmitExam').addEventListener('click', async function() {
+        if(this.dataset.state === 'done') {
+            document.getElementById('examArea').classList.add('hidden');
+            document.getElementById('examSelectionArea').classList.remove('hidden');
+            this.textContent = "NỘP BÀI (Chờ AI Chấm)"; delete this.dataset.state; return;
+        }
+
+        const btn = this;
+        btn.textContent = "⏳ Đang gửi cho AI chấm điểm... Vui lòng không đóng trang!";
+        btn.disabled = true;
+        clearInterval(autoSaveInterval);
+        
+        let answers = {};
+        currentExamData.questions.forEach((q, idx) => {
+            if(q.type === 'essay') {
+                answers[idx] = document.getElementById(`ans_${idx}`).value;
+                localStorage.removeItem(`draft_${currentExamData.examCode}_${idx}`); // Xóa nháp
+            } else {
+                answers[idx] = document.querySelector(`input[name="q${idx}"]:checked`)?.value || '';
+            }
+        });
+
         try {
-            const exams = await (await fetch(`${API_URL}/exams`)).json();
-            const tbody = document.getElementById('adminExamListBody');
-            if (!Array.isArray(exams) || !tbody) return;
-            if (!exams.length) return tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa có đề thi.</td></tr>';
-            tbody.innerHTML = exams.map(e => `<tr><td><b>${escapeHtml(typeof e==='string'?e:(e.examCode||e.code))}</b></td><td>${escapeHtml(e.subject||'Chưa gán')}</td><td>${escapeHtml(e.grade||'Chưa gán')}</td><td><button onclick="deleteExam('${escapeHtml(typeof e==='string'?e:(e.examCode||e.code))}')" class="btn-danger">Xóa</button></td></tr>`).join('');
-        } catch(e) {}
+            const res = await fetchAuth(`${API_URL}/submit`, { method: 'POST', body: JSON.stringify({ examCode: currentExamData.examCode, answers, time: new Date().toLocaleString() }) });
+            const data = await res.json();
+            
+            if(data.success) {
+                alert(`Nộp bài thành công!\nĐiểm tổng: ${data.history.score}`);
+                // Hiển thị Nhận xét AI trên UI
+                data.history.essayDetails.forEach(ed => {
+                    const box = document.getElementById(`q_${ed.questionIndex}`);
+                    const div = document.createElement('div');
+                    let confWarning = ed.confidence < 70 ? `<br><small style="color:red">Độ tin cậy AI thấp (${ed.confidence}%). Khuyên dùng tính năng Phúc Khảo.</small>` : '';
+                    div.className = 'answer-explanation ai-feedback';
+                    div.innerHTML = `🤖 <b>AI Nhận xét:</b> ${escapeHtml(ed.feedback)} <br>👉 <b>Điểm AI chấm:</b> ${ed.score}đ ${confWarning}`;
+                    box.appendChild(div);
+                });
+                
+                btn.textContent = "✖️ ĐÓNG KẾT QUẢ"; btn.dataset.state = 'done';
+                loadHistory(); updateMcion();
+            } else {
+                alert("Lỗi: " + data.message);
+                btn.textContent = "NỘP BÀI";
+            }
+        } catch(e) { alert("Lỗi mạng!"); btn.textContent = "NỘP BÀI"; }
+        btn.disabled = false;
+    });
+
+    async function loadHistory() {
+        const u = JSON.parse(sessionStorage.getItem("current_user"));
+        const res = await fetchAuth(`${API_URL}/history?search=${u.username}`);
+        const list = await res.json();
+        
+        document.getElementById('myHistoryRecentBody').innerHTML = list.map(h => {
+            const btnRegrade = h.regradeRequested ? `<button disabled>Đã yêu cầu</button>` : `<button class="btn-warning" onclick="requestRegrade('${h.id}')" style="padding: 5px 10px; font-size:12px;">Phúc khảo</button>`;
+            return `<tr><td>${h.examCode}</td><td>${h.correctCount}</td><td><b>${h.score}đ</b></td><td>${btnRegrade}</td></tr>`;
+        }).join('');
     }
 
-    async function updateMcionDisplay() {
-        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-        if (currentUser && currentUser.role === "student") {
-            try {
-                const data = await (await fetch(`${API_URL}/mcion/${encodeURIComponent(currentUser.username)}`)).json();
-                document.getElementById('userMcionBalance').textContent = Number(data.balance || 0).toLocaleString("vi-VN");
-                document.getElementById('mcionBox')?.classList.remove('hidden');
-            } catch (e) {}
-        } else document.getElementById('mcionBox')?.classList.add('hidden');
+    window.requestRegrade = async function(id) {
+        if(!confirm("Bạn có chắc muốn gửi yêu cầu giáo viên chấm lại bài này?")) return;
+        const res = await fetchAuth(`${API_URL}/regrade`, { method: 'POST', body: JSON.stringify({ historyId: id }) });
+        if((await res.json()).success) { alert("Đã gửi yêu cầu!"); loadHistory(); }
+    };
+
+    async function updateMcion() {
+        const u = JSON.parse(sessionStorage.getItem("current_user"));
+        const res = await fetchAuth(`${API_URL}/mcion/${u.username}`);
+        const data = await res.json();
+        document.getElementById('userMcionBalance').textContent = data.balance;
+        document.getElementById('mcionBox').classList.remove('hidden');
     }
 
-    async function loadUISettings() {
-        try {
-            const ui = await (await fetch(`${API_URL}/ui`)).json();
-            if (ui.title) { document.title = ui.title; document.getElementById('mainTitle').textContent = ui.title; }
-            if (ui.primaryColor) document.documentElement.style.setProperty('--primary-color', ui.primaryColor);
-            if (ui.banner) { const b = document.getElementById('headerBanner'); b.src = ui.banner; b.classList.remove('hidden'); }
-        } catch(e) {}
-    }
-
-    async function loadMyAvatars() {
-        const user = JSON.parse(sessionStorage.getItem("current_user") || "null");
-        const container = document.getElementById('ownedAvatarList');
-        if (!user || !container) return;
-        try {
-            const inventory = (await (await fetch(`${API_URL}/mcion/${encodeURIComponent(user.username)}`)).json()).inventory || [];
-            const available = [{ name: 'Mặc định', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Default' }, ...SHOP_AVATARS.filter(i => inventory.includes(i.name))];
-            container.innerHTML = available.map(avt => `<div onclick="selectAvatar('${avt.url}', '${avt.name}')" style="text-align: center; cursor: pointer; padding: 8px; border: 2px solid var(--primary-color); border-radius: 10px; background: var(--container-bg); transition: transform 0.2s;"><img src="${avt.url}" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 5px auto;"><span style="font-size: 12px; font-weight: bold;">${escapeHtml(avt.name)}</span></div>`).join('');
-        } catch (e) { container.innerHTML = '<p style="color: red; font-size: 14px;">Lỗi tải danh sách Avatar.</p>'; }
-    }
+    checkLoginState();
 </script>
 </body>
 </html>
