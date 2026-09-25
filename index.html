@@ -2,195 +2,135 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="siteTitleTag">Trang Web Học Tập Của MR Minh</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+    <title>Web Học Tập - MR Minh</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        :root { 
-            --primary-color: #3498db; --bg-color: #f4f7f6; --container-bg: #ffffff; 
-            --text-color: #333333; --card-bg: #fafafa; --border-color: #e0e0e0; 
-            --input-bg: #ffffff; --input-border: #cccccc; --header-bg: #eef2f5; 
-            --table-bg: #ffffff; --th-bg: #f2f2f2; --title-color: #2c3e50; 
-        }
-        .dark-mode { 
-            --bg-color: #121212; --container-bg: #1e1e1e; --text-color: #e0e0e0; 
-            --card-bg: #2c2c2c; --border-color: #444444; --input-bg: #333333; 
-            --input-border: #555555; --header-bg: #2a2a2a; --table-bg: #2c2c2c; 
-            --th-bg: #3a3a3a; --title-color: #f39c12; 
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 950px; background: var(--container-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; background: var(--header-bg); padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .user-profile-bar { display: flex; align-items: center; gap: 12px; }
-        .mcion-badge { display: inline-flex; align-items: center; background: linear-gradient(135deg, #f1c40f, #f39c12); color: #fff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 14px; }
-        .card-box { border: 1px solid var(--border-color); padding: 20px; border-radius: 8px; margin-bottom: 20px; background: var(--card-bg); }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: bold; }
-        input[type="text"], input[type="password"], input[type="number"], select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 14px; background: var(--input-bg); color: var(--text-color); }
-        textarea { resize: vertical; min-height: 90px; }
-        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-        button { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: opacity 0.2s; }
-        button:hover { opacity: 0.88; }
-        .btn-primary { background-color: var(--primary-color); color: white; }
-        .btn-success { background-color: #2ecc71; color: white; }
-        .btn-danger { background-color: #e74c3c; color: white; }
-        .btn-warning { background-color: #f39c12; color: white; }
-        .question-card { background: var(--container-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .question-title { font-weight: bold; margin-bottom: 10px; color: var(--title-color); }
-        .option-item { margin: 6px 0; display: flex; align-items: center; cursor: pointer; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); }
+        :root { --primary: #3498db; --bg: #f4f7f6; --card: #ffffff; --text: #333; }
+        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 900px; background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #eef2f5; padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; }
+        .card-box { border: 1px solid #ddd; padding: 18px; border-radius: 8px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 12px; }
+        label { font-weight: bold; display: block; margin-bottom: 4px; }
+        input, select, textarea { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--primary); color: #fff; margin-right: 5px; }
+        .btn-success { background: #2ecc71; } .btn-danger { background: #e74c3c; } .btn-warning { background: #f39c12; }
+        .avatar-badge { font-size: 24px; vertical-align: middle; cursor: pointer; }
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 10px; }
+        .shop-item { border: 1px solid #ccc; border-radius: 8px; padding: 12px; text-align: center; background: #fafafa; }
         .hidden { display: none !important; }
-        
-        /* Navigation Tabs Admin */
-        .admin-nav { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
-        .admin-nav button { background: none; color: var(--text-color); border: 1px solid var(--border-color); }
-        .admin-nav button.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: var(--table-bg); }
-        th, td { padding: 10px; border: 1px solid var(--border-color); text-align: left; font-size: 14px; }
-        th { background: var(--th-bg); }
-
-        .answer-explanation { margin-top: 10px; padding: 10px 15px; border-radius: 6px; font-size: 14px; }
-        .answer-explanation.ai-feedback { background: rgba(52, 152, 219, 0.12); border-left: 4px solid #3498db; }
-        
-        #autosaveToast { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.85); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity 0.4s; z-index: 1000; pointer-events: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
     </style>
 </head>
 <body>
 
-<div id="autosaveToast">💾 Đã tự động lưu nháp bài làm</div>
-
 <div class="container">
-    <h2 id="mainTitle" style="text-align: center; margin-bottom: 20px; color: var(--title-color);">Trang Web Học Tập Của MR Minh</h2>
-    
+    <h2 style="text-align: center; margin-bottom: 15px;">🎓 Web Học Tập MR Minh</h2>
+
     <!-- Top Bar -->
     <div class="top-bar">
-        <div class="user-profile-bar">
-            <div><b>Tài khoản: </b><span id="userInfo">Chưa đăng nhập</span></div>
+        <div>
+            <span id="userAvatar" class="avatar-badge" title="Bấm để đổi Avatar" onclick="openShopModal()">🎓</span>
+            <b> Tên: </b><span id="userInfo">Chưa đăng nhập</span>
         </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <div id="mcionBox" class="mcion-badge hidden">🪙 Mcion: <span id="userMcionBalance">0</span></div>
-            <button id="btnToggleTheme" class="btn-warning" onclick="toggleDarkMode()">🌙</button>
+        <div>
+            <span id="mcionBox" class="hidden" style="margin-right:15px; font-weight:bold; color:#f39c12;">🪙 Mcion: <span id="userMcion">0</span></span>
+            <button id="btnShop" class="btn-warning hidden" onclick="openShopModal()">🛒 Shop Avatar</button>
             <button id="btnLogout" class="btn-danger hidden" onclick="logout()">Đăng Xuất</button>
         </div>
     </div>
 
-    <!-- KHU VỰC ĐĂNG NHẬP / ĐĂNG KÝ -->
+    <!-- AUTH SECTION -->
     <div id="sectionAuth" class="card-box">
-        <h3>Đăng Nhập Hệ Thống</h3><br>
+        <h3>Đăng Nhập</h3><br>
         <div class="form-group"><label>Tên đăng nhập:</label><input type="text" id="authUsername"></div>
         <div class="form-group"><label>Mật khẩu:</label><input type="password" id="authPassword"></div>
-        <div class="form-group"><label>Họ và Tên (Nếu đăng ký mới):</label><input type="text" id="authFullname" placeholder="Ví dụ: Nguyễn Văn A"></div>
-        <div class="btn-group">
-            <button class="btn-primary" onclick="handleLogin('student')">Đăng Nhập Học Sinh</button>
-            <button class="btn-warning" onclick="handleLogin('admin')">Đăng Nhập Admin</button>
-            <button class="btn-success" onclick="handleRegister()">Đăng Ký Mới</button>
-        </div>
+        <button onclick="handleLogin('student')">Học Sinh Đăng Nhập</button>
+        <button onclick="handleLogin('admin')" class="btn-warning">Admin Đăng Nhập</button>
     </div>
 
-    <!-- KHU VỰC HỌC SINH -->
+    <!-- STUDENT SECTION -->
     <div id="sectionStudent" class="hidden">
-        <div class="card-box" id="examSelectionArea">
-            <h3>🎯 Chọn Đề Thi Để Bắt Đầu</h3>
-            <div class="form-group" style="margin-top:15px;">
-                <select id="selectExamCode"><option value="">-- Danh Sách Đề Thi --</option></select>
-            </div>
-            <button onclick="startExam()" class="btn-success" style="width: 100%;">🚀 BẮT ĐẦU LÀM BÀI</button>
-        </div>
-
-        <div id="examArea" class="card-box hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 id="examTitle">Bài Thi</h3>
-                <div id="examTimerDisplay" class="mcion-badge" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
-                    ⏱️ <span id="timeRemaining">--:--</span>
+        <!-- BỘ LỌC PHÂN LOẠI MÔN HỌC VÀ LỚP HỌC -->
+        <div class="card-box">
+            <h3>🔍 Phân Loại Đề Thi</h3>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <div style="flex:1;">
+                    <label>Lớp / Khối:</label>
+                    <select id="filterGrade" onchange="loadExamList()">
+                        <option value="Tất cả">-- Tất cả Khối Lớp --</option>
+                        <option value="Lớp 10">Lớp 10</option>
+                        <option value="Lớp 11">Lớp 11</option>
+                        <option value="Lớp 12">Lớp 12</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label>Môn Học:</label>
+                    <select id="filterSubject" onchange="loadExamList()">
+                        <option value="Tất cả">-- Tất cả Môn Học --</option>
+                        <option value="Toán">Toán Hóa</option>
+                        <option value="Văn">Ngữ Văn</option>
+                        <option value="Tiếng Anh">Tiếng Anh</option>
+                        <option value="Vật Lý">Vật Lý</option>
+                        <option value="Tổng hợp">Tổng hợp</option>
+                    </select>
                 </div>
             </div>
-            <div id="questionsContainer"></div>
-            <button id="btnSubmitExam" onclick="submitExam()" class="btn-primary" style="width: 100%; padding: 12px; margin-top: 15px;">NỘP BÀI (Chờ AI Chấm)</button>
+            <div class="form-group" style="margin-top:15px;">
+                <label>Chọn Đề Thi:</label>
+                <select id="selectExamCode"><option value="">-- Chọn đề --</option></select>
+            </div>
+            <button onclick="startExam()" class="btn-success" style="width: 100%;">🚀 BẮT ĐẦU THI</button>
         </div>
 
-        <div class="card-box">
-            <h3>📜 Lịch Sử Làm Bài Cá Nhân</h3>
-            <table>
-                <thead>
-                    <tr><th>Mã Đề</th><th>Số Câu Đúng (TN)</th><th>Điểm AI Chấm</th><th>Phúc Khảo</th></tr>
-                </thead>
-                <tbody id="studentHistoryBody"></tbody>
-            </table>
+        <!-- BÀI THI AREA -->
+        <div id="examArea" class="card-box hidden">
+            <h3 id="examTitle">Bài Thi</h3>
+            <div id="questionsContainer" style="margin-top:15px;"></div>
+            <button onclick="submitExam()" class="btn-primary" style="width: 100%; margin-top:15px;">NỘP BÀI</button>
         </div>
     </div>
 
-    <!-- KHU VỰC ADMIN -->
-    <div id="sectionAdmin" class="hidden">
-        <div class="admin-nav">
-            <button id="tabBtn1" class="active" onclick="switchAdminTab(1)">➕ Thêm Đề Thi Excel</button>
-            <button id="tabBtn2" onclick="switchAdminTab(2)">📚 Quản Lý Đề Thi</button>
-            <button id="tabBtn3" onclick="switchAdminTab(3)">📊 Lịch Sử Thi & Phúc Khảo</button>
-            <button id="tabBtn4" onclick="switchAdminTab(4)">👥 Quản Lý Học Sinh & Mcion</button>
+    <!-- SHOP & TỦ ĐỒ AVATAR MODAL -->
+    <div id="sectionShop" class="card-box hidden">
+        <div style="display:flex; justify-between; align-items:center;">
+            <h3>🛒 Shop & Kho Avatar Của Bạn</h3>
+            <button onclick="closeShopModal()" class="btn-danger">Đóng X</button>
         </div>
+        <p style="margin-top:5px; font-size:14px; color:#666;">Chọn Avatar đã sở hữu để đổi, hoặc dùng Mcion mua Avatar mới!</p>
+        <div id="shopListGrid" class="shop-grid"></div>
+    </div>
 
-        <!-- TAB 1: THÊM ĐỀ -->
-        <div id="adminTab1" class="card-box">
-            <h3>Thêm Mới Đề Thi (File Excel)</h3><br>
-            <div class="form-group"><label>Mã Đề Thi:</label><input type="text" id="inputExamCode" placeholder="VD: TOAN10_DE1"></div>
-            <div class="form-group"><label>Thời Gian Làm Bài (Phút):</label><input type="number" id="inputExamTime" value="15"></div>
-            <div class="form-group"><label>Chọn File Excel (Cột F ghi "TL" cho tự luận, Cột G là Dàn Ý, H là Điểm Tối Đa):</label><input type="file" id="excelFileInput"></div>
-            <button onclick="uploadExamFromExcel()" class="btn-success">Lưu Bộ Đề Vào Hệ Thống</button>
+    <!-- ADMIN SECTION -->
+    <div id="sectionAdmin" class="hidden card-box">
+        <h3>➕ Thêm Đề Thi Mới (Phân Loại Lớp & Môn)</h3>
+        <div class="form-group"><label>Mã Đề Thi:</label><input type="text" id="inputExamCode"></div>
+        <div class="form-group">
+            <label>Khối Lớp:</label>
+            <select id="inputExamGrade">
+                <option value="Lớp 10">Lớp 10</option>
+                <option value="Lớp 11">Lớp 11</option>
+                <option value="Lớp 12">Lớp 12</option>
+            </select>
         </div>
-
-        <!-- TAB 2: QUẢN LÝ ĐỀ -->
-        <div id="adminTab2" class="card-box hidden">
-            <h3>Danh Sách Đề Thi Trong Hệ Thống</h3>
-            <table>
-                <thead>
-                    <tr><th>Mã Đề</th><th>Môn Học</th><th>Thời Gian</th><th>Số Câu Hỏi</th><th>Hành Động</th></tr>
-                </thead>
-                <tbody id="adminExamListBody"></tbody>
-            </table>
+        <div class="form-group">
+            <label>Môn Học:</label>
+            <select id="inputExamSubject">
+                <option value="Toán">Toán</option>
+                <option value="Văn">Văn</option>
+                <option value="Tiếng Anh">Tiếng Anh</option>
+                <option value="Vật Lý">Vật Lý</option>
+            </select>
         </div>
-
-        <!-- TAB 3: QUẢN LÝ LỊCH SỬ THI & PHÚC KHẢO -->
-        <div id="adminTab3" class="card-box hidden">
-            <h3>Lịch Sử Thi & Yêu Cầu Phúc Khảo Toàn Hệ Thống</h3>
-            <div class="form-group" style="margin-top:10px;">
-                <input type="text" id="searchHistoryInput" placeholder="Tìm kiếm theo Tên học sinh, Mã đề..." oninput="loadAdminHistory()">
-            </div>
-            <table>
-                <thead>
-                    <tr><th>Học Sinh</th><th>Mã Đề</th><th>Thời Gian</th><th>Điểm Hiển Thị</th><th>Trạng Thái Phúc Khảo</th><th>Xử Lý Điểm</th></tr>
-                </thead>
-                <tbody id="adminHistoryBody"></tbody>
-            </table>
-        </div>
-
-        <!-- TAB 4: QUẢN LÝ MCION -->
-        <div id="adminTab4" class="card-box hidden">
-            <h3>Quản Lý Số Dư Mcion Học Sinh</h3>
-            <table>
-                <thead>
-                    <tr><th>Tên Đăng Nhập</th><th>Họ Và Tên</th><th>Mcion Hiện Tại</th><th>Cộng / Trừ Mcion</th></tr>
-                </thead>
-                <tbody id="adminUsersBody"></tbody>
-            </table>
-        </div>
+        <div class="form-group"><label>File Excel:</label><input type="file" id="excelFileInput"></div>
+        <button onclick="uploadExamFromExcel()" class="btn-success">Lưu Đề Thi</button>
     </div>
 </div>
 
 <script>
-    const isLocal = window.location.hostname === 'localhost' || 
-                    window.location.hostname === '127.0.0.1' || 
-                    window.location.hostname === '' || 
-                    window.location.protocol === 'file:';
-    const API_URL = isLocal ? "http://localhost:3000/api" : "https://quiz-backend-ta9z.onrender.com/api";
-    
-    let currentExamData = null;
-    let autoSaveInterval = null;
-    let examTimerInterval = null;
-
-    function escapeHtml(str) { 
-        return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); 
-    }
+    const API_URL = "http://localhost:3000/api";
+    let currentUser = null;
 
     async function fetchAuth(url, options = {}) {
         const token = sessionStorage.getItem("access_token");
@@ -199,401 +139,110 @@
         return await fetch(url, { ...options, headers });
     }
 
-    function toggleDarkMode() {
-        document.body.classList.toggle('dark-mode');
-    }
-
-    // AUTHENTICATION
     async function handleLogin(role) {
         const username = document.getElementById('authUsername').value.trim();
         const password = document.getElementById('authPassword').value.trim();
-        if (!username || !password) return alert("Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!");
+        const res = await fetch(`${API_URL}/login`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username, password, role })
+        });
+        const data = await res.json();
+        if (data.success) {
+            sessionStorage.setItem("current_user", JSON.stringify(data));
+            sessionStorage.setItem("access_token", data.token);
+            checkLoginState();
+        } else alert(data.message);
+    }
 
-        try {
-            const res = await fetch(`${API_URL}/login`, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ username, password, role })
-            });
-            const data = await res.json();
-            if (data.success) {
-                sessionStorage.setItem("current_user", JSON.stringify(data));
-                sessionStorage.setItem("access_token", data.token);
-                checkLoginState();
+    function checkLoginState() {
+        currentUser = JSON.parse(sessionStorage.getItem("current_user"));
+        document.getElementById('sectionAuth').classList.toggle('hidden', !!currentUser);
+        document.getElementById('btnLogout').classList.toggle('hidden', !currentUser);
+        document.getElementById('btnShop').classList.toggle('hidden', !currentUser || currentUser.role !== 'student');
+        document.getElementById('mcionBox').classList.toggle('hidden', !currentUser);
+
+        if (currentUser) {
+            document.getElementById('userInfo').textContent = currentUser.fullname;
+            document.getElementById('userAvatar').textContent = currentUser.avatar || '🎓';
+            document.getElementById('userMcion').textContent = currentUser.mcion || 0;
+
+            if (currentUser.role === 'student') {
+                document.getElementById('sectionStudent').classList.remove('hidden');
+                loadExamList();
             } else {
-                alert(data.message || "Đăng nhập thất bại!");
+                document.getElementById('sectionAdmin').classList.remove('hidden');
             }
-        } catch (err) {
-            alert("Không thể kết nối đến máy chủ Backend! Vui lòng kiểm tra Server đã được khởi chạy chưa.");
-            console.error("Login Error:", err);
+        } else {
+            document.getElementById('sectionStudent').classList.add('hidden');
+            document.getElementById('sectionAdmin').classList.add('hidden');
+            document.getElementById('sectionShop').classList.add('hidden');
         }
     }
 
-    async function handleRegister() {
-        const username = document.getElementById('authUsername').value.trim();
-        const password = document.getElementById('authPassword').value.trim();
-        const fullname = document.getElementById('authFullname').value.trim();
-        if (!username || !password) return alert("Vui lòng điền thông tin đăng ký!");
+    // NẠP ĐỀ THI THEO BỘ LỌC (MÔN HỌC & LỚP)
+    async function loadExamList() {
+        const grade = document.getElementById('filterGrade').value;
+        const subject = document.getElementById('filterSubject').value;
+        const res = await fetchAuth(`${API_URL}/exams?grade=${encodeURIComponent(grade)}&subject=${encodeURIComponent(subject)}`);
+        const exams = await res.json();
+        
+        document.getElementById('selectExamCode').innerHTML = '<option value="">-- Chọn đề thi --</option>' + 
+            exams.map(e => `<option value="${e.examCode}">[${e.grade} - ${e.subject}] ${e.examCode}</option>`).join('');
+    }
 
-        try {
-            const res = await fetch(`${API_URL}/register`, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ username, password, fullname })
-            });
-            const data = await res.json();
-            alert(data.message);
-        } catch (err) {
-            alert("Lỗi kết nối máy chủ khi đăng ký!");
-            console.error("Register Error:", err);
+    // CỬA HÀNG VÀ ĐỔI AVATAR
+    async function openShopModal() {
+        if (!currentUser) return;
+        document.getElementById('sectionShop').classList.remove('hidden');
+        const res = await fetch(`${API_URL}/shop/avatars`);
+        const avatars = await res.json();
+
+        const grid = document.getElementById('shopListGrid');
+        grid.innerHTML = avatars.map(item => {
+            const isOwned = currentUser.inventory.includes(item.id);
+            const isEquipped = currentUser.avatar === item.id;
+
+            let actionBtn = '';
+            if (isEquipped) actionBtn = '<b style="color:#2ecc71;">[Đang Mặc]</b>';
+            else if (isOwned) actionBtn = `<button class="btn-primary" onclick="equipAvatar('${item.id}')">Đổi Avatar</button>`;
+            else actionBtn = `<button class="btn-warning" onclick="buyAvatar('${item.id}')">Mua (${item.price}🪙)</button>`;
+
+            return `<div class="shop-item">
+                <div style="font-size:36px;">${item.id}</div>
+                <div><b>${item.name}</b></div>
+                <div style="margin-top:8px;">${actionBtn}</div>
+            </div>`;
+        }).join('');
+    }
+
+    function closeShopModal() {
+        document.getElementById('sectionShop').classList.add('hidden');
+    }
+
+    async function buyAvatar(avatarId) {
+        const res = await fetchAuth(`${API_URL}/shop/buy-avatar`, { method: 'POST', body: JSON.stringify({ avatarId }) });
+        const data = await res.json();
+        alert(data.message);
+        if (data.success) {
+            sessionStorage.setItem("current_user", JSON.stringify(data));
+            checkLoginState();
+            openShopModal();
+        }
+    }
+
+    async function equipAvatar(avatarId) {
+        const res = await fetchAuth(`${API_URL}/user/change-avatar`, { method: 'POST', body: JSON.stringify({ avatarId }) });
+        const data = await res.json();
+        if (data.success) {
+            sessionStorage.setItem("current_user", JSON.stringify(data));
+            checkLoginState();
+            openShopModal();
         }
     }
 
     function logout() {
         sessionStorage.clear();
-        clearInterval(autoSaveInterval);
-        clearInterval(examTimerInterval);
         checkLoginState();
-    }
-
-    function checkLoginState() {
-        const user = JSON.parse(sessionStorage.getItem("current_user"));
-        document.getElementById('sectionAuth').classList.toggle('hidden', !!user);
-        document.getElementById('btnLogout').classList.toggle('hidden', !user);
-        
-        if (!user) {
-            document.getElementById('sectionStudent').classList.add('hidden');
-            document.getElementById('sectionAdmin').classList.add('hidden');
-            document.getElementById('userInfo').textContent = "Chưa đăng nhập";
-            document.getElementById('mcionBox').classList.add('hidden');
-        } else if (user.role === 'student') {
-            document.getElementById('sectionStudent').classList.remove('hidden');
-            document.getElementById('sectionAdmin').classList.add('hidden');
-            document.getElementById('userInfo').textContent = `${user.fullname} (${user.username})`;
-            loadExamList(); loadStudentHistory(); updateMcion();
-        } else {
-            document.getElementById('sectionAdmin').classList.remove('hidden');
-            document.getElementById('sectionStudent').classList.add('hidden');
-            document.getElementById('userInfo').textContent = `Admin (${user.fullname || user.username})`;
-            switchAdminTab(1);
-        }
-    }
-
-    // STUDENT: THI & AI CHẤM
-    async function loadExamList() {
-        try {
-            const res = await fetchAuth(`${API_URL}/exams`);
-            const exams = await res.json();
-            document.getElementById('selectExamCode').innerHTML = '<option value="">-- Danh Sách Đề Thi --</option>' + 
-                exams.map(e => `<option value="${e.examCode}">${e.examCode} (${e.timeLimit || 15} phút)</option>`).join('');
-        } catch (err) {
-            console.error("Lỗi tải danh sách đề thi:", err);
-        }
-    }
-
-    async function startExam() {
-        const code = document.getElementById('selectExamCode').value;
-        if (!code) return alert("Vui lòng chọn một đề thi!");
-        
-        try {
-            const res = await fetchAuth(`${API_URL}/exams/${code}`);
-            currentExamData = await res.json();
-            
-            document.getElementById('examArea').classList.remove('hidden');
-            document.getElementById('examSelectionArea').classList.add('hidden');
-            document.getElementById('examTitle').textContent = `Bài Thi: ${currentExamData.examCode}`;
-
-            // Đếm ngược thời gian
-            let remainingSeconds = (currentExamData.timeLimit || 15) * 60;
-            clearInterval(examTimerInterval);
-            examTimerInterval = setInterval(() => {
-                const m = Math.floor(remainingSeconds / 60);
-                const s = remainingSeconds % 60;
-                document.getElementById('timeRemaining').textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-                if (--remainingSeconds < 0) {
-                    clearInterval(examTimerInterval);
-                    alert("Đã hết thời gian làm bài! Hệ thống tự động nộp bài.");
-                    submitExam();
-                }
-            }, 1000);
-            
-            // Render danh sách câu hỏi
-            const container = document.getElementById('questionsContainer');
-            container.innerHTML = currentExamData.questions.map((q, idx) => {
-                if (q.type === 'essay') {
-                    const draft = localStorage.getItem(`draft_${code}_${idx}`) || '';
-                    return `<div class="question-card" id="q_${idx}">
-                        <div class="question-title">Câu ${idx+1} (Tự luận - ${q.maxScore || 10}đ): ${escapeHtml(q.question)}</div>
-                        <textarea class="essay-box" id="ans_${idx}" rows="5" placeholder="Nhập câu trả lời của bạn...">${escapeHtml(draft)}</textarea>
-                    </div>`;
-                } else {
-                    const labels = ['A','B','C','D'];
-                    const opts = (q.options || []).map((opt, oIdx) => 
-                        `<label class="option-item"><input type="radio" name="q${idx}" value="${labels[oIdx]}"> &nbsp;<b>${labels[oIdx]}.</b> ${escapeHtml(opt)}</label>`
-                    ).join('');
-                    return `<div class="question-card" id="q_${idx}">
-                        <div class="question-title">Câu ${idx+1}: ${escapeHtml(q.question)}</div>
-                        ${opts}
-                    </div>`;
-                }
-            }).join('');
-
-            // Auto-Save 30s
-            clearInterval(autoSaveInterval);
-            autoSaveInterval = setInterval(() => {
-                document.querySelectorAll('.essay-box').forEach(ta => {
-                    const idx = ta.id.split('_')[1];
-                    localStorage.setItem(`draft_${code}_${idx}`, ta.value);
-                });
-                const t = document.getElementById('autosaveToast');
-                t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 2000);
-            }, 30000);
-        } catch (err) {
-            alert("Không thể bắt đầu bài thi!");
-            console.error(err);
-        }
-    }
-
-    async function submitExam() {
-        const btn = document.getElementById('btnSubmitExam');
-        if (btn.dataset.state === 'done') {
-            document.getElementById('examArea').classList.add('hidden');
-            document.getElementById('examSelectionArea').classList.remove('hidden');
-            btn.textContent = "NỘP BÀI (Chờ AI Chấm)"; delete btn.dataset.state; return;
-        }
-
-        btn.textContent = "⏳ Gemini AI đang chấm bài tự luận... Vui lòng chờ!";
-        btn.disabled = true;
-        clearInterval(autoSaveInterval);
-        clearInterval(examTimerInterval);
-        
-        let answers = {};
-        currentExamData.questions.forEach((q, idx) => {
-            if (q.type === 'essay') {
-                answers[idx] = document.getElementById(`ans_${idx}`).value;
-                localStorage.removeItem(`draft_${currentExamData.examCode}_${idx}`);
-            } else {
-                answers[idx] = document.querySelector(`input[name="q${idx}"]:checked`)?.value || '';
-            }
-        });
-
-        try {
-            const res = await fetchAuth(`${API_URL}/submit`, { method: 'POST', body: JSON.stringify({ examCode: currentExamData.examCode, answers, time: new Date().toLocaleString('vi-VN') }) });
-            const data = await res.json();
-            
-            if (data.success) {
-                alert(`Nộp bài thành công!\nTổng điểm đạt được: ${data.history.score} / 10 điểm`);
-                data.history.essayDetails.forEach(ed => {
-                    const box = document.getElementById(`q_${ed.questionIndex}`);
-                    if (box) {
-                        const div = document.createElement('div');
-                        let confWarning = ed.confidence < 70 ? `<br><small style="color:#e74c3c; font-weight:bold;">⚠️ Độ tin cậy AI chấm thấp (${ed.confidence}%). Bạn nên bấm Phúc Khảo bên dưới.</small>` : '';
-                        div.className = 'answer-explanation ai-feedback';
-                        div.innerHTML = `🤖 <b>Nhận xét AI:</b> ${escapeHtml(ed.feedback)} <br>👉 <b>Điểm đạt:</b> ${ed.score}đ ${confWarning}`;
-                        box.appendChild(div);
-                    }
-                });
-                
-                btn.textContent = "✖️ ĐÓNG VÀ XEM BẢNG ĐIỂM"; btn.dataset.state = 'done';
-                loadStudentHistory(); updateMcion();
-            } else { 
-                alert("Lỗi: " + data.message); 
-                btn.textContent = "NỘP BÀI"; 
-            }
-        } catch (e) { 
-            alert("Lỗi kết nối máy chủ!"); 
-            btn.textContent = "NỘP BÀI"; 
-        }
-        btn.disabled = false;
-    }
-
-    async function loadStudentHistory() {
-        try {
-            const res = await fetchAuth(`${API_URL}/history`);
-            const list = await res.json();
-            document.getElementById('studentHistoryBody').innerHTML = list.map(h => {
-                let btnRegrade = '';
-                if (h.regradeStatus === 'pending') btnRegrade = '<span style="color:#f39c12">⏳ Đang chờ duyệt</span>';
-                else if (h.regradeStatus === 'resolved') btnRegrade = '<span style="color:#2ecc71">✅ Đã phúc khảo</span>';
-                else btnRegrade = `<button class="btn-warning" onclick="requestRegrade('${h.id}')" style="padding: 4px 8px; font-size:12px;">Yêu cầu Phúc khảo</button>`;
-
-                return `<tr>
-                    <td><b>${h.examCode}</b></td>
-                    <td>${h.correctCount} câu</td>
-                    <td><b>${h.score}đ</b></td>
-                    <td>${btnRegrade}</td>
-                </tr>`;
-            }).join('');
-        } catch (err) {
-            console.error("Lỗi tải lịch sử thi:", err);
-        }
-    }
-
-    async function requestRegrade(id) {
-        if (!confirm("Bạn có chắc muốn gửi yêu cầu giáo viên xem lại bài thi này?")) return;
-        try {
-            const res = await fetchAuth(`${API_URL}/regrade`, { method: 'POST', body: JSON.stringify({ historyId: id }) });
-            const data = await res.json();
-            alert(data.message);
-            loadStudentHistory();
-        } catch (err) {
-            alert("Không thể gửi yêu cầu phúc khảo!");
-        }
-    }
-
-    async function updateMcion() {
-        try {
-            const user = JSON.parse(sessionStorage.getItem("current_user"));
-            if (!user) return;
-            const res = await fetchAuth(`${API_URL}/mcion/${user.username}`);
-            const data = await res.json();
-            document.getElementById('userMcionBalance').textContent = data.balance;
-            document.getElementById('mcionBox').classList.remove('hidden');
-        } catch (err) {
-            console.error("Lỗi cập nhật Mcion:", err);
-        }
-    }
-
-    // ADMIN TABS & MANAGEMENT
-    function switchAdminTab(tabIndex) {
-        [1,2,3,4].forEach(i => {
-            document.getElementById(`adminTab${i}`).classList.toggle('hidden', i !== tabIndex);
-            document.getElementById(`tabBtn${i}`).classList.toggle('active', i === tabIndex);
-        });
-        if (tabIndex === 2) loadAdminExams();
-        if (tabIndex === 3) loadAdminHistory();
-        if (tabIndex === 4) loadAdminUsers();
-    }
-
-    function uploadExamFromExcel() {
-        const examCode = document.getElementById('inputExamCode').value.trim();
-        const timeLimit = document.getElementById('inputExamTime').value;
-        const file = document.getElementById('excelFileInput').files[0];
-        if (!examCode || !file) return alert("Vui lòng nhập Mã đề và chọn file Excel!");
-
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const rows = XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type:'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type:'array'}).SheetNames[0]], {header:1});
-                const questions = [];
-                for (let i = 1; i < rows.length; i++) {
-                    const row = rows[i]; if (!row[0]) continue;
-                    let isEssay = (String(row[5] || '').toUpperCase().includes('TL') || String(row[5] || '').toUpperCase().includes('TỰ LUẬN'));
-                    questions.push({
-                        id: i, question: String(row[0]),
-                        type: isEssay ? 'essay' : 'multiple_choice',
-                        options: isEssay ? [] : [row[1], row[2], row[3], row[4]].filter(Boolean),
-                        correct: isEssay ? null : (row[5] === 1 ? 'A' : row[5] === 2 ? 'B' : row[5] === 3 ? 'C' : String(row[5] || '')),
-                        sampleAnswer: isEssay ? (row[6] || '') : null,
-                        maxScore: isEssay ? (Number(row[7]) || 10) : null
-                    });
-                }
-                const res = await fetchAuth(`${API_URL}/exams`, { method:'POST', body: JSON.stringify({examCode, timeLimit, questions})});
-                const data = await res.json();
-                alert(data.message);
-            } catch (err) {
-                alert("Lỗi xử lý file Excel hoặc tải lên server!");
-            }
-        };
-        reader.readAsArrayBuffer(file);
-    }
-
-    async function loadAdminExams() {
-        try {
-            const res = await fetchAuth(`${API_URL}/exams`);
-            const exams = await res.json();
-            document.getElementById('adminExamListBody').innerHTML = exams.map(e => `
-                <tr>
-                    <td><b>${e.examCode}</b></td>
-                    <td>${e.subject || 'Tổng hợp'}</td>
-                    <td>${e.timeLimit || 15} phút</td>
-                    <td>${(e.questions || []).length} câu</td>
-                    <td><button class="btn-danger" onclick="deleteExam('${e.examCode}')" style="padding:4px 8px; font-size:12px;">Xóa Đề</button></td>
-                </tr>
-            `).join('');
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    async function deleteExam(code) {
-        if (!confirm(`Xác nhận xóa đề thi ${code}?`)) return;
-        try {
-            const res = await fetchAuth(`${API_URL}/exams/${code}`, { method: 'DELETE' });
-            const data = await res.json();
-            alert(data.message);
-            loadAdminExams();
-        } catch (err) {
-            alert("Không thể xóa đề thi!");
-        }
-    }
-
-    async function loadAdminHistory() {
-        try {
-            const search = document.getElementById('searchHistoryInput').value.trim();
-            const res = await fetchAuth(`${API_URL}/history?search=${encodeURIComponent(search)}`);
-            const histories = await res.json();
-            
-            document.getElementById('adminHistoryBody').innerHTML = histories.map(h => {
-                let regradeTag = h.regradeStatus === 'pending' ? '<b style="color:#e67e22">Có yêu cầu phúc khảo!</b>' : (h.regradeStatus === 'resolved' ? '<span style="color:#2ecc71">Đã điều chỉnh</span>' : 'Bình thường');
-                return `<tr>
-                    <td><b>${escapeHtml(h.fullname)}</b> (${h.username})</td>
-                    <td>${h.examCode}</td>
-                    <td>${h.time || ''}</td>
-                    <td><b>${h.score}đ</b></td>
-                    <td>${regradeTag}</td>
-                    <td>
-                        <button class="btn-primary" onclick="resolveRegrade('${h.id}', ${h.score})" style="padding:4px 8px; font-size:12px;">Sửa điểm</button>
-                    </td>
-                </tr>`;
-            }).join('');
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    async function resolveRegrade(historyId, oldScore) {
-        const newScore = prompt(`Nhập điểm số mới cho học sinh (Điểm hiện tại: ${oldScore}):`, oldScore);
-        if (newScore === null || isNaN(newScore)) return;
-        try {
-            const res = await fetchAuth(`${API_URL}/regrade/resolve`, { method: 'POST', body: JSON.stringify({ historyId, newScore }) });
-            const data = await res.json();
-            alert(data.message);
-            loadAdminHistory();
-        } catch (err) {
-            alert("Lỗi khi điều chỉnh điểm!");
-        }
-    }
-
-    async function loadAdminUsers() {
-        try {
-            const res = await fetchAuth(`${API_URL}/users`);
-            const users = await res.json();
-            document.getElementById('adminUsersBody').innerHTML = users.map(u => `
-                <tr>
-                    <td><b>${u.username}</b></td>
-                    <td>${escapeHtml(u.fullname)}</td>
-                    <td>🪙 <b>${u.mcion || 0}</b></td>
-                    <td>
-                        <button class="btn-success" onclick="modifyUserMcion('${u.username}', 50)" style="padding:3px 8px; font-size:12px;">+50</button>
-                        <button class="btn-danger" onclick="modifyUserMcion('${u.username}', -50)" style="padding:3px 8px; font-size:12px;">-50</button>
-                    </td>
-                </tr>
-            `).join('');
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    async function modifyUserMcion(username, amount) {
-        try {
-            const res = await fetchAuth(`${API_URL}/mcion/update`, { method: 'POST', body: JSON.stringify({ username, amount }) });
-            const data = await res.json();
-            alert(data.message);
-            loadAdminUsers();
-        } catch (err) {
-            alert("Lỗi khi cập nhật Mcion!");
-        }
     }
 
     checkLoginState();
