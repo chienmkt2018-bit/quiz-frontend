@@ -64,7 +64,7 @@
 <div class="container">
     <h2 id="mainTitle" style="text-align: center; margin-bottom: 20px; color: var(--title-color);">Trang Web Học Tập Của MR Minh</h2>
     
-    <!-- Top Bar Bar -->
+    <!-- Top Bar -->
     <div class="top-bar">
         <div class="user-profile-bar">
             <div><b>Tài khoản: </b><span id="userInfo">Chưa đăng nhập</span></div>
@@ -78,7 +78,7 @@
 
     <!-- KHU VỰC ĐĂNG NHẬP / ĐĂNG KÝ -->
     <div id="sectionAuth" class="card-box">
-        <h3>Đăng Nhập Hống Thống</h3><br>
+        <h3>Đăng Nhập Hệ Thống</h3><br>
         <div class="form-group"><label>Tên đăng nhập:</label><input type="text" id="authUsername"></div>
         <div class="form-group"><label>Mật khẩu:</label><input type="password" id="authPassword"></div>
         <div class="form-group"><label>Họ và Tên (Nếu đăng ký mới):</label><input type="text" id="authFullname" placeholder="Ví dụ: Nguyễn Văn A"></div>
@@ -178,14 +178,19 @@
 </div>
 
 <script>
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocal = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1' || 
+                    window.location.hostname === '' || 
+                    window.location.protocol === 'file:';
     const API_URL = isLocal ? "http://localhost:3000/api" : "https://quiz-backend-ta9z.onrender.com/api";
     
     let currentExamData = null;
     let autoSaveInterval = null;
     let examTimerInterval = null;
 
-    function escapeHtml(str) { return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace font(/>/g, "&gt;"); }
+    function escapeHtml(str) { 
+        return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); 
+    }
 
     async function fetchAuth(url, options = {}) {
         const token = sessionStorage.getItem("access_token");
@@ -202,26 +207,46 @@
     async function handleLogin(role) {
         const username = document.getElementById('authUsername').value.trim();
         const password = document.getElementById('authPassword').value.trim();
-        if(!username || !password) return alert("Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!");
+        if (!username || !password) return alert("Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!");
 
-        const res = await fetch(`${API_URL}/login`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username, password, role})});
-        const data = await res.json();
-        if (data.success) {
-            sessionStorage.setItem("current_user", JSON.stringify(data));
-            sessionStorage.setItem("access_token", data.token);
-            checkLoginState();
-        } else alert(data.message);
+        try {
+            const res = await fetch(`${API_URL}/login`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ username, password, role })
+            });
+            const data = await res.json();
+            if (data.success) {
+                sessionStorage.setItem("current_user", JSON.stringify(data));
+                sessionStorage.setItem("access_token", data.token);
+                checkLoginState();
+            } else {
+                alert(data.message || "Đăng nhập thất bại!");
+            }
+        } catch (err) {
+            alert("Không thể kết nối đến máy chủ Backend! Vui lòng kiểm tra Server đã được khởi chạy chưa.");
+            console.error("Login Error:", err);
+        }
     }
 
     async function handleRegister() {
         const username = document.getElementById('authUsername').value.trim();
         const password = document.getElementById('authPassword').value.trim();
         const fullname = document.getElementById('authFullname').value.trim();
-        if(!username || !password) return alert("Vui lòng điền thông tin đăng ký!");
+        if (!username || !password) return alert("Vui lòng điền thông tin đăng ký!");
 
-        const res = await fetch(`${API_URL}/register`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username, password, fullname})});
-        const data = await res.json();
-        alert(data.message);
+        try {
+            const res = await fetch(`${API_URL}/register`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ username, password, fullname })
+            });
+            const data = await res.json();
+            alert(data.message);
+        } catch (err) {
+            alert("Lỗi kết nối máy chủ khi đăng ký!");
+            console.error("Register Error:", err);
+        }
     }
 
     function logout() {
@@ -256,72 +281,82 @@
 
     // STUDENT: THI & AI CHẤM
     async function loadExamList() {
-        const res = await fetchAuth(`${API_URL}/exams`);
-        const exams = await res.json();
-        document.getElementById('selectExamCode').innerHTML = '<option value="">-- Danh Sách Đề Thi --</option>' + 
-            exams.map(e => `<option value="${e.examCode}">${e.examCode} (${e.timeLimit || 15} phút)</option>`).join('');
+        try {
+            const res = await fetchAuth(`${API_URL}/exams`);
+            const exams = await res.json();
+            document.getElementById('selectExamCode').innerHTML = '<option value="">-- Danh Sách Đề Thi --</option>' + 
+                exams.map(e => `<option value="${e.examCode}">${e.examCode} (${e.timeLimit || 15} phút)</option>`).join('');
+        } catch (err) {
+            console.error("Lỗi tải danh sách đề thi:", err);
+        }
     }
 
     async function startExam() {
         const code = document.getElementById('selectExamCode').value;
-        if(!code) return alert("Vui lòng chọn một đề thi!");
-        const res = await fetchAuth(`${API_URL}/exams/${code}`);
-        currentExamData = await res.json();
+        if (!code) return alert("Vui lòng chọn một đề thi!");
         
-        document.getElementById('examArea').classList.remove('hidden');
-        document.getElementById('examSelectionArea').classList.add('hidden');
-        document.getElementById('examTitle').textContent = `Bài Thi: ${currentExamData.examCode}`;
+        try {
+            const res = await fetchAuth(`${API_URL}/exams/${code}`);
+            currentExamData = await res.json();
+            
+            document.getElementById('examArea').classList.remove('hidden');
+            document.getElementById('examSelectionArea').classList.add('hidden');
+            document.getElementById('examTitle').textContent = `Bài Thi: ${currentExamData.examCode}`;
 
-        // Đếm ngược thời gian
-        let remainingSeconds = (currentExamData.timeLimit || 15) * 60;
-        clearInterval(examTimerInterval);
-        examTimerInterval = setInterval(() => {
-            const m = Math.floor(remainingSeconds / 60);
-            const s = remainingSeconds % 60;
-            document.getElementById('timeRemaining').textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-            if (--remainingSeconds < 0) {
-                clearInterval(examTimerInterval);
-                alert("Đã hết thời gian làm bài! Hệ thống tự động nộp bài.");
-                submitExam();
-            }
-        }, 1000);
-        
-        // Render danh sách câu hỏi
-        const container = document.getElementById('questionsContainer');
-        container.innerHTML = currentExamData.questions.map((q, idx) => {
-            if (q.type === 'essay') {
-                const draft = localStorage.getItem(`draft_${code}_${idx}`) || '';
-                return `<div class="question-card" id="q_${idx}">
-                    <div class="question-title">Câu ${idx+1} (Tự luận - ${q.maxScore || 10}đ): ${escapeHtml(q.question)}</div>
-                    <textarea class="essay-box" id="ans_${idx}" rows="5" placeholder="Nhập câu trả lời của bạn...">${escapeHtml(draft)}</textarea>
-                </div>`;
-            } else {
-                const labels = ['A','B','C','D'];
-                const opts = (q.options || []).map((opt, oIdx) => 
-                    `<label class="option-item"><input type="radio" name="q${idx}" value="${labels[oIdx]}"> &nbsp;<b>${labels[oIdx]}.</b> ${escapeHtml(opt)}</label>`
-                ).join('');
-                return `<div class="question-card" id="q_${idx}">
-                    <div class="question-title">Câu ${idx+1}: ${escapeHtml(q.question)}</div>
-                    ${opts}
-                </div>`;
-            }
-        }).join('');
+            // Đếm ngược thời gian
+            let remainingSeconds = (currentExamData.timeLimit || 15) * 60;
+            clearInterval(examTimerInterval);
+            examTimerInterval = setInterval(() => {
+                const m = Math.floor(remainingSeconds / 60);
+                const s = remainingSeconds % 60;
+                document.getElementById('timeRemaining').textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (--remainingSeconds < 0) {
+                    clearInterval(examTimerInterval);
+                    alert("Đã hết thời gian làm bài! Hệ thống tự động nộp bài.");
+                    submitExam();
+                }
+            }, 1000);
+            
+            // Render danh sách câu hỏi
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = currentExamData.questions.map((q, idx) => {
+                if (q.type === 'essay') {
+                    const draft = localStorage.getItem(`draft_${code}_${idx}`) || '';
+                    return `<div class="question-card" id="q_${idx}">
+                        <div class="question-title">Câu ${idx+1} (Tự luận - ${q.maxScore || 10}đ): ${escapeHtml(q.question)}</div>
+                        <textarea class="essay-box" id="ans_${idx}" rows="5" placeholder="Nhập câu trả lời của bạn...">${escapeHtml(draft)}</textarea>
+                    </div>`;
+                } else {
+                    const labels = ['A','B','C','D'];
+                    const opts = (q.options || []).map((opt, oIdx) => 
+                        `<label class="option-item"><input type="radio" name="q${idx}" value="${labels[oIdx]}"> &nbsp;<b>${labels[oIdx]}.</b> ${escapeHtml(opt)}</label>`
+                    ).join('');
+                    return `<div class="question-card" id="q_${idx}">
+                        <div class="question-title">Câu ${idx+1}: ${escapeHtml(q.question)}</div>
+                        ${opts}
+                    </div>`;
+                }
+            }).join('');
 
-        // Bật Auto-Save 30 giây
-        clearInterval(autoSaveInterval);
-        autoSaveInterval = setInterval(() => {
-            document.querySelectorAll('.essay-box').forEach(ta => {
-                const idx = ta.id.split('_')[1];
-                localStorage.setItem(`draft_${code}_${idx}`, ta.value);
-            });
-            const t = document.getElementById('autosaveToast');
-            t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 2000);
-        }, 30000);
+            // Auto-Save 30s
+            clearInterval(autoSaveInterval);
+            autoSaveInterval = setInterval(() => {
+                document.querySelectorAll('.essay-box').forEach(ta => {
+                    const idx = ta.id.split('_')[1];
+                    localStorage.setItem(`draft_${code}_${idx}`, ta.value);
+                });
+                const t = document.getElementById('autosaveToast');
+                t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 2000);
+            }, 30000);
+        } catch (err) {
+            alert("Không thể bắt đầu bài thi!");
+            console.error(err);
+        }
     }
 
     async function submitExam() {
         const btn = document.getElementById('btnSubmitExam');
-        if(btn.dataset.state === 'done') {
+        if (btn.dataset.state === 'done') {
             document.getElementById('examArea').classList.add('hidden');
             document.getElementById('examSelectionArea').classList.remove('hidden');
             btn.textContent = "NỘP BÀI (Chờ AI Chấm)"; delete btn.dataset.state; return;
@@ -334,7 +369,7 @@
         
         let answers = {};
         currentExamData.questions.forEach((q, idx) => {
-            if(q.type === 'essay') {
+            if (q.type === 'essay') {
                 answers[idx] = document.getElementById(`ans_${idx}`).value;
                 localStorage.removeItem(`draft_${currentExamData.examCode}_${idx}`);
             } else {
@@ -346,7 +381,7 @@
             const res = await fetchAuth(`${API_URL}/submit`, { method: 'POST', body: JSON.stringify({ examCode: currentExamData.examCode, answers, time: new Date().toLocaleString('vi-VN') }) });
             const data = await res.json();
             
-            if(data.success) {
+            if (data.success) {
                 alert(`Nộp bài thành công!\nTổng điểm đạt được: ${data.history.score} / 10 điểm`);
                 data.history.essayDetails.forEach(ed => {
                     const box = document.getElementById(`q_${ed.questionIndex}`);
@@ -361,43 +396,62 @@
                 
                 btn.textContent = "✖️ ĐÓNG VÀ XEM BẢNG ĐIỂM"; btn.dataset.state = 'done';
                 loadStudentHistory(); updateMcion();
-            } else { alert("Lỗi: " + data.message); btn.textContent = "NỘP BÀI"; }
-        } catch(e) { alert("Lỗi kết nối máy chủ!"); btn.textContent = "NỘP BÀI"; }
+            } else { 
+                alert("Lỗi: " + data.message); 
+                btn.textContent = "NỘP BÀI"; 
+            }
+        } catch (e) { 
+            alert("Lỗi kết nối máy chủ!"); 
+            btn.textContent = "NỘP BÀI"; 
+        }
         btn.disabled = false;
     }
 
     async function loadStudentHistory() {
-        const res = await fetchAuth(`${API_URL}/history`);
-        const list = await res.json();
-        document.getElementById('studentHistoryBody').innerHTML = list.map(h => {
-            let btnRegrade = '';
-            if (h.regradeStatus === 'pending') btnRegrade = '<span style="color:#f39c12">⏳ Đang chờ duyệt</span>';
-            else if (h.regradeStatus === 'resolved') btnRegrade = '<span style="color:#2ecc71">✅ Đã phúc khảo</span>';
-            else btnRegrade = `<button class="btn-warning" onclick="requestRegrade('${h.id}')" style="padding: 4px 8px; font-size:12px;">Yêu cầu Phúc khảo</button>`;
+        try {
+            const res = await fetchAuth(`${API_URL}/history`);
+            const list = await res.json();
+            document.getElementById('studentHistoryBody').innerHTML = list.map(h => {
+                let btnRegrade = '';
+                if (h.regradeStatus === 'pending') btnRegrade = '<span style="color:#f39c12">⏳ Đang chờ duyệt</span>';
+                else if (h.regradeStatus === 'resolved') btnRegrade = '<span style="color:#2ecc71">✅ Đã phúc khảo</span>';
+                else btnRegrade = `<button class="btn-warning" onclick="requestRegrade('${h.id}')" style="padding: 4px 8px; font-size:12px;">Yêu cầu Phúc khảo</button>`;
 
-            return `<tr>
-                <td><b>${h.examCode}</b></td>
-                <td>${h.correctCount} câu</td>
-                <td><b>${h.score}đ</b></td>
-                <td>${btnRegrade}</td>
-            </tr>`;
-        }).join('');
+                return `<tr>
+                    <td><b>${h.examCode}</b></td>
+                    <td>${h.correctCount} câu</td>
+                    <td><b>${h.score}đ</b></td>
+                    <td>${btnRegrade}</td>
+                </tr>`;
+            }).join('');
+        } catch (err) {
+            console.error("Lỗi tải lịch sử thi:", err);
+        }
     }
 
     async function requestRegrade(id) {
-        if(!confirm("Bạn có chắc muốn gửi yêu cầu giáo viên xem lại bài thi này?")) return;
-        const res = await fetchAuth(`${API_URL}/regrade`, { method: 'POST', body: JSON.stringify({ historyId: id }) });
-        const data = await res.json();
-        alert(data.message);
-        loadStudentHistory();
+        if (!confirm("Bạn có chắc muốn gửi yêu cầu giáo viên xem lại bài thi này?")) return;
+        try {
+            const res = await fetchAuth(`${API_URL}/regrade`, { method: 'POST', body: JSON.stringify({ historyId: id }) });
+            const data = await res.json();
+            alert(data.message);
+            loadStudentHistory();
+        } catch (err) {
+            alert("Không thể gửi yêu cầu phúc khảo!");
+        }
     }
 
     async function updateMcion() {
-        const user = JSON.parse(sessionStorage.getItem("current_user"));
-        const res = await fetchAuth(`${API_URL}/mcion/${user.username}`);
-        const data = await res.json();
-        document.getElementById('userMcionBalance').textContent = data.balance;
-        document.getElementById('mcionBox').classList.remove('hidden');
+        try {
+            const user = JSON.parse(sessionStorage.getItem("current_user"));
+            if (!user) return;
+            const res = await fetchAuth(`${API_URL}/mcion/${user.username}`);
+            const data = await res.json();
+            document.getElementById('userMcionBalance').textContent = data.balance;
+            document.getElementById('mcionBox').classList.remove('hidden');
+        } catch (err) {
+            console.error("Lỗi cập nhật Mcion:", err);
+        }
     }
 
     // ADMIN TABS & MANAGEMENT
@@ -406,112 +460,140 @@
             document.getElementById(`adminTab${i}`).classList.toggle('hidden', i !== tabIndex);
             document.getElementById(`tabBtn${i}`).classList.toggle('active', i === tabIndex);
         });
-        if(tabIndex === 2) loadAdminExams();
-        if(tabIndex === 3) loadAdminHistory();
-        if(tabIndex === 4) loadAdminUsers();
+        if (tabIndex === 2) loadAdminExams();
+        if (tabIndex === 3) loadAdminHistory();
+        if (tabIndex === 4) loadAdminUsers();
     }
 
     function uploadExamFromExcel() {
         const examCode = document.getElementById('inputExamCode').value.trim();
         const timeLimit = document.getElementById('inputExamTime').value;
         const file = document.getElementById('excelFileInput').files[0];
-        if(!examCode || !file) return alert("Vui lòng nhập Mã đề và chọn file Excel!");
+        if (!examCode || !file) return alert("Vui lòng nhập Mã đề và chọn file Excel!");
 
         const reader = new FileReader();
         reader.onload = async (e) => {
-            const rows = XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type:'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type:'array'}).SheetNames[0]], {header:1});
-            const questions = [];
-            for (let i = 1; i < rows.length; i++) {
-                const row = rows[i]; if(!row[0]) continue;
-                let isEssay = (String(row[5] || '').toUpperCase().includes('TL') || String(row[5] || '').toUpperCase().includes('TỰ LUẬN'));
-                questions.push({
-                    id: i, question: String(row[0]),
-                    type: isEssay ? 'essay' : 'multiple_choice',
-                    options: isEssay ? [] : [row[1], row[2], row[3], row[4]].filter(Boolean),
-                    correct: isEssay ? null : (row[5] === 1 ? 'A' : row[5] === 2 ? 'B' : row[5] === 3 ? 'C' : String(row[5] || '')),
-                    sampleAnswer: isEssay ? (row[6] || '') : null,
-                    maxScore: isEssay ? (Number(row[7]) || 10) : null
-                });
+            try {
+                const rows = XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type:'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type:'array'}).SheetNames[0]], {header:1});
+                const questions = [];
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i]; if (!row[0]) continue;
+                    let isEssay = (String(row[5] || '').toUpperCase().includes('TL') || String(row[5] || '').toUpperCase().includes('TỰ LUẬN'));
+                    questions.push({
+                        id: i, question: String(row[0]),
+                        type: isEssay ? 'essay' : 'multiple_choice',
+                        options: isEssay ? [] : [row[1], row[2], row[3], row[4]].filter(Boolean),
+                        correct: isEssay ? null : (row[5] === 1 ? 'A' : row[5] === 2 ? 'B' : row[5] === 3 ? 'C' : String(row[5] || '')),
+                        sampleAnswer: isEssay ? (row[6] || '') : null,
+                        maxScore: isEssay ? (Number(row[7]) || 10) : null
+                    });
+                }
+                const res = await fetchAuth(`${API_URL}/exams`, { method:'POST', body: JSON.stringify({examCode, timeLimit, questions})});
+                const data = await res.json();
+                alert(data.message);
+            } catch (err) {
+                alert("Lỗi xử lý file Excel hoặc tải lên server!");
             }
-            const res = await fetchAuth(`${API_URL}/exams`, { method:'POST', body: JSON.stringify({examCode, timeLimit, questions})});
-            const data = await res.json();
-            alert(data.message);
         };
         reader.readAsArrayBuffer(file);
     }
 
     async function loadAdminExams() {
-        const res = await fetchAuth(`${API_URL}/exams`);
-        const exams = await res.json();
-        document.getElementById('adminExamListBody').innerHTML = exams.map(e => `
-            <tr>
-                <td><b>${e.examCode}</b></td>
-                <td>${e.subject || 'Tổng hợp'}</td>
-                <td>${e.timeLimit || 15} phút</td>
-                <td>${(e.questions || []).length} câu</td>
-                <td><button class="btn-danger" onclick="deleteExam('${e.examCode}')" style="padding:4px 8px; font-size:12px;">Xóa Đề</button></td>
-            </tr>
-        `).join('');
+        try {
+            const res = await fetchAuth(`${API_URL}/exams`);
+            const exams = await res.json();
+            document.getElementById('adminExamListBody').innerHTML = exams.map(e => `
+                <tr>
+                    <td><b>${e.examCode}</b></td>
+                    <td>${e.subject || 'Tổng hợp'}</td>
+                    <td>${e.timeLimit || 15} phút</td>
+                    <td>${(e.questions || []).length} câu</td>
+                    <td><button class="btn-danger" onclick="deleteExam('${e.examCode}')" style="padding:4px 8px; font-size:12px;">Xóa Đề</button></td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     async function deleteExam(code) {
-        if(!confirm(`Xác nhận xóa đề thi ${code}?`)) return;
-        const res = await fetchAuth(`${API_URL}/exams/${code}`, { method: 'DELETE' });
-        const data = await res.json();
-        alert(data.message);
-        loadAdminExams();
+        if (!confirm(`Xác nhận xóa đề thi ${code}?`)) return;
+        try {
+            const res = await fetchAuth(`${API_URL}/exams/${code}`, { method: 'DELETE' });
+            const data = await res.json();
+            alert(data.message);
+            loadAdminExams();
+        } catch (err) {
+            alert("Không thể xóa đề thi!");
+        }
     }
 
     async function loadAdminHistory() {
-        const search = document.getElementById('searchHistoryInput').value.trim();
-        const res = await fetchAuth(`${API_URL}/history?search=${encodeURIComponent(search)}`);
-        const histories = await res.json();
-        
-        document.getElementById('adminHistoryBody').innerHTML = histories.map(h => {
-            let regradeTag = h.regradeStatus === 'pending' ? '<b style="color:#e67e22">Có yêu cầu phúc khảo!</b>' : (h.regradeStatus === 'resolved' ? '<span style="color:#2ecc71">Đã điều chỉnh</span>' : 'Bình thường');
-            return `<tr>
-                <td><b>${escapeHtml(h.fullname)}</b> (${h.username})</td>
-                <td>${h.examCode}</td>
-                <td>${h.time || ''}</td>
-                <td><b>${h.score}đ</b></td>
-                <td>${regradeTag}</td>
-                <td>
-                    <button class="btn-primary" onclick="resolveRegrade('${h.id}', ${h.score})" style="padding:4px 8px; font-size:12px;">Sửa điểm</button>
-                </td>
-            </tr>`;
-        }).join('');
+        try {
+            const search = document.getElementById('searchHistoryInput').value.trim();
+            const res = await fetchAuth(`${API_URL}/history?search=${encodeURIComponent(search)}`);
+            const histories = await res.json();
+            
+            document.getElementById('adminHistoryBody').innerHTML = histories.map(h => {
+                let regradeTag = h.regradeStatus === 'pending' ? '<b style="color:#e67e22">Có yêu cầu phúc khảo!</b>' : (h.regradeStatus === 'resolved' ? '<span style="color:#2ecc71">Đã điều chỉnh</span>' : 'Bình thường');
+                return `<tr>
+                    <td><b>${escapeHtml(h.fullname)}</b> (${h.username})</td>
+                    <td>${h.examCode}</td>
+                    <td>${h.time || ''}</td>
+                    <td><b>${h.score}đ</b></td>
+                    <td>${regradeTag}</td>
+                    <td>
+                        <button class="btn-primary" onclick="resolveRegrade('${h.id}', ${h.score})" style="padding:4px 8px; font-size:12px;">Sửa điểm</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     async function resolveRegrade(historyId, oldScore) {
         const newScore = prompt(`Nhập điểm số mới cho học sinh (Điểm hiện tại: ${oldScore}):`, oldScore);
         if (newScore === null || isNaN(newScore)) return;
-        const res = await fetchAuth(`${API_URL}/regrade/resolve`, { method: 'POST', body: JSON.stringify({ historyId, newScore }) });
-        const data = await res.json();
-        alert(data.message);
-        loadAdminHistory();
+        try {
+            const res = await fetchAuth(`${API_URL}/regrade/resolve`, { method: 'POST', body: JSON.stringify({ historyId, newScore }) });
+            const data = await res.json();
+            alert(data.message);
+            loadAdminHistory();
+        } catch (err) {
+            alert("Lỗi khi điều chỉnh điểm!");
+        }
     }
 
     async function loadAdminUsers() {
-        const res = await fetchAuth(`${API_URL}/users`);
-        const users = await res.json();
-        document.getElementById('adminUsersBody').innerHTML = users.map(u => `
-            <tr>
-                <td><b>${u.username}</b></td>
-                <td>${escapeHtml(u.fullname)}</td>
-                <td>🪙 <b>${u.mcion || 0}</b></td>
-                <td>
-                    <button class="btn-success" onclick="modifyUserMcion('${u.username}', 50)" style="padding:3px 8px; font-size:12px;">+50</button>
-                    <button class="btn-danger" onclick="modifyUserMcion('${u.username}', -50)" style="padding:3px 8px; font-size:12px;">-50</button>
-                </td>
-            </tr>
-        `).join('');
+        try {
+            const res = await fetchAuth(`${API_URL}/users`);
+            const users = await res.json();
+            document.getElementById('adminUsersBody').innerHTML = users.map(u => `
+                <tr>
+                    <td><b>${u.username}</b></td>
+                    <td>${escapeHtml(u.fullname)}</td>
+                    <td>🪙 <b>${u.mcion || 0}</b></td>
+                    <td>
+                        <button class="btn-success" onclick="modifyUserMcion('${u.username}', 50)" style="padding:3px 8px; font-size:12px;">+50</button>
+                        <button class="btn-danger" onclick="modifyUserMcion('${u.username}', -50)" style="padding:3px 8px; font-size:12px;">-50</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     async function modifyUserMcion(username, amount) {
-        const res = await fetchAuth(`${API_URL}/mcion/update`, { method: 'POST', body: JSON.stringify({ username, amount }) });
-        const data = await res.json();
-        alert(data.message);
-        loadAdminUsers();
+        try {
+            const res = await fetchAuth(`${API_URL}/mcion/update`, { method: 'POST', body: JSON.stringify({ username, amount }) });
+            const data = await res.json();
+            alert(data.message);
+            loadAdminUsers();
+        } catch (err) {
+            alert("Lỗi khi cập nhật Mcion!");
+        }
     }
 
     checkLoginState();
