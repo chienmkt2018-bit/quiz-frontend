@@ -623,12 +623,13 @@
         } catch(e) { alert("❌ Lỗi kết nối!"); }
     };
 
-    // ĐÃ SỬA LỖI AVATAR MẶC ĐỊNH & CẬP NHẬT CHUẨN URL
-    window.selectAvatar = async function(avatarUrl, itemName) {
+    // ĐÃ SỬA LỖI ĐỔI AVATAR BẰNG CÁCH TRA CỨU THEO ITEMNAME AN TOÀN TUYỆT ĐỐI
+    window.selectAvatar = async function(itemName) {
         const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
         if (!currentUser) return;
         
-        const payloadAvatar = (itemName === 'Mặc định') ? 'https://api.dicebear.com/7.x/bottts/svg?seed=Default' : avatarUrl;
+        const found = SHOP_AVATARS.find(a => a.name === itemName);
+        const payloadAvatar = found ? found.url : "https://api.dicebear.com/7.x/bottts/svg?seed=Default";
         
         try {
             const res = await fetchWithAuth(`${API_URL}/update-avatar`, {
@@ -1008,7 +1009,13 @@
         try {
             const inventory = (await (await fetch(`${API_URL}/mcion/${encodeURIComponent(user.username)}`)).json()).inventory || [];
             const available = [{ name: 'Mặc định', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Default' }, ...SHOP_AVATARS.filter(i => inventory.includes(i.name))];
-            container.innerHTML = available.map(avt => `<div onclick="selectAvatar('${avt.url}', '${avt.name}')" class="text-center cursor-pointer p-2 border-2 border-primary-500 rounded-xl bg-white dark:bg-gray-800 hover:scale-105 transition shadow-sm"><img src="${avt.url}" alt="${escapeHtml(avt.name)}" class="w-14 h-14 rounded-full object-cover mx-auto mb-1"><span class="text-xs font-bold block">${escapeHtml(avt.name)}</span></div>`).join('');
+            
+            container.innerHTML = available.map(avt => `
+                <div onclick="selectAvatar('${escapeHtml(avt.name)}')" class="text-center cursor-pointer p-2 border-2 border-primary-500 rounded-xl bg-white dark:bg-gray-800 hover:scale-105 transition shadow-sm">
+                    <img src="${avt.url}" alt="${escapeHtml(avt.name)}" class="w-14 h-14 rounded-full object-cover mx-auto mb-1">
+                    <span class="text-xs font-bold block">${escapeHtml(avt.name)}</span>
+                </div>
+            `).join('');
         } catch (e) { container.innerHTML = '<p class="text-rose-500 text-sm">Lỗi tải danh sách Avatar.</p>'; }
     }
 </script>
