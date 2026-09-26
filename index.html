@@ -40,7 +40,6 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
-        /* CSS Custom cho hiệu ứng Slide & Đáp án */
         .auth-wrapper { display: grid; grid-template-columns: 1fr; position: relative; overflow: hidden; }
         .auth-form { grid-row: 1; grid-column: 1; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease; width: 100%; }
         .auth-form.active { transform: translateX(0); opacity: 1; pointer-events: auto; visibility: visible; z-index: 2; }
@@ -88,7 +87,6 @@
 
         <!-- AUTHENTICATION SECTION -->
         <section id="sectionAuth" class="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 p-5 sm:p-6 rounded-xl mb-6 auth-wrapper">
-            <!-- Form Đăng Nhập -->
             <article id="formLogin" class="auth-form active">
                 <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white border-b pb-2 border-gray-200 dark:border-gray-600">Đăng Nhập Hệ Thống</h2>
                 <div class="space-y-4">
@@ -108,7 +106,6 @@
                 </div>
             </article>
 
-            <!-- Form Đăng Ký -->
             <article id="formRegister" class="auth-form hidden-right">
                 <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white border-b pb-2 border-gray-200 dark:border-gray-600">Đăng Ký Tài Khoản Học Viên</h2>
                 <div class="space-y-4">
@@ -138,7 +135,6 @@
 
         <!-- STUDENT SECTION -->
         <section id="sectionStudent" class="space-y-6 hidden">
-            <!-- CHỌN ĐỀ THI -->
             <article class="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 p-5 rounded-xl">
                 <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">🎯 Chọn Bài Thi Theo Môn Học & Khối Lớp</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -170,7 +166,6 @@
                 <button id="btnStartExam" class="w-full py-3 font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-md text-base">🚀 BẮT ĐẦU LÀM BÀI</button>
             </article>
 
-            <!-- KHU VỰC LÀM BÀI THI -->
             <article id="examArea" class="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 p-5 rounded-xl hidden">
                 <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-200 dark:border-gray-600">
                     <h3 id="examTitle" class="text-xl font-bold text-gray-800 dark:text-white">Bài Thi</h3>
@@ -182,7 +177,6 @@
                 <button id="btnSubmitExam" class="w-full py-3 mt-6 font-bold rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition shadow-md text-base">NỘP BÀI THI</button>
             </article>
 
-            <!-- LỊCH SỬ CÁ NHÂN HỌC SINH -->
             <article class="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 p-5 rounded-xl">
                 <h3 class="text-lg font-bold mb-3 text-gray-800 dark:text-white">📜 Lịch Sử Làm Bài Của Bạn</h3>
                 <div class="flex gap-4 mb-4 border-b border-gray-200 dark:border-gray-600 overflow-x-auto">
@@ -216,11 +210,9 @@
                 </div>
             </article>
 
-            <!-- CỬA HÀNG MCION NÂNG CẤP VỚI BỘ LỌC DANH MỤC -->
             <article class="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 p-5 rounded-xl">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                     <h3 class="text-lg font-bold text-gray-800 dark:text-white">🛒 Cửa Hàng Đổi Thưởng Mcion</h3>
-                    <!-- Thanh Tab Chọn Danh Mục Đổi Thưởng -->
                     <div class="flex gap-2 flex-wrap" id="shopCategoryTabs">
                         <button type="button" onclick="filterShopCategory('ALL', this)" class="shop-cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-primary-600 text-white transition shadow-sm">✨ Tất Cả</button>
                         <button type="button" onclick="filterShopCategory('AVATAR', this)" class="shop-cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition">🖼️ Avatar</button>
@@ -228,17 +220,12 @@
                         <button type="button" onclick="filterShopCategory('GIFT', this)" class="shop-cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition">🎁 Thẻ Quà Tặng</button>
                     </div>
                 </div>
-
-                <!-- Dựng danh sách vật phẩm linh hoạt từ JavaScript -->
-                <div id="shopGridContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <!-- Được render tự động qua hàm renderShopItems() -->
-                </div>
+                <div id="shopGridContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
             </article>
         </section>
 
         <!-- ADMIN SECTION -->
         <section id="sectionAdmin" class="space-y-6 hidden">
-            <!-- THÊM ĐỀ THI EXCEL -->
             <article class="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 p-5 rounded-xl space-y-4">
                 <h3 class="text-lg font-bold text-gray-800 dark:text-white border-b pb-2 border-gray-200 dark:border-gray-600">Thêm Mới Đề Thi (Excel)</h3>
                 <div>
@@ -277,7 +264,6 @@
 
                 <hr class="my-6 border-gray-200 dark:border-gray-600">
 
-                <!-- TẠO ĐỀ TỰ ĐỘNG -->
                 <h3 class="text-lg font-bold text-gray-800 dark:text-white border-b pb-2 border-gray-200 dark:border-gray-600">🎲 Tạo Đề Thi Tự Động (Trộn Ngẫu Nhiên)</h3>
                 <div>
                     <label for="autoExamCode" class="block text-sm font-bold mb-1">Mã Đề Thi Mới:</label>
@@ -314,7 +300,6 @@
                 <button id="btnAutoGenerateExam" class="px-5 py-2.5 font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-white transition shadow-sm text-sm">🎲 Tạo & Lưu Đề Tự Động</button>
             </article>
 
-            <!-- QUẢN LÝ ĐỀ THI -->
             <article class="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 p-5 rounded-xl">
                 <h3 class="text-lg font-bold mb-3 text-gray-800 dark:text-white">Quản Lý Đề Thi</h3>
                 <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
@@ -327,7 +312,6 @@
                 </div>
             </article>
 
-            <!-- CẤP MCION -->
             <article class="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 p-5 rounded-xl space-y-4">
                 <h3 class="text-lg font-bold text-gray-800 dark:text-white border-b pb-2 border-gray-200 dark:border-gray-600">Cấp Tặng Mcion Cho Học Sinh</h3>
                 <div>
@@ -341,7 +325,6 @@
                 <button id="btnGrantMcion" class="px-5 py-2.5 font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-white transition shadow-sm text-sm">Cấp Mcion</button>
             </article>
 
-            <!-- LỊCH SỬ BÀI LÀM SYSTEM -->
             <article class="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 p-5 rounded-xl">
                 <h3 class="text-lg font-bold mb-3 text-gray-800 dark:text-white">📊 Quản Lý Lịch Sử Bài Làm Học Viên</h3>
                 <div class="flex gap-4 mb-4 border-b border-gray-200 dark:border-gray-600 overflow-x-auto">
@@ -418,20 +401,16 @@
     let allExamsFromServer = [];
     let adminSearchTimeout = null;
 
-    // DANH SÁCH VẬT PHẨM ĐỔI THƯỞNG ĐA DẠNG CÓ PHÂN LOẠI CATEGORY
     const SHOP_ITEMS = [
-        // AVATARS
         { name: 'Avatar Mèo Cool', category: 'AVATAR', price: 100, icon: '🐱', avatarUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>" },
         { name: 'Avatar Chó Shiba', category: 'AVATAR', price: 150, icon: '🐶', avatarUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐶</text></svg>" },
         { name: 'Avatar Siêu VIP', category: 'AVATAR', price: 300, icon: '👑', avatarUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>" },
         { name: 'Avatar Rồng Thần', category: 'AVATAR', price: 500, icon: '🐲', avatarUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐲</text></svg>" },
         
-        // VẬT PHẨM HỌC TẬP
         { name: 'Bút Chì May Mắn', category: 'ITEM', price: 50, icon: '✏️', avatarUrl: null },
         { name: 'Sổ Tay Học Tập', category: 'ITEM', price: 120, icon: '📔', avatarUrl: null },
         { name: 'Bộ Thước Kẻ Thông Minh', category: 'ITEM', price: 200, icon: '📐', avatarUrl: null },
 
-        // THẺ QUÀ TẶNG
         { name: 'Voucher Trà Sữa 20K', category: 'GIFT', price: 400, icon: '🧋', avatarUrl: null },
         { name: 'Voucher Mua Sách 50K', category: 'GIFT', price: 800, icon: '🎟️', avatarUrl: null }
     ];
@@ -455,7 +434,6 @@
         return arr;
     }
 
-    // RENDER SHOP ITEMS CÓ BỘ LỌC DANH MỤC (Đã sửa lỗi truyền avatarUrl qua onclick bằng cách chỉ truyền itemName)
     function renderShopItems(filterCategory = 'ALL') {
         const container = document.getElementById('shopGridContainer');
         if (!container) return;
@@ -481,7 +459,6 @@
         `).join('');
     }
 
-    // CHUYỂN TAB DANH MỤC SHOP
     window.filterShopCategory = function(category, btnElement) {
         document.querySelectorAll('.shop-cat-btn').forEach(btn => {
             btn.className = "shop-cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition";
@@ -515,7 +492,7 @@
             tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-3 text-center text-gray-500">${escapeHtml(emptyMsg)}</td></tr>`;
             return;
         }
-        const htmlStr = historyList.map(h => {
+        tbody.innerHTML = historyList.map(h => {
             const candidateCell = showCandidate ? `<td class="p-3 font-semibold">${escapeHtml(h.fullname || h.username)}</td>` : '';
             return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
                 <td class="p-3">${escapeHtml(h.time)}</td>
@@ -525,7 +502,6 @@
                 <td class="p-3"><b class="text-rose-600 dark:text-rose-400">${escapeHtml(h.score)}đ</b></td>
             </tr>`;
         }).join('');
-        tbody.innerHTML = htmlStr;
     }
 
     window.switchStudentHistoryTab = function(tabName) {
@@ -619,7 +595,6 @@
         } catch(e) { alert("❌ Lỗi kết nối!"); }
     };
 
-    // ĐÃ SỬA & TỐI ƯU: Tìm kiếm item trực tiếp từ SHOP_ITEMS dựa trên itemName
     window.buyShopItem = async function(itemName) {
         const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
         if (!currentUser) return alert("Vui lòng đăng nhập!");
@@ -648,13 +623,22 @@
         } catch(e) { alert("❌ Lỗi kết nối!"); }
     };
 
+    // ĐÃ SỬA LỖI AVATAR MẶC ĐỊNH & CẬP NHẬT CHUẨN URL
     window.selectAvatar = async function(avatarUrl, itemName) {
         const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
         if (!currentUser) return;
-        const payloadAvatar = (itemName === 'Mặc định') ? 'default' : avatarUrl;
+        
+        const payloadAvatar = (itemName === 'Mặc định') ? 'https://api.dicebear.com/7.x/bottts/svg?seed=Default' : avatarUrl;
+        
         try {
             const res = await fetchWithAuth(`${API_URL}/update-avatar`, {
-                method: 'POST', body: JSON.stringify({ username: currentUser.username, avatar: payloadAvatar, avatarUrl: payloadAvatar, itemName: itemName })
+                method: 'POST', 
+                body: JSON.stringify({ 
+                    username: currentUser.username, 
+                    avatar: payloadAvatar, 
+                    avatarUrl: payloadAvatar, 
+                    itemName: itemName 
+                })
             });
             const data = await res.json();
             if (data.success) {
@@ -682,13 +666,11 @@
             .concat(filteredExams.map(exam => `<option value="${escapeHtml(exam.code)}">[${escapeHtml(exam.subject || 'Môn khác')} - ${escapeHtml(exam.grade || 'Lớp khác')}] ${escapeHtml(exam.code)} (${exam.timeLimit || 15} phút)</option>`)).join('');
     }
 
-    // MAIN EVENT INITIALIZATION
     document.addEventListener("DOMContentLoaded", function() {
         loadUISettings();
         checkLoginState();
-        renderShopItems(); // Render danh sách Cửa hàng Mcion lần đầu
+        renderShopItems();
 
-        // DARK MODE TOGGLE
         const themeToggle = document.getElementById('btnToggleTheme');
         const currentTheme = localStorage.getItem('theme') || 'light';
         if (currentTheme === 'dark') {
@@ -702,7 +684,6 @@
             themeToggle.textContent = isDark ? '☀️' : '🌙';
         });
 
-        // AUTH TRANSITION
         document.getElementById('btnToggleToRegister')?.addEventListener('click', () => {
             document.getElementById('formLogin').classList.replace('active', 'hidden-left');
             document.getElementById('formRegister').classList.replace('hidden-right', 'active');
@@ -712,7 +693,6 @@
             document.getElementById('formLogin').classList.replace('hidden-left', 'active');
         });
 
-        // BẮT ĐẦU LÀM BÀI
         document.getElementById('btnStartExam')?.addEventListener('click', async function() {
             const examCode = document.getElementById('selectExamCode').value;
             if (!examCode) return alert("⚠️ Vui lòng chọn một mã đề thi!");
@@ -761,7 +741,6 @@
             finally { btn.textContent = originalText; btn.disabled = false; }
         });
 
-        // NỘP BÀI THI
         document.getElementById('btnSubmitExam')?.addEventListener('click', async function() {
             if (!currentExamData) return;
             const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
@@ -816,7 +795,6 @@
             this.textContent = "✖️ ĐÓNG VÀ HOÀN THÀNH BÀI THI"; this.className = "w-full py-3 mt-6 font-bold rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition shadow-md text-base"; this.dataset.state = "review";
         });
 
-        // TẠO ĐỀ EXCEL (ADMIN)
         document.getElementById('btnSaveExam')?.addEventListener('click', async () => {
             const examCode = document.getElementById('inputExamCode').value.trim();
             const subject = document.getElementById('adminSubject').value;
@@ -853,7 +831,6 @@
             reader.readAsArrayBuffer(fileInput.files[0]);
         });
 
-        // AUTH HANDLERS
         document.getElementById('btnRegisterSubmit')?.addEventListener('click', async () => {
             const fullname = document.getElementById('regFullname').value.trim();
             const username = document.getElementById('regUsername').value.trim();
@@ -891,7 +868,6 @@
             checkLoginState();
         });
 
-        // ADMIN CẤP MCION
         document.getElementById('btnGrantMcion')?.addEventListener('click', async () => {
             const username = document.getElementById('targetStudentUser').value.trim();
             const amount = Number(document.getElementById('targetMcionAmount').value.trim());
@@ -903,7 +879,6 @@
             } catch (err) {}
         });
 
-        // MODAL EVENTS
         document.getElementById('btnShowChangePass')?.addEventListener('click', () => document.getElementById('modalChangePass').classList.remove('hidden'));
         document.getElementById('btnCancelChangePass')?.addEventListener('click', () => document.getElementById('modalChangePass').classList.add('hidden'));
         document.getElementById('btnShowChangeAvatar')?.addEventListener('click', () => { document.getElementById('modalChangeAvatar').classList.remove('hidden'); loadMyAvatars(); });
@@ -920,7 +895,6 @@
             } catch(e) {}
         });
 
-        // TẠO ĐỀ TỰ ĐỘNG
         document.getElementById('btnAutoGenerateExam')?.addEventListener('click', async function() {
             const examCode = document.getElementById('autoExamCode').value.trim(), subject = document.getElementById('autoAdminSubject').value, grade = document.getElementById('autoAdminGrade').value, count = parseInt(document.getElementById('autoExamCount').value)||10, timeLimit = parseInt(document.getElementById('autoExamTime').value)||15;
             if (!examCode) return alert("⚠️ Nhập mã đề thi mới!");
@@ -965,7 +939,10 @@
         
         if (currentUser.role === "student") {
             document.getElementById('btnShowChangeAvatar')?.classList.remove('hidden');
-            if (topAvatar) { topAvatar.src = currentUser.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=Default"; topAvatar.classList.remove('hidden'); }
+            if (topAvatar) { 
+                topAvatar.src = currentUser.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=Default"; 
+                topAvatar.classList.remove('hidden'); 
+            }
             document.getElementById('userInfo').textContent = `Học sinh: ${currentUser.fullname || currentUser.username}`;
             document.getElementById('sectionStudent')?.classList.remove('hidden');
             document.getElementById('sectionAdmin')?.classList.add('hidden');
