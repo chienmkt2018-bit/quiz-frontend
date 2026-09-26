@@ -50,9 +50,24 @@
         .dark .option-item.correct-choice { color: #4ade80 !important; }
         .option-item.wrong-choice { background-color: rgba(239, 68, 68, 0.15) !important; border-color: #ef4444 !important; color: #b91c1c !important; text-decoration: line-through; }
         .dark .option-item.wrong-choice { color: #f87171 !important; }
+
+        /* Toast Animation */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .toast-animate { animation: slideIn 0.3s ease forwards; }
+        .toast-fadeout { animation: fadeOut 0.3s ease forwards; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen py-6 px-3 sm:px-6 transition-colors duration-300 font-sans">
+
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 space-y-2 pointer-events-none flex flex-col items-end"></div>
 
     <main class="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-7 border border-gray-100 dark:border-gray-700 transition-colors duration-300 relative">
         
@@ -173,6 +188,19 @@
                         ⏱️ <span id="timeRemaining">--:--</span>
                     </div>
                 </div>
+
+                <!-- QUESTION PALETTE / NAVIGATION GRID (NEW FEATURE) -->
+                <div class="mb-5 p-3.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">🗺️ Sơ Đồ Câu Hỏi:</span>
+                        <div class="flex items-center gap-3 text-xs">
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Đã chọn</span>
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-gray-200 dark:bg-gray-600 inline-block"></span> Chưa chọn</span>
+                        </div>
+                    </div>
+                    <div id="examPaletteGrid" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1"></div>
+                </div>
+
                 <div id="questionsContainer" class="space-y-4"></div>
                 <button id="btnSubmitExam" class="w-full py-3 mt-6 font-bold rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition shadow-md text-base">NỘP BÀI THI</button>
             </article>
@@ -420,6 +448,31 @@
         ...SHOP_ITEMS.filter(item => item.category === 'AVATAR').map(a => ({ name: a.name, url: a.avatarUrl }))
     ];
 
+    // TOAST NOTIFICATION SYSTEM (NEW FEATURE)
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        const bgColors = {
+            success: 'bg-emerald-600 text-white',
+            error: 'bg-rose-600 text-white',
+            warning: 'bg-amber-500 text-white',
+            info: 'bg-primary-600 text-white'
+        };
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+
+        toast.className = `pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-semibold toast-animate ${bgColors[type] || bgColors.success}`;
+        toast.innerHTML = `<span>${icons[type] || '✨'}</span><span>${escapeHtml(message)}</span>`;
+        
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.replace('toast-animate', 'toast-fadeout');
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
+    }
+
     function escapeHtml(str) {
         if (str === null || str === undefined) return '';
         return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -434,7 +487,6 @@
         return arr;
     }
 
-    // CẬP NHẬT: Render cửa hàng có kiểm tra kho đối với AVATAR (không cho mua trùng)
     async function renderShopItems(filterCategory = 'ALL') {
         const container = document.getElementById('shopGridContainer');
         if (!container) return;
@@ -495,7 +547,7 @@
         const response = await fetch(url, { ...options, headers });
         if (response.status === 401 || response.status === 403) {
             const errData = await response.json().catch(() => ({}));
-            alert("⚠️ " + (errData.message || "Phiên đăng nhập hết hạn hoặc không đủ quyền!"));
+            showToast(errData.message || "Phiên đăng nhập hết hạn hoặc không đủ quyền!", "error");
             if (response.status === 401) document.getElementById('btnLogout')?.click();
             throw new Error(errData.message || "Unauthorized");
         }
@@ -608,27 +660,25 @@
         try {
             const res = await fetchWithAuth(`${API_URL}/exams/${code}`, { method: 'DELETE' });
             const data = await res.json();
-            if(data.success) { alert("✅ Xóa thành công!"); loadAdminExamList(); loadExamList(); }
-            else alert("❌ Lỗi: " + data.message);
-        } catch(e) { alert("❌ Lỗi kết nối!"); }
+            if(data.success) { showToast("Xóa thành công!", "success"); loadAdminExamList(); loadExamList(); }
+            else showToast("Lỗi: " + data.message, "error");
+        } catch(e) { showToast("Lỗi kết nối!", "error"); }
     };
 
-    // CẬP NHẬT: Thêm logic kiểm tra xem học viên đã mua Avatar này chưa trước khi gửi request mua
     window.buyShopItem = async function(itemName) {
         const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-        if (!currentUser) return alert("Vui lòng đăng nhập!");
+        if (!currentUser) return showToast("Vui lòng đăng nhập!", "warning");
         
         const item = SHOP_ITEMS.find(i => i.name === itemName);
-        if (!item) return alert("Không tìm thấy thông tin vật phẩm!");
+        if (!item) return showToast("Không tìm thấy thông tin vật phẩm!", "error");
 
-        // Nếu là AVATAR, kiểm tra xem đã có trong kho chưa
         if (item.category === 'AVATAR') {
             try {
                 const res = await fetch(`${API_URL}/mcion/${encodeURIComponent(currentUser.username)}`);
                 const data = await res.json();
                 const inventory = data.inventory || [];
                 if (inventory.includes(item.name)) {
-                    return alert("⚠️ Bạn đã sở hữu avatar này rồi, không thể mua thêm!");
+                    return showToast("Bạn đã sở hữu avatar này rồi, không thể mua thêm!", "warning");
                 }
             } catch (e) {}
         }
@@ -646,12 +696,11 @@
             });
             const data = await res.json();
             if (data.success) {
-                alert("🎉 Mua thành công!");
+                showToast("Mua thành công!", "success");
                 if (data.user) sessionStorage.setItem("current_user", JSON.stringify(data.user));
                 updateMcionDisplay(); 
                 checkLoginState();
                 
-                // Cập nhật lại giao diện cửa hàng để khóa nút avatar vừa mua
                 const activeCatBtn = document.querySelector('.shop-cat-btn.bg-primary-600');
                 let activeCat = 'ALL';
                 if (activeCatBtn) {
@@ -660,8 +709,8 @@
                     if (match) activeCat = match[1];
                 }
                 renderShopItems(activeCat);
-            } else { alert("❌ " + data.message); }
-        } catch(e) { alert("❌ Lỗi kết nối!"); }
+            } else { showToast(data.message, "error"); }
+        } catch(e) { showToast("Lỗi kết nối!", "error"); }
     };
 
     window.selectAvatar = async function(itemName) {
@@ -686,9 +735,9 @@
                 if (data.user) sessionStorage.setItem("current_user", JSON.stringify(data.user));
                 document.getElementById('modalChangeAvatar')?.classList.add('hidden');
                 checkLoginState();
-                alert("✅ Đổi Avatar thành công!");
-            } else { alert("❌ " + (data.message || "Đổi Avatar thất bại!")); }
-        } catch(e) { alert("❌ Lỗi kết nối máy chủ!"); }
+                showToast("Đổi Avatar thành công!", "success");
+            } else { showToast(data.message || "Đổi Avatar thất bại!", "error"); }
+        } catch(e) { showToast("Lỗi kết nối máy chủ!", "error"); }
     };
 
     function onCategoryFilterChange() {
@@ -725,6 +774,23 @@
             themeToggle.textContent = isDark ? '☀️' : '🌙';
         });
 
+        // MODAL BACKDROP & ESC KEY HANDLERS (NEW UX FEATURE)
+        const modalPass = document.getElementById('modalChangePass');
+        const modalAvatar = document.getElementById('modalChangeAvatar');
+
+        [modalPass, modalAvatar].forEach(modal => {
+            modal?.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.add('hidden');
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                modalPass?.classList.add('hidden');
+                modalAvatar?.classList.add('hidden');
+            }
+        });
+
         document.getElementById('btnToggleToRegister')?.addEventListener('click', () => {
             document.getElementById('formLogin').classList.replace('active', 'hidden-left');
             document.getElementById('formRegister').classList.replace('hidden-right', 'active');
@@ -736,9 +802,9 @@
 
         document.getElementById('btnStartExam')?.addEventListener('click', async function() {
             const examCode = document.getElementById('selectExamCode').value;
-            if (!examCode) return alert("⚠️ Vui lòng chọn một mã đề thi!");
+            if (!examCode) return showToast("Vui lòng chọn một mã đề thi!", "warning");
             const btn = this; const originalText = btn.textContent;
-            btn.textContent = "⏳ Đang tải (Chờ Server)..."; btn.disabled = true;
+            btn.textContent = "⏳ Đang tải đề..."; btn.disabled = true;
 
             try {
                 const res = await fetch(`${API_URL}/exams/${encodeURIComponent(examCode)}`);
@@ -752,8 +818,10 @@
                 document.getElementById('examArea')?.classList.remove('hidden');
                 document.getElementById('examTitle').textContent = `Bài Thi: ${examCode}`;
                 const container = document.getElementById('questionsContainer');
+                const paletteGrid = document.getElementById('examPaletteGrid');
                 const labels = ['A', 'B', 'C', 'D'];
 
+                // Render Question Cards
                 container.innerHTML = exam.questions.map((q, index) => {
                     const correctIndex = labels.indexOf(String(q.correct || 'A').trim().toUpperCase());
                     let optionObjects = shuffleArray((q.options || []).map((text, i) => ({ text, isCorrect: i === (correctIndex!==-1?correctIndex:0) })).filter(o => o.text !== undefined && String(o.text).trim() !== ''));
@@ -762,10 +830,15 @@
                     q.shuffledOptions = optionObjects; q.runtimeCorrect = runtimeCorrect;
                     
                     const optionsHtml = q.shuffledOptions.map(optObj => 
-                        `<label class="option-item flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition my-2 text-sm"><input type="radio" name="q${index}" value="${optObj.label}" class="mr-3 accent-primary-600"> ${optObj.label}. ${escapeHtml(optObj.text)}</label>`
+                        `<label class="option-item flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition my-2 text-sm"><input type="radio" name="q${index}" value="${optObj.label}" onchange="updateQuestionPalette(${index})" class="mr-3 accent-primary-600"> ${optObj.label}. ${escapeHtml(optObj.text)}</label>`
                     ).join('');
                     return `<div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm" id="qcard_${index}"><div class="font-bold mb-3 text-gray-800 dark:text-gray-100">Câu ${index + 1}: ${escapeHtml(q.question)}</div>${optionsHtml}</div>`;
                 }).join('');
+
+                // Render Question Palette Grid
+                paletteGrid.innerHTML = exam.questions.map((_, index) => `
+                    <button type="button" id="palette_btn_${index}" onclick="jumpToQuestion(${index})" class="w-8 h-8 rounded-lg font-bold text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-primary-500 hover:text-white transition shadow-sm">${index + 1}</button>
+                `).join('');
 
                 clearInterval(examTimerInterval);
                 if (exam.timeLimit > 0) {
@@ -775,17 +848,31 @@
                         time--;
                         const m = Math.floor(time / 60); const s = time % 60;
                         document.getElementById('timeRemaining').textContent = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
-                        if (time <= 0) { clearInterval(examTimerInterval); alert("⏳ Hết thời gian, tự nộp bài!"); document.getElementById('btnSubmitExam')?.click(); }
+                        if (time <= 0) { clearInterval(examTimerInterval); showToast("Hết thời gian, hệ thống tự động nộp bài!", "warning"); document.getElementById('btnSubmitExam')?.click(); }
                     }, 1000);
                 } else document.getElementById('examTimerDisplay')?.classList.add('hidden');
-            } catch (err) { alert("❌ Lỗi: " + err.message); } 
+            } catch (err) { showToast("Lỗi: " + err.message, "error"); } 
             finally { btn.textContent = originalText; btn.disabled = false; }
         });
+
+        window.jumpToQuestion = function(index) {
+            const card = document.getElementById(`qcard_${index}`);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        };
+
+        window.updateQuestionPalette = function(index) {
+            const paletteBtn = document.getElementById(`palette_btn_${index}`);
+            if (paletteBtn) {
+                paletteBtn.className = "w-8 h-8 rounded-lg font-bold text-xs bg-emerald-500 text-white transition shadow-sm";
+            }
+        };
 
         document.getElementById('btnSubmitExam')?.addEventListener('click', async function() {
             if (!currentExamData) return;
             const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
-            if (!currentUser) return alert("❌ Phiên hết hạn!");
+            if (!currentUser) return showToast("Phiên đăng nhập hết hạn!", "error");
             
             if (this.dataset.state === "review") {
                 document.getElementById('examArea')?.classList.add('hidden');
@@ -821,7 +908,7 @@
 
             const score = Number(((correctCount / total) * 10).toFixed(1));
             const earnedMcion = correctCount * 10;
-            alert(`🎉 Nộp bài thành công!\n- Đúng: ${correctCount}/${total}\n- Điểm: ${score}\n- Thưởng: +${earnedMcion} Mcion!`);
+            showToast(`Nộp bài thành công! Đúng: ${correctCount}/${total} | Điểm: ${score} (+${earnedMcion} Mcion)`, "success");
 
             try {
                 await fetchWithAuth(`${API_URL}/submit`, {
@@ -843,7 +930,7 @@
             const timeLimit = parseInt(document.getElementById('inputExamTime').value, 10) || 0;
             const fileInput = document.getElementById('excelFileInput');
 
-            if (!examCode || !fileInput.files.length) return alert("⚠️ Vui lòng nhập mã đề và chọn file Excel!");
+            if (!examCode || !fileInput.files.length) return showToast("Vui lòng nhập mã đề và chọn file Excel!", "warning");
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
@@ -861,13 +948,13 @@
                             options: [row[1]?String(row[1]).trim():'', row[2]?String(row[2]).trim():'', row[3]?String(row[3]).trim():'', row[4]?String(row[4]).trim():'']
                         });
                     }
-                    if (!questions.length) return alert("❌ Không có dữ liệu hợp lệ!");
+                    if (!questions.length) return showToast("Không có dữ liệu hợp lệ trong file!", "error");
                     
                     const res = await fetchWithAuth(`${API_URL}/exams`, { method: 'POST', body: JSON.stringify({ examCode, subject, grade, timeLimit, questions }) });
                     const result = await res.json();
-                    if (result.success) { alert(`🎉 Lưu thành công ${questions.length} câu!`); loadAdminExamList(); loadExamList(); fileInput.value = ''; } 
-                    else alert("❌ " + result.message);
-                } catch (err) { alert("❌ Lỗi: " + err.message); }
+                    if (result.success) { showToast(`Lưu thành công ${questions.length} câu hỏi!`, "success"); loadAdminExamList(); loadExamList(); fileInput.value = ''; } 
+                    else showToast(result.message, "error");
+                } catch (err) { showToast("Lỗi: " + err.message, "error"); }
             };
             reader.readAsArrayBuffer(fileInput.files[0]);
         });
@@ -877,20 +964,20 @@
             const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value.trim();
             const confirmPass = document.getElementById('regConfirmPassword').value.trim();
-            if (!fullname || !username || !password) return alert("⚠️ Điền đầy đủ!");
-            if (password !== confirmPass) return alert("❌ Mật khẩu không khớp!");
+            if (!fullname || !username || !password) return showToast("Vui lòng điền đầy đủ thông tin!", "warning");
+            if (password !== confirmPass) return showToast("Mật khẩu xác nhận không khớp!", "error");
             try {
                 const res = await fetch(`${API_URL}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullname, username, password }) });
                 const data = await res.json();
-                if (data.success) { alert("🎉 Đăng ký thành công!"); document.getElementById('btnToggleToLogin')?.click(); } 
-                else alert("❌ " + data.message);
-            } catch (err) { alert("❌ Lỗi kết nối!"); }
+                if (data.success) { showToast("Đăng ký thành công!", "success"); document.getElementById('btnToggleToLogin')?.click(); } 
+                else showToast(data.message, "error");
+            } catch (err) { showToast("Lỗi kết nối máy chủ!", "error"); }
         });
 
         async function handleLogin(role) {
             const username = document.getElementById('authUsername').value.trim();
             const password = document.getElementById('authPassword').value.trim();
-            if (!username || !password) return alert("⚠️ Nhập đủ thông tin!");
+            if (!username || !password) return showToast("Vui lòng nhập tài khoản và mật khẩu!", "warning");
             try {
                 const res = await fetch(`${API_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password, role }) });
                 const data = await res.json();
@@ -898,8 +985,9 @@
                     sessionStorage.setItem("current_user", JSON.stringify(data));
                     if (data.token) sessionStorage.setItem("access_token", data.token);
                     checkLoginState();
-                } else alert("❌ " + (data.message || "Đăng nhập thất bại!"));
-            } catch (e) { alert("❌ Lỗi kết nối!"); }
+                    showToast("Đăng nhập thành công!", "success");
+                } else showToast(data.message || "Đăng nhập thất bại!", "error");
+            } catch (e) { showToast("Lỗi kết nối máy chủ!", "error"); }
         }
         document.getElementById('btnLoginStudent')?.addEventListener('click', () => handleLogin('student'));
         document.getElementById('btnLoginAdmin')?.addEventListener('click', () => handleLogin('admin'));
@@ -907,16 +995,17 @@
             sessionStorage.clear(); clearInterval(examTimerInterval); currentExamData = null;
             document.getElementById('questionsContainer').innerHTML = ''; document.getElementById('examArea').classList.add('hidden'); 
             checkLoginState();
+            showToast("Đã đăng xuất tài khoản", "info");
         });
 
         document.getElementById('btnGrantMcion')?.addEventListener('click', async () => {
             const username = document.getElementById('targetStudentUser').value.trim();
             const amount = Number(document.getElementById('targetMcionAmount').value.trim());
-            if (!username || isNaN(amount)) return alert("⚠️ Nhập Username và số Mcion hợp lệ!");
+            if (!username || isNaN(amount)) return showToast("Nhập Username và số Mcion hợp lệ!", "warning");
             try {
                 const res = await fetchWithAuth(`${API_URL}/mcion/grant`, { method: 'POST', body: JSON.stringify({ username, amount }) });
                 const data = await res.json();
-                if (data.success) { alert(`✅ ${data.message}`); } else alert("❌ " + data.message);
+                if (data.success) { showToast(data.message, "success"); } else showToast(data.message, "error");
             } catch (err) {}
         });
 
@@ -928,17 +1017,17 @@
         document.getElementById('btnSubmitChangePass')?.addEventListener('click', async () => {
             const user = JSON.parse(sessionStorage.getItem("current_user") || "null"); if (!user) return;
             const oldPassword = document.getElementById('cpOldPass').value.trim(), newPassword = document.getElementById('cpNewPass').value.trim(), confirmPass = document.getElementById('cpConfirmPass').value.trim();
-            if (!oldPassword || !newPassword) return alert("⚠️ Điền đủ thông tin!"); if (newPassword !== confirmPass) return alert("❌ Xác nhận không khớp!");
+            if (!oldPassword || !newPassword) return showToast("Vui lòng điền đủ thông tin!", "warning"); if (newPassword !== confirmPass) return showToast("Mật khẩu mới không khớp!", "error");
             try {
                 const res = await fetchWithAuth(`${API_URL}/change-password`, { method: 'POST', body: JSON.stringify({ username: user.username, role: user.role, oldPassword, newPassword }) });
                 const data = await res.json();
-                if (data.success) { alert("🎉 " + data.message); document.getElementById('modalChangePass').classList.add('hidden'); } else alert("❌ " + data.message);
+                if (data.success) { showToast(data.message, "success"); document.getElementById('modalChangePass').classList.add('hidden'); } else showToast(data.message, "error");
             } catch(e) {}
         });
 
         document.getElementById('btnAutoGenerateExam')?.addEventListener('click', async function() {
             const examCode = document.getElementById('autoExamCode').value.trim(), subject = document.getElementById('autoAdminSubject').value, grade = document.getElementById('autoAdminGrade').value, count = parseInt(document.getElementById('autoExamCount').value)||10, timeLimit = parseInt(document.getElementById('autoExamTime').value)||15;
-            if (!examCode) return alert("⚠️ Nhập mã đề thi mới!");
+            if (!examCode) return showToast("Vui lòng nhập mã đề thi mới!", "warning");
             const btn = this; const originalText = btn.textContent; btn.textContent = "⏳ Đang tạo..."; btn.disabled = true;
 
             try {
@@ -949,13 +1038,13 @@
                 let questionBank = [];
                 examResults.forEach(r => { if (r.status === 'fulfilled' && r.value && r.value.questions) questionBank.push(...r.value.questions); });
                 
-                if (questionBank.length === 0) throw new Error("Không có câu hỏi phù hợp!");
+                if (questionBank.length === 0) throw new Error("Không có câu hỏi phù hợp trong hệ thống!");
                 const selected = shuffleArray(questionBank).slice(0, count).map((q, idx) => ({ id: idx+1, question: q.question, options: q.options, correct: q.correct }));
                 
                 const saveRes = await fetchWithAuth(`${API_URL}/exams`, { method: 'POST', body: JSON.stringify({ examCode, subject, grade, timeLimit, questions: selected }) });
                 const result = await saveRes.json();
-                if (result.success) { alert(`🎉 Tạo thành công ${examCode}!`); loadAdminExamList(); loadExamList(); } else alert("❌ Lỗi!");
-            } catch (err) { alert("❌ Lỗi: " + err.message); } finally { btn.textContent = originalText; btn.disabled = false; }
+                if (result.success) { showToast(`Tạo đề tự động thành công (${examCode})!`, "success"); loadAdminExamList(); loadExamList(); } else showToast("Lỗi lưu đề thi!", "error");
+            } catch (err) { showToast("Lỗi: " + err.message, "error"); } finally { btn.textContent = originalText; btn.disabled = false; }
         });
     });
 
@@ -972,7 +1061,7 @@
             topAvatar?.classList.add('hidden');
             document.getElementById('userInfo').textContent = "Chưa đăng nhập";
             updateMcionDisplay(); 
-            renderShopItems(); // Cập nhật lại trạng thái shop khi đăng xuất
+            renderShopItems();
             return;
         }
         
@@ -998,7 +1087,7 @@
             renderAllHistoryRecent(); loadAdminExamList(); 
         }
         updateMcionDisplay();
-        renderShopItems(); // Cập nhật lại shop theo inventory của học viên mới đăng nhập
+        renderShopItems();
     }
 
     async function loadExamList() {
