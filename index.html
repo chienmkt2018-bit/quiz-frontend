@@ -40,6 +40,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
+        /* CSS Custom cho hiệu ứng Slide & Đáp án */
         .auth-wrapper { display: grid; grid-template-columns: 1fr; position: relative; overflow: hidden; }
         .auth-form { grid-row: 1; grid-column: 1; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease; width: 100%; }
         .auth-form.active { transform: translateX(0); opacity: 1; pointer-events: auto; visibility: visible; z-index: 2; }
@@ -229,7 +230,9 @@
                 </div>
 
                 <!-- Dựng danh sách vật phẩm linh hoạt từ JavaScript -->
-                <div id="shopGridContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+                <div id="shopGridContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Được render tự động qua hàm renderShopItems() -->
+                </div>
             </article>
         </section>
 
@@ -415,7 +418,7 @@
     let allExamsFromServer = [];
     let adminSearchTimeout = null;
 
-    // DANH SÁCH VẬT PHẨM ĐỔI THƯỞNG ĐÃ BỔ SUNG ĐẦY ĐỦ AVATAR URL ĐỂ FIX LỖI MUA HÀNG
+    // DANH SÁCH VẬT PHẨM ĐỔI THƯỞNG ĐA DẠNG CÓ PHÂN LOẠI CATEGORY
     const SHOP_ITEMS = [
         // AVATARS
         { name: 'Avatar Mèo Cool', category: 'AVATAR', price: 100, icon: '🐱', avatarUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>" },
@@ -452,6 +455,7 @@
         return arr;
     }
 
+    // RENDER SHOP ITEMS CÓ BỘ LỌC DANH MỤC (Đã sửa lỗi truyền avatarUrl qua onclick bằng cách chỉ truyền itemName)
     function renderShopItems(filterCategory = 'ALL') {
         const container = document.getElementById('shopGridContainer');
         if (!container) return;
@@ -472,11 +476,12 @@
                     <h4 class="font-bold text-base mb-1">${escapeHtml(item.name)}</h4>
                     <p class="text-amber-500 font-bold mb-3 text-sm">🪙 ${item.price} Mcion</p>
                 </div>
-                <button onclick="buyShopItem('${escapeHtml(item.name)}', ${item.price}, '${item.avatarUrl || ''}')" class="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg text-sm transition">Đổi Ngay</button>
+                <button onclick="buyShopItem('${escapeHtml(item.name)}')" class="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg text-sm transition">Đổi Ngay</button>
             </div>
         `).join('');
     }
 
+    // CHUYỂN TAB DANH MỤC SHOP
     window.filterShopCategory = function(category, btnElement) {
         document.querySelectorAll('.shop-cat-btn').forEach(btn => {
             btn.className = "shop-cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition";
@@ -614,19 +619,31 @@
         } catch(e) { alert("❌ Lỗi kết nối!"); }
     };
 
-    window.buyShopItem = async function(itemName, price, avatarUrl) {
+    // ĐÃ SỬA & TỐI ƯU: Tìm kiếm item trực tiếp từ SHOP_ITEMS dựa trên itemName
+    window.buyShopItem = async function(itemName) {
         const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
         if (!currentUser) return alert("Vui lòng đăng nhập!");
-        if (!confirm(`Xác nhận đổi vật phẩm "${itemName}" với giá ${price} Mcion?`)) return;
+        
+        const item = SHOP_ITEMS.find(i => i.name === itemName);
+        if (!item) return alert("Không tìm thấy thông tin vật phẩm!");
+
+        if (!confirm(`Xác nhận đổi vật phẩm "${item.name}" với giá ${item.price} Mcion?`)) return;
         try {
             const res = await fetchWithAuth(`${API_URL}/mcion/buy`, {
-                method: 'POST', body: JSON.stringify({ username: currentUser.username, itemName: itemName, cost: Number(price), avatarUrl: avatarUrl })
+                method: 'POST', 
+                body: JSON.stringify({ 
+                    username: currentUser.username, 
+                    itemName: item.name, 
+                    cost: Number(item.price), 
+                    avatarUrl: item.avatarUrl || '' 
+                })
             });
             const data = await res.json();
             if (data.success) {
                 alert("🎉 Mua thành công!");
                 if (data.user) sessionStorage.setItem("current_user", JSON.stringify(data.user));
-                updateMcionDisplay(); checkLoginState();
+                updateMcionDisplay(); 
+                checkLoginState();
             } else { alert("❌ " + data.message); }
         } catch(e) { alert("❌ Lỗi kết nối!"); }
     };
@@ -665,11 +682,13 @@
             .concat(filteredExams.map(exam => `<option value="${escapeHtml(exam.code)}">[${escapeHtml(exam.subject || 'Môn khác')} - ${escapeHtml(exam.grade || 'Lớp khác')}] ${escapeHtml(exam.code)} (${exam.timeLimit || 15} phút)</option>`)).join('');
     }
 
+    // MAIN EVENT INITIALIZATION
     document.addEventListener("DOMContentLoaded", function() {
         loadUISettings();
         checkLoginState();
-        renderShopItems();
+        renderShopItems(); // Render danh sách Cửa hàng Mcion lần đầu
 
+        // DARK MODE TOGGLE
         const themeToggle = document.getElementById('btnToggleTheme');
         const currentTheme = localStorage.getItem('theme') || 'light';
         if (currentTheme === 'dark') {
@@ -683,6 +702,7 @@
             themeToggle.textContent = isDark ? '☀️' : '🌙';
         });
 
+        // AUTH TRANSITION
         document.getElementById('btnToggleToRegister')?.addEventListener('click', () => {
             document.getElementById('formLogin').classList.replace('active', 'hidden-left');
             document.getElementById('formRegister').classList.replace('hidden-right', 'active');
@@ -692,6 +712,7 @@
             document.getElementById('formLogin').classList.replace('hidden-left', 'active');
         });
 
+        // BẮT ĐẦU LÀM BÀI
         document.getElementById('btnStartExam')?.addEventListener('click', async function() {
             const examCode = document.getElementById('selectExamCode').value;
             if (!examCode) return alert("⚠️ Vui lòng chọn một mã đề thi!");
@@ -740,6 +761,7 @@
             finally { btn.textContent = originalText; btn.disabled = false; }
         });
 
+        // NỘP BÀI THI
         document.getElementById('btnSubmitExam')?.addEventListener('click', async function() {
             if (!currentExamData) return;
             const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
@@ -794,6 +816,7 @@
             this.textContent = "✖️ ĐÓNG VÀ HOÀN THÀNH BÀI THI"; this.className = "w-full py-3 mt-6 font-bold rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition shadow-md text-base"; this.dataset.state = "review";
         });
 
+        // TẠO ĐỀ EXCEL (ADMIN)
         document.getElementById('btnSaveExam')?.addEventListener('click', async () => {
             const examCode = document.getElementById('inputExamCode').value.trim();
             const subject = document.getElementById('adminSubject').value;
@@ -830,6 +853,7 @@
             reader.readAsArrayBuffer(fileInput.files[0]);
         });
 
+        // AUTH HANDLERS
         document.getElementById('btnRegisterSubmit')?.addEventListener('click', async () => {
             const fullname = document.getElementById('regFullname').value.trim();
             const username = document.getElementById('regUsername').value.trim();
@@ -867,6 +891,7 @@
             checkLoginState();
         });
 
+        // ADMIN CẤP MCION
         document.getElementById('btnGrantMcion')?.addEventListener('click', async () => {
             const username = document.getElementById('targetStudentUser').value.trim();
             const amount = Number(document.getElementById('targetMcionAmount').value.trim());
@@ -878,6 +903,7 @@
             } catch (err) {}
         });
 
+        // MODAL EVENTS
         document.getElementById('btnShowChangePass')?.addEventListener('click', () => document.getElementById('modalChangePass').classList.remove('hidden'));
         document.getElementById('btnCancelChangePass')?.addEventListener('click', () => document.getElementById('modalChangePass').classList.add('hidden'));
         document.getElementById('btnShowChangeAvatar')?.addEventListener('click', () => { document.getElementById('modalChangeAvatar').classList.remove('hidden'); loadMyAvatars(); });
@@ -894,6 +920,7 @@
             } catch(e) {}
         });
 
+        // TẠO ĐỀ TỰ ĐỘNG
         document.getElementById('btnAutoGenerateExam')?.addEventListener('click', async function() {
             const examCode = document.getElementById('autoExamCode').value.trim(), subject = document.getElementById('autoAdminSubject').value, grade = document.getElementById('autoAdminGrade').value, count = parseInt(document.getElementById('autoExamCount').value)||10, timeLimit = parseInt(document.getElementById('autoExamTime').value)||15;
             if (!examCode) return alert("⚠️ Nhập mã đề thi mới!");
