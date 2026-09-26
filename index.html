@@ -434,9 +434,20 @@
         return arr;
     }
 
-    function renderShopItems(filterCategory = 'ALL') {
+    // CẬP NHẬT: Render cửa hàng có kiểm tra kho đối với AVATAR (không cho mua trùng)
+    async function renderShopItems(filterCategory = 'ALL') {
         const container = document.getElementById('shopGridContainer');
         if (!container) return;
+
+        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
+        let userInventory = [];
+        if (currentUser && currentUser.role === 'student') {
+            try {
+                const res = await fetch(`${API_URL}/mcion/${encodeURIComponent(currentUser.username)}`);
+                const data = await res.json();
+                userInventory = data.inventory || [];
+            } catch (e) {}
+        }
 
         const filteredList = (filterCategory === 'ALL') 
             ? SHOP_ITEMS 
@@ -447,16 +458,23 @@
             return;
         }
 
-        container.innerHTML = filteredList.map(item => `
-            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl text-center shadow-sm hover:-translate-y-1 transition flex flex-col justify-between">
-                <div>
-                    <div class="text-4xl mb-2">${item.icon}</div>
-                    <h4 class="font-bold text-base mb-1">${escapeHtml(item.name)}</h4>
-                    <p class="text-amber-500 font-bold mb-3 text-sm">🪙 ${item.price} Mcion</p>
+        container.innerHTML = filteredList.map(item => {
+            const isOwnedAvatar = item.category === 'AVATAR' && userInventory.includes(item.name);
+            const buttonHtml = isOwnedAvatar 
+                ? `<button disabled class="w-full py-2 bg-gray-400 dark:bg-gray-600 text-white font-bold rounded-lg text-sm cursor-not-allowed">Đã Sở Hữu</button>`
+                : `<button onclick="buyShopItem('${escapeHtml(item.name)}')" class="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg text-sm transition">Đổi Ngay</button>`;
+
+            return `
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl text-center shadow-sm hover:-translate-y-1 transition flex flex-col justify-between">
+                    <div>
+                        <div class="text-4xl mb-2">${item.icon}</div>
+                        <h4 class="font-bold text-base mb-1">${escapeHtml(item.name)}</h4>
+                        <p class="text-amber-500 font-bold mb-3 text-sm">🪙 ${item.price} Mcion</p>
+                    </div>
+                    ${buttonHtml}
                 </div>
-                <button onclick="buyShopItem('${escapeHtml(item.name)}')" class="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg text-sm transition">Đổi Ngay</button>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     window.filterShopCategory = function(category, btnElement) {
@@ -595,12 +613,25 @@
         } catch(e) { alert("❌ Lỗi kết nối!"); }
     };
 
+    // CẬP NHẬT: Thêm logic kiểm tra xem học viên đã mua Avatar này chưa trước khi gửi request mua
     window.buyShopItem = async function(itemName) {
         const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
         if (!currentUser) return alert("Vui lòng đăng nhập!");
         
         const item = SHOP_ITEMS.find(i => i.name === itemName);
         if (!item) return alert("Không tìm thấy thông tin vật phẩm!");
+
+        // Nếu là AVATAR, kiểm tra xem đã có trong kho chưa
+        if (item.category === 'AVATAR') {
+            try {
+                const res = await fetch(`${API_URL}/mcion/${encodeURIComponent(currentUser.username)}`);
+                const data = await res.json();
+                const inventory = data.inventory || [];
+                if (inventory.includes(item.name)) {
+                    return alert("⚠️ Bạn đã sở hữu avatar này rồi, không thể mua thêm!");
+                }
+            } catch (e) {}
+        }
 
         if (!confirm(`Xác nhận đổi vật phẩm "${item.name}" với giá ${item.price} Mcion?`)) return;
         try {
@@ -619,11 +650,20 @@
                 if (data.user) sessionStorage.setItem("current_user", JSON.stringify(data.user));
                 updateMcionDisplay(); 
                 checkLoginState();
+                
+                // Cập nhật lại giao diện cửa hàng để khóa nút avatar vừa mua
+                const activeCatBtn = document.querySelector('.shop-cat-btn.bg-primary-600');
+                let activeCat = 'ALL';
+                if (activeCatBtn) {
+                    const onclickAttr = activeCatBtn.getAttribute('onclick');
+                    const match = onclickAttr.match(/'([^']+)'/);
+                    if (match) activeCat = match[1];
+                }
+                renderShopItems(activeCat);
             } else { alert("❌ " + data.message); }
         } catch(e) { alert("❌ Lỗi kết nối!"); }
     };
 
-    // ĐÃ SỬA LỖI ĐỔI AVATAR BẰNG CÁCH TRA CỨU THEO ITEMNAME AN TOÀN TUYỆT ĐỐI
     window.selectAvatar = async function(itemName) {
         const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
         if (!currentUser) return;
@@ -931,7 +971,9 @@
             document.getElementById('btnShowChangeAvatar')?.classList.add('hidden');
             topAvatar?.classList.add('hidden');
             document.getElementById('userInfo').textContent = "Chưa đăng nhập";
-            updateMcionDisplay(); return;
+            updateMcionDisplay(); 
+            renderShopItems(); // Cập nhật lại trạng thái shop khi đăng xuất
+            return;
         }
         
         document.getElementById('sectionAuth')?.classList.add('hidden');
@@ -956,6 +998,7 @@
             renderAllHistoryRecent(); loadAdminExamList(); 
         }
         updateMcionDisplay();
+        renderShopItems(); // Cập nhật lại shop theo inventory của học viên mới đăng nhập
     }
 
     async function loadExamList() {
