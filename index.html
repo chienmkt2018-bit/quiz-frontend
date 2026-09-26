@@ -189,7 +189,7 @@
                     </div>
                 </div>
 
-                <!-- QUESTION PALETTE / NAVIGATION GRID (NEW FEATURE) -->
+                <!-- QUESTION PALETTE / NAVIGATION GRID -->
                 <div class="mb-5 p-3.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">🗺️ Sơ Đồ Câu Hỏi:</span>
@@ -203,6 +203,17 @@
 
                 <div id="questionsContainer" class="space-y-4"></div>
                 <button id="btnSubmitExam" class="w-full py-3 mt-6 font-bold rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition shadow-md text-base">NỘP BÀI THI</button>
+            </article>
+
+            <!-- TÍNH NĂNG MỚI: TÚI ĐỒ HỌC VIÊN -->
+            <article class="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 p-5 rounded-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">🎒 Túi Đồ Của Tôi (Inventory)</h3>
+                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Vật phẩm & Quà tặng đã sở hữu</span>
+                </div>
+                <div id="studentInventoryGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="col-span-full text-center py-6 text-gray-500 dark:text-gray-400">Đang tải túi đồ...</div>
+                </div>
             </article>
 
             <article class="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 p-5 rounded-xl">
@@ -448,7 +459,7 @@
         ...SHOP_ITEMS.filter(item => item.category === 'AVATAR').map(a => ({ name: a.name, url: a.avatarUrl }))
     ];
 
-    // TOAST NOTIFICATION SYSTEM (NEW FEATURE)
+    // TOAST NOTIFICATION SYSTEM
     function showToast(message, type = 'success') {
         const container = document.getElementById('toastContainer');
         if (!container) return;
@@ -486,6 +497,56 @@
         }
         return arr;
     }
+
+    // LOAD STUDENT INVENTORY (TÚI ĐỒ HỌC VIÊN)
+    async function loadStudentInventory() {
+        const container = document.getElementById('studentInventoryGrid');
+        if (!container) return;
+        const currentUser = JSON.parse(sessionStorage.getItem("current_user") || "null");
+        if (!currentUser || currentUser.role !== 'student') return;
+
+        try {
+            const res = await fetch(`${API_URL}/mcion/${encodeURIComponent(currentUser.username)}`);
+            const data = await res.json();
+            const inventory = data.inventory || [];
+
+            if (inventory.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-6 text-gray-500 dark:text-gray-400">Túi đồ của bạn đang trống. Hãy ghé cửa hàng Mcion bên dưới để đổi quà nhé!</div>`;
+                return;
+            }
+
+            container.innerHTML = inventory.map(itemName => {
+                const shopItem = SHOP_ITEMS.find(i => i.name === itemName) || { name: itemName, category: 'ITEM', icon: '🎁' };
+                let actionHtml = '';
+
+                if (shopItem.category === 'AVATAR') {
+                    actionHtml = `<button onclick="openAvatarModal()" class="w-full py-1.5 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg text-xs transition shadow-sm">Đổi Avatar Này</button>`;
+                } else if (shopItem.category === 'GIFT') {
+                    actionHtml = `<button onclick="showToast('Mã Voucher của bạn [${escapeHtml(shopItem.name)}]: VIP-${Math.random().toString(36).substring(2, 8).toUpperCase()}', 'info')" class="w-full py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg text-xs transition shadow-sm">Xem Mã Voucher</button>`;
+                } else {
+                    actionHtml = `<button disabled class="w-full py-1.5 bg-emerald-600/80 text-white font-bold rounded-lg text-xs cursor-default">Đang Sở Hữu</button>`;
+                }
+
+                return `
+                    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl text-center shadow-sm flex flex-col justify-between hover:-translate-y-1 transition">
+                        <div>
+                            <div class="text-4xl mb-2">${shopItem.icon}</div>
+                            <h4 class="font-bold text-sm mb-1 text-gray-800 dark:text-white">${escapeHtml(shopItem.name)}</h4>
+                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 mb-3">${shopItem.category}</span>
+                        </div>
+                        ${actionHtml}
+                    </div>
+                `;
+            }).join('');
+        } catch (e) {
+            container.innerHTML = `<div class="col-span-full text-center py-6 text-rose-500 text-sm">Không thể tải túi đồ học viên.</div>`;
+        }
+    }
+
+    window.openAvatarModal = function() {
+        document.getElementById('modalChangeAvatar')?.classList.remove('hidden');
+        loadMyAvatars();
+    };
 
     async function renderShopItems(filterCategory = 'ALL') {
         const container = document.getElementById('shopGridContainer');
@@ -696,10 +757,11 @@
             });
             const data = await res.json();
             if (data.success) {
-                showToast("Mua thành công!", "success");
+                showToast("Mua vật phẩm thành công! Đã thêm vào túi đồ.", "success");
                 if (data.user) sessionStorage.setItem("current_user", JSON.stringify(data.user));
                 updateMcionDisplay(); 
                 checkLoginState();
+                loadStudentInventory(); // Cập nhật lại túi đồ ngay lập tức
                 
                 const activeCatBtn = document.querySelector('.shop-cat-btn.bg-primary-600');
                 let activeCat = 'ALL';
@@ -774,7 +836,7 @@
             themeToggle.textContent = isDark ? '☀️' : '🌙';
         });
 
-        // MODAL BACKDROP & ESC KEY HANDLERS (NEW UX FEATURE)
+        // MODAL BACKDROP & ESC KEY HANDLERS
         const modalPass = document.getElementById('modalChangePass');
         const modalAvatar = document.getElementById('modalChangeAvatar');
 
@@ -1078,13 +1140,16 @@
             document.getElementById('userInfo').textContent = `Học sinh: ${currentUser.fullname || currentUser.username}`;
             document.getElementById('sectionStudent')?.classList.remove('hidden');
             document.getElementById('sectionAdmin')?.classList.add('hidden');
-            loadExamList(); renderMyHistoryRecent();
+            loadExamList(); 
+            renderMyHistoryRecent();
+            loadStudentInventory(); // Tải túi đồ khi học sinh đăng nhập
         } else {
             topAvatar?.classList.add('hidden');
             document.getElementById('userInfo').textContent = `Admin (${currentUser.username})`;
             document.getElementById('sectionAdmin')?.classList.remove('hidden');
             document.getElementById('sectionStudent')?.classList.add('hidden');
-            renderAllHistoryRecent(); loadAdminExamList(); 
+            renderAllHistoryRecent(); 
+            loadAdminExamList(); 
         }
         updateMcionDisplay();
         renderShopItems();
